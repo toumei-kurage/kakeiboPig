@@ -1,3 +1,23 @@
 <resources>
+    <!--    アクションバーのタイトル-->
     <string name="app_name">家計簿アプリ</string>
+    <string name="title_register">ユーザー登録</string>
+    <string name="title_logout">ログアウト</string>
+    <string name="title_login">ログイン</string>
+
+    <!--    ボタン名-->
+    <string name="button_login">ログイン</string>
+    <string name="button_signup">アカウント作成</string>
+    <string name="button_register">ユーザー登録</string>
+
+    <!--    ヒント-->
+    <string name="hint_password">パスワード</string>
+    <string name="hint_email">メールアドレス</string>
+    <string name="hint_username">ユーザー名</string>
+
+
+    <!--    エラーメッセージ-->
+    <string name="error_empty">入力必須です</string>
+    <string name="error_digit_6">6桁以上で入力して下さい</string>
+    <string name="error_email">正しいメールアドレス形式で入力してください</string>
 </resources>
