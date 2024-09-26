@@ -5,6 +5,9 @@ import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import com.websarva.wings.android.kakeibo.R
 
+/**
+ * 入力フォームのバリデーションチェック
+ */
 class ValidateHelper(private val context: Context) {
     //未入力チェック(空白の時false)
     private fun emptyCheck(text:String):Boolean{

@@ -1,14 +1,14 @@
 <resources>
     <!--    アクションバーのタイトル-->
     <string name="app_name">家計簿アプリ</string>
-    <string name="title_register">ユーザー登録</string>
+    <string name="title_register">アカウント作成</string>
     <string name="title_logout">ログアウト</string>
     <string name="title_login">ログイン</string>
 
     <!--    ボタン名-->
     <string name="button_login">ログイン</string>
     <string name="button_signup">アカウント作成</string>
-    <string name="button_register">ユーザー登録</string>
+    <string name="button_register">アカウント登録</string>
 
     <!--    ヒント-->
     <string name="hint_password">パスワード</string>

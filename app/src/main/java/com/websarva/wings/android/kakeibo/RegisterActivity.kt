@@ -15,6 +15,10 @@ import androidx.appcompat.widget.Toolbar
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 
+/**
+ * アカウント作成画面
+ * １家族につき１アカウント作成予定
+ */
 class RegisterActivity : AppCompatActivity() {
 
     // FirebaseAuthのインスタンスを準備
