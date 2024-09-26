@@ -16,6 +16,9 @@ import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 
+/**
+ * ログイン画面
+ */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
