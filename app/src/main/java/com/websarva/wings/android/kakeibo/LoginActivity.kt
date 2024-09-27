@@ -17,7 +17,7 @@ import com.google.firebase.auth.FirebaseAuth
 /**
  * ログイン画面
  */
-class MainActivity : AppCompatActivity() {
+class LoginActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
 
@@ -26,7 +26,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_login)
         // Toolbarを設定
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         toolbar.setTitle(R.string.app_name)

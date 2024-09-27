@@ -9,7 +9,6 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import com.google.android.material.textfield.TextInputLayout
@@ -23,7 +22,9 @@ class RegisterActivity : AppCompatActivity() {
 
     // FirebaseAuthのインスタンスを準備
     private lateinit var auth: FirebaseAuth
-    private val validate = ValidateHelper(this)
+
+    private val validateHelper = ValidateHelper(this)
+    private val dialogHelper = DialogHelper(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,7 +55,7 @@ class RegisterActivity : AppCompatActivity() {
         usernameEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
                 // フォーカスが外れたときの処理
-                val (result: Boolean, errorMsg: String) = validate.usernameCheck(usernameEditText)
+                val (result: Boolean, errorMsg: String) = validateHelper.usernameCheck(usernameEditText)
                 if (!result) {
                     usernameError.error = errorMsg
                     return@OnFocusChangeListener
@@ -66,7 +67,7 @@ class RegisterActivity : AppCompatActivity() {
         emailEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
                 // フォーカスが外れたときの処理
-                val (result: Boolean, errorMsg: String) = validate.emailCheck(emailEditText)
+                val (result: Boolean, errorMsg: String) = validateHelper.emailCheck(emailEditText)
                 if (!result) {
                     emailError.error = errorMsg
                     return@OnFocusChangeListener
@@ -78,7 +79,7 @@ class RegisterActivity : AppCompatActivity() {
         passwordEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
                 // フォーカスが外れたときの処理
-                val (result: Boolean, errorMsg: String) = validate.passwordCheck(passwordEditText)
+                val (result: Boolean, errorMsg: String) = validateHelper.passwordCheck(passwordEditText)
                 if (!result) {
                     passwordError.error = errorMsg
                     return@OnFocusChangeListener
@@ -91,11 +92,11 @@ class RegisterActivity : AppCompatActivity() {
         buttonRegister.setOnClickListener {
             clearBordFocus()
             //すべての入力項目のバリデーションチェック
-            val (resultUsername: Boolean, usernameMsg: String) = validate.usernameCheck(
+            val (resultUsername: Boolean, usernameMsg: String) = validateHelper.usernameCheck(
                 usernameEditText
             )
-            val (resultEmail: Boolean, emailMsg: String) = validate.emailCheck(emailEditText)
-            val (resultPassword: Boolean, passwordMsg) = validate.passwordCheck(passwordEditText)
+            val (resultEmail: Boolean, emailMsg: String) = validateHelper.emailCheck(emailEditText)
+            val (resultPassword: Boolean, passwordMsg) = validateHelper.passwordCheck(passwordEditText)
 
             if (!(resultUsername && resultEmail && resultPassword)) {
                 usernameError.error = usernameMsg
@@ -114,17 +115,13 @@ class RegisterActivity : AppCompatActivity() {
                         // 登録成功
                         Toast.makeText(this, "登録成功", Toast.LENGTH_SHORT).show()
                         // 次の画面に進むなどの処理を書く
-                        val intent = Intent(this, MainActivity::class.java)
+                        val intent = Intent(this, LoginActivity::class.java)
                         startActivity(intent)
                         finish() // このアクティビティを終了して、戻れないようにする
 
                     } else {
                         // エラー処理
-                        Toast.makeText(
-                            this,
-                            "登録失敗: ${task.exception?.message}",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        dialogHelper.dialogOkOnly("","登録に失敗しました")
                     }
                 }
         }
@@ -135,7 +132,7 @@ class RegisterActivity : AppCompatActivity() {
         return when (item.itemId) {
             android.R.id.home -> {
                 // MainActivityに遷移する処理
-                val intent = Intent(this, MainActivity::class.java)
+                val intent = Intent(this, LoginActivity::class.java)
                 startActivity(intent)
                 true
             }

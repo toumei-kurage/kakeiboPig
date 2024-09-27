@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     id("com.google.gms.google-services")
+    id("kotlin-kapt") // KAPTプラグインの追加
 }
 
 android {
@@ -49,4 +50,9 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    // Roomの依存関係
+    implementation("androidx.room:room-runtime:2.5.1") // Roomのランタイム
+    kapt("androidx.room:room-compiler:2.5.1") // Roomのコンパイラ
+    implementation("androidx.room:room-ktx:2.5.1") // Kotlin拡張
 }
