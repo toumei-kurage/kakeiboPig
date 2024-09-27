@@ -20,4 +20,8 @@
     <string name="error_empty">入力必須です</string>
     <string name="error_digit_6">6桁以上で入力して下さい</string>
     <string name="error_email">正しいメールアドレス形式で入力してください</string>
+
+    <!--    メニューバー-->
+    <string name="open">開く</string>
+    <string name="close">閉じる</string>
 </resources>
