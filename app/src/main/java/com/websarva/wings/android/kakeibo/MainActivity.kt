@@ -3,16 +3,14 @@ package com.websarva.wings.android.kakeibo
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 
@@ -22,7 +20,9 @@ import com.google.firebase.auth.FirebaseAuth
 class MainActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
-    private val validate = ValidateHelper(this)
+
+    private val validateHelper = ValidateHelper(this)
+    private val dialogHelper = DialogHelper(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
         emailEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
                 // フォーカスが外れたときの処理
-                val (result: Boolean, errorMsg: String) = validate.emailCheck(emailEditText)
+                val (result: Boolean, errorMsg: String) = validateHelper.emailCheck(emailEditText)
                 if (!result) {
                     emailError.error = errorMsg
                     return@OnFocusChangeListener
@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity() {
         passwordEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
                 // フォーカスが外れたときの処理
-                val (result: Boolean, errorMsg: String) = validate.passwordCheck(passwordEditText)
+                val (result: Boolean, errorMsg: String) = validateHelper.passwordCheck(passwordEditText)
                 if (!result) {
                     passwordError.error = errorMsg
                     return@OnFocusChangeListener
@@ -70,8 +70,8 @@ class MainActivity : AppCompatActivity() {
         loginButton.setOnClickListener {
             clearBordFocus()
             //すべての入力項目のバリデーションチェック
-            val (resutlEmail: Boolean, emailMsg: String) = validate.emailCheck(emailEditText)
-            val (resultPassword: Boolean, passwordMsg) = validate.passwordCheck(passwordEditText)
+            val (resutlEmail: Boolean, emailMsg: String) = validateHelper.emailCheck(emailEditText)
+            val (resultPassword: Boolean, passwordMsg) = validateHelper.passwordCheck(passwordEditText)
             if (!(resutlEmail && resultPassword)) {
                 emailError.error = emailMsg
                 passwordError.error = passwordMsg
@@ -104,7 +104,8 @@ class MainActivity : AppCompatActivity() {
                     finish() // このアクティビティを終了して、戻れないようにする
                 } else {
                     // ログイン失敗
-                    Toast.makeText(this, "ログイン失敗: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                    dialogHelper.dialogOkOnly("ログイン失敗","ユーザーIDまたはパスワードが間違っています。")
+                    Log.e("ログイン失敗","${task.exception?.message}")
                 }
             }
     }
