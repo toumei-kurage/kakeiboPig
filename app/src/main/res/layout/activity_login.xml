@@ -1,25 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
     <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:id="@+id/toolbar"
         android:background="?attr/colorPrimary"
-        android:elevation="10dp"/>
+        android:elevation="10dp" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/email"
-        android:padding="3dp"
-        android:layout_marginTop="10dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_margin="10dp"
+        android:padding="3dp"
         app:counterEnabled="true"
         app:errorEnabled="true">
 
@@ -27,18 +26,19 @@
             android:id="@+id/emailEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="text"
             android:hint="@string/hint_email"
-            android:text="yoshikawa60065@gmail.com"/>
+            android:inputType="text"
+            android:text="yoshikawa60065@gmail.com" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/password"
-        android:padding="3dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_margin="10dp"
+        android:padding="3dp"
         app:counterEnabled="true"
         app:errorEnabled="true">
 
@@ -48,7 +48,7 @@
             android:layout_height="wrap_content"
             android:hint="@string/hint_password"
             android:inputType="textPassword"
-            android:text="rekadon1"/>
+            android:text="rekadon1" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -56,15 +56,13 @@
         android:id="@+id/loginButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="3dp"
-        android:layout_marginEnd="3dp"
+        android:layout_margin="10dp"
         android:text="@string/button_login" />
 
     <Button
         android:id="@+id/SignUpButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="3dp"
-        android:layout_marginEnd="3dp"
+        android:layout_margin="10dp"
         android:text="@string/button_signup" />
 </LinearLayout>

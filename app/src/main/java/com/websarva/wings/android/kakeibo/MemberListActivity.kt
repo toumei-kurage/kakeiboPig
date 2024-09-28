@@ -22,7 +22,7 @@ class MemberListActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_member_list)
         //ログイン中のユーザーIDを取得
-        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        val userID = FirebaseAuth.getInstance().currentUser?.uid
 
         //画面部品の取得
         val buttonMemberAdd = findViewById<FloatingActionButton>(R.id.buttonMemberAdd)

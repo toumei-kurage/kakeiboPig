@@ -6,20 +6,53 @@
     android:layout_height="match_parent">
 
     <!-- メインのコンテンツ -->
-    <FrameLayout
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
+        <!-- 縦方向のレイアウト -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            android:elevation="10dp" />
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
-        <!-- 他のメインコンテンツをここに追加 -->
+            <!-- Toolbar (アクションバー) -->
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="?attr/colorPrimary"
+                android:elevation="10dp" />
 
-    </FrameLayout>
+            <!-- TextInputLayout (入力フォーム) -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/memberName"
+                android:padding="3dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                app:counterEnabled="true"
+                app:errorEnabled="true"
+                android:layout_margin="16dp">
+
+                <EditText
+                    android:id="@+id/memberNameEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/hint_member_name"
+                    android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <Button
+                android:id="@+id/buttonMemberAdd"
+                android:layout_margin="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/button_member_regist" />
+
+        </LinearLayout>
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     <!-- ナビゲーションビュー -->
     <com.google.android.material.navigation.NavigationView
@@ -28,6 +61,6 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
-        app:menu="@menu/menu_home"/>
+        app:menu="@menu/menu_home" />
 
 </androidx.drawerlayout.widget.DrawerLayout>
