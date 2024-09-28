@@ -4,6 +4,8 @@
     <string name="title_register">アカウント作成</string>
     <string name="title_logout">ログアウト</string>
     <string name="title_login">ログイン</string>
+    <string name="title_member_list">メンバー</string>
+    <string name="title_member_regist">メンバー登録</string>
 
     <!--    ボタン名-->
     <string name="button_login">ログイン</string>
