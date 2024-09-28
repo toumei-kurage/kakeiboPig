@@ -37,9 +37,9 @@ class HomeActivity : AppCompatActivity() {
         // ナビゲーションメニューアイテムのクリックリスナー
         navView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.nav_member_regist -> {
+                R.id.nav_member_list -> {
                     // メンバー登録画面に遷移
-                    val intent = Intent(this, MemberRegistActivity::class.java)
+                    val intent = Intent(this, MemberListActivity::class.java)
                     startActivity(intent)
                 }
             }

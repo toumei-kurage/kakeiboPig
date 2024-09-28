@@ -3,6 +3,6 @@
     <item
         android:icon="@drawable/ic_hamberger_menu"/>
     <item
-        android:id="@+id/nav_member_regist"
-        android:title="メンバー登録" />
+        android:id="@+id/nav_member_list"
+        android:title="@string/title_member_list" />
 </menu>
