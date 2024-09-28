@@ -11,11 +11,13 @@
     <string name="button_login">ログイン</string>
     <string name="button_signup">アカウント作成</string>
     <string name="button_register">アカウント登録</string>
+    <string name="button_member_regist">メンバー登録</string>
 
     <!--    ヒント-->
     <string name="hint_password">パスワード</string>
     <string name="hint_email">メールアドレス</string>
     <string name="hint_username">ユーザー名</string>
+    <string name="hint_member_name">メンバー名</string>
 
 
     <!--    エラーメッセージ-->
