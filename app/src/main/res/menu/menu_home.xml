@@ -3,6 +3,9 @@
     <item
         android:icon="@drawable/ic_hamberger_menu"/>
     <item
+        android:id="@+id/nav_home"
+        android:title ="@string/title_home"/>
+    <item
         android:id="@+id/nav_member_list"
         android:title="@string/title_member_list" />
 </menu>
