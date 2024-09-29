@@ -3,6 +3,10 @@ package com.websarva.wings.android.kakeibo
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.view.View
+import android.view.inputmethod.InputMethodManager
+import android.widget.Button
+import android.widget.EditText
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
@@ -11,6 +15,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
+import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 
 class MemberRegistActivity : AppCompatActivity() {
@@ -87,15 +92,15 @@ class MemberRegistActivity : AppCompatActivity() {
             clearBordFocus()
             val(resultMemberName:Boolean,memberNameMsg:String) = validateHelper.usernameCheck(memberNameEditText)
             if(!resultMemberName){
+                memberNameError.error = memberNameMsg
                 return@setOnClickListener
             }
             else{
                 val memberName = memberNameEditText.text.toString()
                 val userID = FirebaseAuth.getInstance().currentUser?.uid
 
-                if (memberName.isNotEmpty() && userID != null) {
+                if (userID != null) {
                     // Personエンティティをデータベースに登録
-                    registerPerson(memberName, userID)
                     dialogHelper.dialogOkOnly("","メンバーが登録されました")
                 }
             }
@@ -109,4 +114,14 @@ class MemberRegistActivity : AppCompatActivity() {
         }
         return super.onOptionsItemSelected(item)
     }
+
+    private fun clearBordFocus(){
+        val memberNameEditText = findViewById<EditText>(R.id.memberNameEditText)
+        // キーボードを閉じる処理
+        val inputMethodManager = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        inputMethodManager.hideSoftInputFromWindow(memberNameEditText.windowToken, 0)
+        //フォーカスを外す処理
+        memberNameEditText.clearFocus()
+    }
+
 }
