@@ -31,9 +31,10 @@ class LoginActivity : AppCompatActivity() {
         setContentView(R.layout.activity_login)
         // Toolbarを設定
         val toolbar: Toolbar = findViewById(R.id.toolbar)
-        toolbar.setTitle(R.string.app_name)
+        toolbar.setTitle(R.string.title_login)
         toolbar.setTitleTextColor(Color.WHITE)
         setSupportActionBar(toolbar)
+
         //画面部品の取得
         val emailError = findViewById<TextInputLayout>(R.id.email)
         val emailEditText: EditText = findViewById(R.id.emailEditText)

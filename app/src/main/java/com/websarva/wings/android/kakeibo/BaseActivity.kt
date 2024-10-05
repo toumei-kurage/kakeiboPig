@@ -10,27 +10,28 @@ import com.websarva.wings.android.kakeibo.HomeActivity
 import com.websarva.wings.android.kakeibo.MemberListActivity
 import com.websarva.wings.android.kakeibo.R
 
-abstract class BaseActivity : AppCompatActivity() {
+abstract class BaseActivity(private val layoutResId: Int,private val title:Int) : AppCompatActivity() {
 
-    lateinit var drawerLayout: DrawerLayout
+    private lateinit var drawerLayout: DrawerLayout
     private lateinit var toggle: ActionBarDrawerToggle
+    lateinit var toolbar: Toolbar
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_base) // 各ActivityでsetContentViewを上書きするため、この行は必要に応じて変更
+        setContentView(layoutResId) // 各ActivityでsetContentViewを上書きするため、この行は必要に応じて変更
 
         // DrawerLayoutとNavigationViewのセットアップ
         setupDrawerAndToolbar()
     }
 
     // DrawerLayoutとNavigationViewのセットアップを共通化
-    private fun setupDrawerAndToolbar() {
+    fun setupDrawerAndToolbar() {
         drawerLayout = findViewById(R.id.drawerLayout)
         val navView: NavigationView = findViewById(R.id.nav_view)
 
         // Toolbarを設定
-        val toolbar: Toolbar = findViewById(R.id.toolbar)
-        toolbar.setTitle(R.string.app_name)
+        toolbar= findViewById(R.id.toolbar)
+        toolbar.setTitle(title)
         toolbar.setTitleTextColor(Color.WHITE)
         setSupportActionBar(toolbar)
 
@@ -45,6 +46,9 @@ abstract class BaseActivity : AppCompatActivity() {
             drawerLayout.closeDrawers() // メニューを閉じる
             true
         }
+
+        // アイコンのクリックリスナーを設定
+        toolbar.setNavigationIcon(R.drawable.ic_hamberger_menu) // ハンバーガーアイコンを表示
     }
 
     // 各Activityでメニューアイテムの動作をオーバーライド可能に
@@ -62,11 +66,11 @@ abstract class BaseActivity : AppCompatActivity() {
         }
     }
 
+    // ハンバーガーメニューのクリック対応
     override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
-        return if (toggle.onOptionsItemSelected(item)) {
-            true
-        } else {
-            super.onOptionsItemSelected(item)
+        if (toggle.onOptionsItemSelected(item)) {
+            return true
         }
+        return super.onOptionsItemSelected(item)
     }
 }
