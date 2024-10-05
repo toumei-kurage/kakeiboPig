@@ -7,5 +7,5 @@ import androidx.room.PrimaryKey
 data class Person(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val userID:String,
-    val memberName: String
+    var memberName: String
 )
