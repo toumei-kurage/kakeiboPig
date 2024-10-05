@@ -12,6 +12,8 @@
     <string name="button_signup">アカウント作成</string>
     <string name="button_register">アカウント登録</string>
     <string name="button_member_regist">メンバー登録</string>
+    <string name="button_member_update">更新</string>
+    <string name="button_member_delete">削除</string>
 
     <!--    ヒント-->
     <string name="hint_password">パスワード</string>
