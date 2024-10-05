@@ -1,8 +1,7 @@
-package com.websarva.wings.android.kakeibo
+package com.websarva.wings.android.kakeibo.helper
 
 import android.content.Context
 import android.widget.EditText
-import androidx.appcompat.app.AppCompatActivity
 import com.websarva.wings.android.kakeibo.R
 
 /**
