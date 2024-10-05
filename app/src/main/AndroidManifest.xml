@@ -19,7 +19,7 @@
             android:name=".MemberListActivity"
             android:exported="false" />
         <activity
-            android:name=".MemberRegistActivity"
+            android:name=".MemberAddActivity"
             android:exported="false" />
         <activity
             android:name=".HomeActivity"
