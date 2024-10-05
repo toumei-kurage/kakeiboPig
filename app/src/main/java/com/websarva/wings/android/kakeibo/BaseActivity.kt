@@ -48,7 +48,7 @@ abstract class BaseActivity(private val layoutResId: Int,private val title:Int) 
         }
 
         // アイコンのクリックリスナーを設定
-        toolbar.setNavigationIcon(R.drawable.ic_hamberger_menu) // ハンバーガーアイコンを表示
+        toolbar.setNavigationIcon(R.drawable.ic_hamburger_menu) // ハンバーガーアイコンを表示
     }
 
     // 各Activityでメニューアイテムの動作をオーバーライド可能に

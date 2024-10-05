@@ -17,7 +17,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class MemberAddActivity : BaseActivity(R.layout.activity_member_add,R.string.title_member_regist) {
+class MemberAddActivity : BaseActivity(R.layout.activity_member_add,R.string.title_member_add) {
     private val validateHelper = ValidateHelper(this)
     private val dialogHelper = DialogHelper(this)
 
