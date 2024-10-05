@@ -1,11 +1,11 @@
 <resources>
     <!--    アクションバーのタイトル-->
     <string name="app_name">家計簿アプリ</string>
+    <string name="title_home">ホーム</string>
     <string name="title_register">アカウント作成</string>
-    <string name="title_logout">ログアウト</string>
     <string name="title_login">ログイン</string>
     <string name="title_member_list">メンバー</string>
-    <string name="title_member_regist">メンバー登録</string>
+    <string name="title_member_add">メンバー登録</string>
 
     <!--    ボタン名-->
     <string name="button_login">ログイン</string>
@@ -26,7 +26,7 @@
     <string name="error_email">正しいメールアドレス形式で入力してください</string>
 
     <!--    メニューバー-->
-    <string name="title_home">ホーム</string>
+    <string name="menu_title_hamburger">ハンバーガー</string>
     <string name="open">開く</string>
     <string name="close">閉じる</string>
 </resources>
