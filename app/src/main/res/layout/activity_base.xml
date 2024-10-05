@@ -24,20 +24,6 @@
                 android:background="?attr/colorPrimary"
                 android:elevation="10dp" />
 
-            <!-- コンテンツのためのFrameLayout -->
-            <FrameLayout
-                android:id="@+id/frameLayout"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1">
-
-                <!-- RecyclerViewをここに追加 -->
-
-
-            </FrameLayout>
-
-            <!-- FloatingActionButton -->
-
         </LinearLayout>
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

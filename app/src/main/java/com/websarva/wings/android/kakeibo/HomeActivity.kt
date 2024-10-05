@@ -41,11 +41,13 @@ class HomeActivity : AppCompatActivity() {
                     //ホーム画面に遷移
                     val intent = Intent(this,HomeActivity::class.java)
                     startActivity(intent)
+                    finish()
                 }
                 R.id.nav_member_list -> {
                     // メンバー登録画面に遷移
                     val intent = Intent(this, MemberListActivity::class.java)
                     startActivity(intent)
+                    finish()
                 }
             }
             drawerLayout.closeDrawers() // メニューを閉じる
