@@ -16,6 +16,12 @@ import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.websarva.wings.android.kakeibo.helper.DialogHelper
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
+import com.websarva.wings.android.kakeibo.room.AppDatabase
+import com.websarva.wings.android.kakeibo.room.Person
+import com.websarva.wings.android.kakeibo.room.PersonDao
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MemberRegistActivity : AppCompatActivity() {
     private lateinit var drawerLayout: DrawerLayout
@@ -23,24 +29,33 @@ class MemberRegistActivity : AppCompatActivity() {
     private val validateHelper = ValidateHelper(this)
     private val dialogHelper = DialogHelper(this)
 
+    private lateinit var auth: FirebaseAuth // Firebase Authentication
+    private lateinit var personDao: PersonDao
+
+    private lateinit var memberNameError:TextInputLayout
+    private lateinit var memberNameEditText: EditText
+    private lateinit var buttonMemberAdd:Button
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_member_regist)
 
-        // Roomデータベースのインスタンスを取得
+        // Firebase Authenticationのインスタンスを取得
+        auth = FirebaseAuth.getInstance()
 
+        // データベースのインスタンスを取得
+        val db = AppDatabase.getDatabase(applicationContext)
+        personDao = db.personDao() // DAOのインスタンスを取得
 
         //画面部品取得
-        val memberNameError = findViewById<TextInputLayout>(R.id.memberName)
-        val memberNameEditText = findViewById<EditText>(R.id.memberNameEditText)
-        val buttonMemberAdd = findViewById<Button>(R.id.buttonMemberAdd)
+        memberNameError = findViewById<TextInputLayout>(R.id.memberName)
+        memberNameEditText = findViewById<EditText>(R.id.memberNameEditText)
+        buttonMemberAdd = findViewById<Button>(R.id.buttonMemberAdd)
 
         // DrawerLayoutとNavigationViewのセットアップ
         drawerLayout = findViewById(R.id.drawerLayout)
         val navView: NavigationView = findViewById(R.id.nav_view)
-
 
         // Toolbarを設定
         val toolbar: Toolbar = findViewById(R.id.toolbar)
@@ -96,9 +111,10 @@ class MemberRegistActivity : AppCompatActivity() {
             }
             else{
                 val memberName = memberNameEditText.text.toString()
-                val userID = FirebaseAuth.getInstance().currentUser?.uid
-
+                val userID = auth.currentUser?.uid ?: return@setOnClickListener // ログインしているユーザーのIDを取得
+                val person = Person(userID = userID, memberName = memberName)
                 if (userID != null) {
+                    addPerson(person)
                     // Personエンティティをデータベースに登録
                     dialogHelper.dialogOkOnly("","メンバーが登録されました")
                 }
@@ -106,6 +122,7 @@ class MemberRegistActivity : AppCompatActivity() {
         }
 
     }
+
     // ハンバーガーメニューのクリック対応
     override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
         if (toggle.onOptionsItemSelected(item)) {
@@ -121,6 +138,13 @@ class MemberRegistActivity : AppCompatActivity() {
         inputMethodManager.hideSoftInputFromWindow(memberNameEditText.windowToken, 0)
         //フォーカスを外す処理
         memberNameEditText.clearFocus()
+    }
+
+    private fun addPerson(person:Person) {
+        // データベースに登録
+        CoroutineScope(Dispatchers.IO).launch {
+            personDao.insert(person)
+        }
     }
 
 }
