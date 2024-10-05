@@ -49,9 +49,9 @@ class MemberRegistActivity : AppCompatActivity() {
         personDao = db.personDao() // DAOのインスタンスを取得
 
         //画面部品取得
-        memberNameError = findViewById<TextInputLayout>(R.id.memberName)
-        memberNameEditText = findViewById<EditText>(R.id.memberNameEditText)
-        buttonMemberAdd = findViewById<Button>(R.id.buttonMemberAdd)
+        memberNameError = findViewById(R.id.memberName)
+        memberNameEditText = findViewById(R.id.memberNameEditText)
+        buttonMemberAdd = findViewById(R.id.buttonMemberAdd)
 
         // DrawerLayoutとNavigationViewのセットアップ
         drawerLayout = findViewById(R.id.drawerLayout)
@@ -114,8 +114,8 @@ class MemberRegistActivity : AppCompatActivity() {
                 val userID = auth.currentUser?.uid ?: return@setOnClickListener // ログインしているユーザーのIDを取得
                 val person = Person(userID = userID, memberName = memberName)
                 if (userID != null) {
-                    addPerson(person)
                     // Personエンティティをデータベースに登録
+                    addPerson(person)
                     dialogHelper.dialogOkOnly("","メンバーが登録されました")
                 }
             }
