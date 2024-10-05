@@ -13,6 +13,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
+import com.websarva.wings.android.kakeibo.helper.DialogHelper
+import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 
 /**
  * アカウント作成画面
