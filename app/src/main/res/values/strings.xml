@@ -34,7 +34,6 @@
     <string name="error_range_pay_date">1900年1月1日から2050年12月31日の間で選択してください</string>
 
     <!--    メニューバー-->
-    <string name="menu_title_hamburger">ハンバーガー</string>
     <string name="open">開く</string>
     <string name="close">閉じる</string>
 
