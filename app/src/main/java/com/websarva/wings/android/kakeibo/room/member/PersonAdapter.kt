@@ -1,4 +1,4 @@
-package com.websarva.wings.android.kakeibo.room
+package com.websarva.wings.android.kakeibo.room.member
 
 import android.view.LayoutInflater
 import android.view.View

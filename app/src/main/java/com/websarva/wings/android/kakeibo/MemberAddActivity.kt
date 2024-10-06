@@ -9,9 +9,9 @@ import android.widget.EditText
 import com.google.android.material.textfield.TextInputLayout
 import com.websarva.wings.android.kakeibo.helper.DialogHelper
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
-import com.websarva.wings.android.kakeibo.room.AppDatabase
-import com.websarva.wings.android.kakeibo.room.Person
-import com.websarva.wings.android.kakeibo.room.PersonDao
+import com.websarva.wings.android.kakeibo.room.member.AppDatabase
+import com.websarva.wings.android.kakeibo.room.member.Person
+import com.websarva.wings.android.kakeibo.room.member.PersonDao
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -82,7 +82,7 @@ class MemberAddActivity : BaseActivity(R.layout.activity_member_add,R.string.tit
         memberNameEditText.clearFocus()
     }
 
-    private fun addPerson(person:Person) {
+    private fun addPerson(person: Person) {
         // データベースに登録
         CoroutineScope(Dispatchers.IO).launch {
             personDao.insert(person)
