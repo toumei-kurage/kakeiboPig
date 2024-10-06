@@ -29,7 +29,10 @@
                 android:id="@+id/spPerson"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="16dp"
                 android:spinnerMode="dropdown" />
 
             <Spinner
@@ -37,8 +40,18 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:spinnerMode="dropdown"
-                android:layout_margin="16dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
                 android:entries="@array/pay_list"/>
+            <TextView
+                android:id="@+id/PayListError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="18dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="16dp"
+                android:textColor="@android:color/holo_red_dark"/>
 
             <!-- TextInputLayout (入力フォーム) -->
             <com.google.android.material.textfield.TextInputLayout
@@ -46,7 +59,7 @@
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="16dp"
+                android:layout_margin="10dp"
                 android:padding="3dp"
                 app:counterEnabled="true"
                 app:errorEnabled="true">
@@ -59,12 +72,31 @@
                     android:inputType="number" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/payDate"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:padding="3dp"
+                app:counterEnabled="true"
+                app:errorEnabled="true">
+
+                <EditText
+                    android:id="@+id/payDateEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/hint_pay_date"
+                    android:focusable="false" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="16dp"
+                android:layout_margin="10dp"
                 android:id="@+id/PayDone"
-                android:text="領収しました"/>
+                android:text="@string/check_pay_done"/>
 
             <Button
                 android:id="@+id/buttonPayRecordAdd"
