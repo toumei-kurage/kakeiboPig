@@ -19,5 +19,5 @@ interface PersonDao {
     suspend fun deletePerson(person: Person)
 
     @Query("SELECT * FROM person_table WHERE userID = :userID")
-    suspend fun getAllPersonsByUserId(userID: String): List<Person>
+    fun getAllPersonsByUserId(userID: String): LiveData<List<Person>>
 }

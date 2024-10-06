@@ -14,12 +14,17 @@ class MemberListViewModel(application: Application) : AndroidViewModel(applicati
     private val _personList = MutableLiveData<List<Person>>()
     val personList: LiveData<List<Person>> = _personList
 
+    // メンバーリストを取得するメソッド
+    fun getPersons(userId: String): LiveData<List<Person>> {
+        return personDao.getAllPersonsByUserId(userId)
+    }
+
     // 更新メソッド
     fun updatePerson(person: Person) {
         viewModelScope.launch {
             personDao.updatePerson(person)
             // 更新後にリストを再取得
-            _personList.value = personDao.getAllPersonsByUserId(person.userID)
+            _personList.value = personDao.getAllPersonsByUserId(person.userID).value
         }
     }
 
@@ -28,7 +33,7 @@ class MemberListViewModel(application: Application) : AndroidViewModel(applicati
         viewModelScope.launch {
             personDao.deletePerson(person)
             // 削除後にリストを再取得
-            _personList.value = personDao.getAllPersonsByUserId(person.userID)
+            _personList.value = personDao.getAllPersonsByUserId(person.userID).value
         }
     }
 }
