@@ -69,6 +69,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/hint_pay_amount"
+                    android:maxLength="6"
                     android:inputType="number" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -97,6 +98,24 @@
                 android:layout_margin="10dp"
                 android:id="@+id/PayDone"
                 android:text="@string/check_pay_done"/>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/payNote"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:padding="3dp"
+                app:counterEnabled="true"
+                app:errorEnabled="true">
+
+                <EditText
+                    android:id="@+id/payNoteEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/hint_pay_note" />
+
+            </com.google.android.material.textfield.TextInputLayout>
 
             <Button
                 android:id="@+id/buttonPayRecordAdd"

@@ -24,6 +24,7 @@
     <string name="hint_member_name">メンバー名</string>
     <string name="hint_pay_amount">金額</string>
     <string name="hint_pay_date">支払日を選択してください</string>
+    <string name="hint_pay_note">備考(支払い場所などをメモ)</string>
 
     <!--    エラーメッセージ-->
     <string name="error_empty">入力必須です</string>
