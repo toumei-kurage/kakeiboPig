@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.websarva.wings.android.kakeibo.room.AppDatabase
 import kotlinx.coroutines.launch
 
 class MemberListViewModel(application: Application) : AndroidViewModel(application) {

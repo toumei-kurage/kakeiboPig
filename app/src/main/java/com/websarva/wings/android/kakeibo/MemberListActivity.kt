@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.websarva.wings.android.kakeibo.room.member.AppDatabase
+import com.websarva.wings.android.kakeibo.room.AppDatabase
 import com.websarva.wings.android.kakeibo.room.member.MemberListViewModel
 import com.websarva.wings.android.kakeibo.room.member.Person
 import com.websarva.wings.android.kakeibo.room.member.PersonAdapter
