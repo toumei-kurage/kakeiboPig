@@ -1,8 +1,13 @@
 package com.websarva.wings.android.kakeibo.helper
 
 import android.content.Context
+import android.os.Build
 import android.widget.EditText
+import android.widget.Spinner
+import androidx.annotation.RequiresApi
 import com.websarva.wings.android.kakeibo.R
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 /**
  * 入力フォームのバリデーションチェック
@@ -25,6 +30,12 @@ class ValidateHelper(private val context: Context) {
      */
     private fun lengthCheck(text:String,digit:Int):Boolean{
         return text.length >= digit
+    }
+
+    //半角数字チェック
+    private fun numberFormatCheck(text:String):Boolean{
+        val regex = Regex("^[0-9]+$")
+        return regex.matches(text)
     }
 
     /**
@@ -66,4 +77,43 @@ class ValidateHelper(private val context: Context) {
         return Pair(true,"")
     }
 
+    //支払い項目スピナーのバリデーションチェック
+    fun payListCheck(spPayList:Spinner):Pair<Boolean,String>{
+        val selectItem = spPayList.selectedItem.toString()
+        if(selectItem == "支払い目的を選択してください"){
+            return Pair(false,"未選択です")
+        }
+        return Pair(true,"")
+    }
+
+    //支払金額のバリデーションチェック
+    fun payAmountCheck(payAmountEditText: EditText):Pair<Boolean,String>{
+        val payAmount = payAmountEditText.text.toString()
+        if(!emptyCheck(payAmount)){
+            return Pair(false,context.getString(R.string.error_empty))
+        }
+        if(!numberFormatCheck(payAmount)){
+            return Pair(false,context.getString(R.string.error_number_format))
+        }
+        if(payAmount.toInt() !in 1..1000000){
+            return Pair(false,context.getString(R.string.error_range_pay_amount))
+        }
+        return Pair(true,"")
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun payDateCheck(payDateEditText: EditText):Pair<Boolean,String>{
+        val payDateStr = payDateEditText.text.toString()
+        if(!emptyCheck(payDateStr)){
+            return Pair(false,context.getString(R.string.error_empty))
+        }
+        val MaxDate = LocalDate.of(2050,12,31)
+        val MinDate = LocalDate.of(1900,1,1)
+        val format = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val payDate = LocalDate.parse(payDateStr,format)
+        if(!(payDate.isBefore(MaxDate) && payDate.isAfter(MinDate))){
+            return Pair(false,context.getString(R.string.error_range_pay_date))
+        }
+        return Pair(true,"")
+    }
 }
