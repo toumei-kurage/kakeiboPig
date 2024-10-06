@@ -9,7 +9,7 @@ import android.widget.EditText
 import com.google.android.material.textfield.TextInputLayout
 import com.websarva.wings.android.kakeibo.helper.DialogHelper
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
-import com.websarva.wings.android.kakeibo.room.member.AppDatabase
+import com.websarva.wings.android.kakeibo.room.AppDatabase
 import com.websarva.wings.android.kakeibo.room.member.Person
 import com.websarva.wings.android.kakeibo.room.member.PersonDao
 import kotlinx.coroutines.CoroutineScope
