@@ -73,9 +73,9 @@ class LoginActivity : AppCompatActivity() {
         loginButton.setOnClickListener {
             clearBordFocus()
             //すべての入力項目のバリデーションチェック
-            val (resutlEmail: Boolean, emailMsg: String) = validateHelper.emailCheck(emailEditText)
+            val (resultEmail: Boolean, emailMsg: String) = validateHelper.emailCheck(emailEditText)
             val (resultPassword: Boolean, passwordMsg) = validateHelper.passwordCheck(passwordEditText)
-            if (!(resutlEmail && resultPassword)) {
+            if (!(resultEmail && resultPassword)) {
                 emailError.error = emailMsg
                 passwordError.error = passwordMsg
                 return@setOnClickListener

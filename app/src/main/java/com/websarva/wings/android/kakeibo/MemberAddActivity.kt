@@ -7,7 +7,6 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import com.google.android.material.textfield.TextInputLayout
-import com.google.firebase.auth.FirebaseAuth
 import com.websarva.wings.android.kakeibo.helper.DialogHelper
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 import com.websarva.wings.android.kakeibo.room.AppDatabase
@@ -21,7 +20,6 @@ class MemberAddActivity : BaseActivity(R.layout.activity_member_add,R.string.tit
     private val validateHelper = ValidateHelper(this)
     private val dialogHelper = DialogHelper(this)
 
-    private lateinit var auth: FirebaseAuth // Firebase Authentication
     private lateinit var personDao: PersonDao
 
     private lateinit var memberNameError:TextInputLayout
