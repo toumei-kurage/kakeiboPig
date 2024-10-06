@@ -24,10 +24,8 @@ import kotlinx.coroutines.withContext
 class MemberListActivity : BaseActivity(R.layout.activity_member_list,R.string.title_member_list) {
     private lateinit var viewModel: MemberListViewModel
     private lateinit var personDao: PersonDao
-    private lateinit var currentUserId: String // ログインユーザーのIDを格納する変数
     private lateinit var recyclerView: RecyclerView
     private lateinit var personAdapter: PersonAdapter
-    private lateinit var personList: List<Person> // 登録した人名のリスト
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,9 +33,6 @@ class MemberListActivity : BaseActivity(R.layout.activity_member_list,R.string.t
         setContentView(R.layout.activity_member_list)
 
         setupDrawerAndToolbar()
-
-        //ログイン中のユーザーIDを取得
-        currentUserId = FirebaseAuth.getInstance().currentUser?.uid.toString()
 
         // データベースのインスタンスを取得
         val db = AppDatabase.getDatabase(applicationContext)
@@ -64,37 +59,26 @@ class MemberListActivity : BaseActivity(R.layout.activity_member_list,R.string.t
             startActivity(intent)
         }
 
-        loadPersons()
-
         // メンバーのリストを監視して更新する
-        viewModel.personList.observe(this) { persons ->
-            val adapter = PersonAdapter(persons,
-                onUpdateClick = { person ->
-                    showUpdateDialog(person)
-                },
-                onDeleteClick = { person ->
-                    viewModel.deletePerson(person)
-                }
-            )
-            recyclerView.adapter = adapter
-        }
-
-    }
-
-    private fun loadPersons() {
-        CoroutineScope(Dispatchers.IO).launch {
-            personList = personDao.getAllPersonsByUserId(currentUserId)
-
-            withContext(Dispatchers.Main) {
-                // RecyclerViewにアダプターを設定
+        viewModel.getPersons(userID).observe(this) { persons ->
+            if (persons != null && persons.isNotEmpty()) {
                 personAdapter = PersonAdapter(
-                    personList = personList, // メンバーのリストを渡す
+                    personList = persons,
                     onUpdateClick = { person ->
-                        showUpdateDialog(person) // 更新処理を定義
+                        showUpdateDialog(person)
                     },
                     onDeleteClick = { person ->
-                        viewModel.deletePerson(person) // 削除処理を定義
+                        viewModel.deletePerson(person)
                     }
+                )
+                recyclerView.adapter = personAdapter
+            } else {
+                // personsがnullまたは空の場合に適切な処理を追加
+                // 例えば、"メンバーがいません"と表示するなど
+                personAdapter = PersonAdapter(
+                    personList = listOf(), // 空のリストを渡す
+                    onUpdateClick = { /* 空のリストなので操作なし */ },
+                    onDeleteClick = { /* 空のリストなので操作なし */ }
                 )
                 recyclerView.adapter = personAdapter
             }

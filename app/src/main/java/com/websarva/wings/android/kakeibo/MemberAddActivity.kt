@@ -35,9 +35,6 @@ class MemberAddActivity : BaseActivity(R.layout.activity_member_add,R.string.tit
 
         setupDrawerAndToolbar()
 
-        // Firebase Authenticationのインスタンスを取得
-        auth = FirebaseAuth.getInstance()
-
         // データベースのインスタンスを取得
         val db = AppDatabase.getDatabase(applicationContext)
         personDao = db.personDao() // DAOのインスタンスを取得
@@ -69,7 +66,6 @@ class MemberAddActivity : BaseActivity(R.layout.activity_member_add,R.string.tit
             }
             else{
                 val memberName = memberNameEditText.text.toString()
-                val userID = auth.currentUser?.uid ?: return@setOnClickListener // ログインしているユーザーのIDを取得
                 val person = Person(userID = userID, memberName = memberName)
                 // Personエンティティをデータベースに登録
                 addPerson(person)

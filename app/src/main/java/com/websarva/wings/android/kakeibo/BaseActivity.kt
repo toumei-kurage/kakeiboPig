@@ -6,15 +6,19 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
+import com.google.firebase.auth.FirebaseAuth
+import com.websarva.wings.android.kakeibo.AddPayReccordActivity
 import com.websarva.wings.android.kakeibo.HomeActivity
 import com.websarva.wings.android.kakeibo.MemberListActivity
 import com.websarva.wings.android.kakeibo.R
 
-abstract class BaseActivity(private val layoutResId: Int,private val title:Int) : AppCompatActivity() {
+abstract class BaseActivity(private val layoutResId: Int, private val title: Int) :
+    AppCompatActivity() {
 
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var toggle: ActionBarDrawerToggle
     lateinit var toolbar: Toolbar
+    lateinit var userID: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,6 +26,9 @@ abstract class BaseActivity(private val layoutResId: Int,private val title:Int) 
 
         // DrawerLayoutとNavigationViewのセットアップ
         setupDrawerAndToolbar()
+
+        //ログイン中のユーザーIDを取得
+        userID = FirebaseAuth.getInstance().currentUser?.uid.toString()
     }
 
     // DrawerLayoutとNavigationViewのセットアップを共通化
@@ -30,7 +37,7 @@ abstract class BaseActivity(private val layoutResId: Int,private val title:Int) 
         val navView: NavigationView = findViewById(R.id.nav_view)
 
         // Toolbarを設定
-        toolbar= findViewById(R.id.toolbar)
+        toolbar = findViewById(R.id.toolbar)
         toolbar.setTitle(title)
         toolbar.setTitleTextColor(Color.WHITE)
         setSupportActionBar(toolbar)
@@ -58,8 +65,14 @@ abstract class BaseActivity(private val layoutResId: Int,private val title:Int) 
                 val intent = Intent(this, HomeActivity::class.java)
                 startActivity(intent)
             }
+
             R.id.nav_member_list -> {
                 val intent = Intent(this, MemberListActivity::class.java)
+                startActivity(intent)
+            }
+
+            R.id.nav_pay_record_add -> {
+                val intent = Intent(this, AddPayReccordActivity::class.java)
                 startActivity(intent)
             }
             // 他のメニューアイテムを追加する場合はここに追加

@@ -9,4 +9,8 @@
     <item
         android:id="@+id/nav_member_list"
         android:title="@string/title_member_list" />
+
+    <item
+        android:id="@+id/nav_pay_record_add"
+        android:title="@string/title_add_pay_record"/>
 </menu>
