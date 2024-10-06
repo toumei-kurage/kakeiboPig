@@ -1,13 +1,18 @@
-package com.websarva.wings.android.kakeibo.room.member
+package com.websarva.wings.android.kakeibo.room
 
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import android.content.Context
+import com.websarva.wings.android.kakeibo.room.member.Person
+import com.websarva.wings.android.kakeibo.room.member.PersonDao
+import com.websarva.wings.android.kakeibo.room.payrecord.Payment
+import com.websarva.wings.android.kakeibo.room.payrecord.PaymentDao
 
-@Database(entities = [Person::class], version = 1, exportSchema = false)
+@Database(entities = [Person::class, Payment::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun personDao(): PersonDao
+    abstract fun paymentDao(): PaymentDao
 
     companion object {
         @Volatile
@@ -19,7 +24,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "app_database"
-                ).build()
+                ).fallbackToDestructiveMigration().build()
                 INSTANCE = instance
                 instance
             }
