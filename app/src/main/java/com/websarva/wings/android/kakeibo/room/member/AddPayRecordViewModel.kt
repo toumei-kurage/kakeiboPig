@@ -1,4 +1,4 @@
-package com.websarva.wings.android.kakeibo.room
+package com.websarva.wings.android.kakeibo.room.member
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel

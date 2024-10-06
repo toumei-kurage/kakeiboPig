@@ -10,11 +10,11 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.websarva.wings.android.kakeibo.room.AppDatabase
-import com.websarva.wings.android.kakeibo.room.MemberListViewModel
-import com.websarva.wings.android.kakeibo.room.Person
-import com.websarva.wings.android.kakeibo.room.PersonAdapter
-import com.websarva.wings.android.kakeibo.room.PersonDao
+import com.websarva.wings.android.kakeibo.room.member.AppDatabase
+import com.websarva.wings.android.kakeibo.room.member.MemberListViewModel
+import com.websarva.wings.android.kakeibo.room.member.Person
+import com.websarva.wings.android.kakeibo.room.member.PersonAdapter
+import com.websarva.wings.android.kakeibo.room.member.PersonDao
 
 class MemberListActivity : BaseActivity(R.layout.activity_member_list,R.string.title_member_list) {
     private lateinit var viewModel: MemberListViewModel

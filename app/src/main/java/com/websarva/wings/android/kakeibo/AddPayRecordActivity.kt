@@ -17,7 +17,7 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.textfield.TextInputLayout
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
-import com.websarva.wings.android.kakeibo.room.AddPayRecordViewModel
+import com.websarva.wings.android.kakeibo.room.member.AddPayRecordViewModel
 import java.util.Calendar
 
 class AddPayRecordActivity :

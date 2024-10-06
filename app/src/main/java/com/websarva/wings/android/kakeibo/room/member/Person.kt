@@ -1,4 +1,4 @@
-package com.websarva.wings.android.kakeibo.room
+package com.websarva.wings.android.kakeibo.room.member
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
