@@ -3,30 +3,31 @@ package com.websarva.wings.android.kakeibo
 import BaseActivity
 import android.os.Bundle
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.Spinner
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.textfield.TextInputLayout
-import com.google.firebase.auth.FirebaseAuth
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 import com.websarva.wings.android.kakeibo.room.AddPayRecordViewModel
 
-class AddPayReccordActivity :
-    BaseActivity(R.layout.activity_add_pay_reccord, R.string.title_add_pay_record) {
+class AddPayRecordActivity :
+    BaseActivity(R.layout.activity_add_pay_record, R.string.title_add_pay_record) {
     private lateinit var viewModel: AddPayRecordViewModel
 
-    private lateinit var validate:ValidateHelper
+    private lateinit var validateHelper: ValidateHelper
 
     private lateinit var spPerson: Spinner
     private lateinit var spPayList: Spinner
     private lateinit var payAmountEditText: EditText
     private lateinit var payAmountError: TextInputLayout
     private lateinit var payDone: CheckBox
+    private lateinit var buttonPayRecordAdd: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_add_pay_reccord)
+        setContentView(R.layout.activity_add_pay_record)
 
         setupDrawerAndToolbar()
 
@@ -36,6 +37,7 @@ class AddPayReccordActivity :
         payAmountEditText = findViewById(R.id.payAmountEditText)
         payAmountError = findViewById(R.id.payAmount)
         payDone = findViewById(R.id.PayDone)
+        buttonPayRecordAdd = findViewById(R.id.buttonPayRecordAdd)
 
         // ViewModelのセットアップ
         viewModel = ViewModelProvider(this).get(AddPayRecordViewModel::class.java)

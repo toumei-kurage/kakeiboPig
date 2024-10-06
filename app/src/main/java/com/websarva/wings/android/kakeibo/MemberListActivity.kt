@@ -10,16 +10,11 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.firebase.auth.FirebaseAuth
 import com.websarva.wings.android.kakeibo.room.AppDatabase
 import com.websarva.wings.android.kakeibo.room.MemberListViewModel
 import com.websarva.wings.android.kakeibo.room.Person
 import com.websarva.wings.android.kakeibo.room.PersonAdapter
 import com.websarva.wings.android.kakeibo.room.PersonDao
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class MemberListActivity : BaseActivity(R.layout.activity_member_list,R.string.title_member_list) {
     private lateinit var viewModel: MemberListViewModel
@@ -40,8 +35,6 @@ class MemberListActivity : BaseActivity(R.layout.activity_member_list,R.string.t
 
         // ViewModelのインスタンスを生成し、ユーザーIDを渡す
         viewModel = ViewModelProvider(this).get(MemberListViewModel::class.java)
-
-
 
         //画面部品の取得
         //メンバー追加ボタン
