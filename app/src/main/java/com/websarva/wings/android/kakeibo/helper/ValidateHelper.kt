@@ -8,6 +8,7 @@ import androidx.annotation.RequiresApi
 import com.websarva.wings.android.kakeibo.R
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Date
 
 /**
  * 入力フォームのバリデーションチェック
@@ -107,11 +108,11 @@ class ValidateHelper(private val context: Context) {
         if(!emptyCheck(payDateStr)){
             return Pair(false,context.getString(R.string.error_empty))
         }
-        val MaxDate = LocalDate.of(2050,12,31)
+        val MaxDate = LocalDate.now()
         val MinDate = LocalDate.of(1900,1,1)
         val format = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val payDate = LocalDate.parse(payDateStr,format)
-        if(!(payDate.isBefore(MaxDate) && payDate.isAfter(MinDate))){
+        if(!((payDate.isEqual(MaxDate) || payDate.isBefore(MaxDate)) && payDate.isAfter(MinDate))){
             return Pair(false,context.getString(R.string.error_range_pay_date))
         }
         return Pair(true,"")

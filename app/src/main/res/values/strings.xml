@@ -32,7 +32,7 @@
     <string name="error_email">正しいメールアドレス形式で入力してください</string>
     <string name="error_number_format">半角数字で入力して下さい</string>
     <string name="error_range_pay_amount">1~1,000,000の間で入力してください</string>
-    <string name="error_range_pay_date">1900年1月1日から2050年12月31日の間で選択してください</string>
+    <string name="error_range_pay_date">1900年1月1日から本日までの間で選択してください</string>
 
     <!--    メニューバー-->
     <string name="open">開く</string>

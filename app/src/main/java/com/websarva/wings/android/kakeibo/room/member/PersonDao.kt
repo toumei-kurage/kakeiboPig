@@ -20,4 +20,8 @@ interface PersonDao {
 
     @Query("SELECT * FROM person_table WHERE userID = :userID")
     fun getAllPersonsByUserId(userID: String): LiveData<List<Person>>
+
+    @Query("SELECT id FROM person_table WHERE userID = :userID AND memberName = :memberName")
+    suspend fun getPersonId(userID: String, memberName: String): Int
+
 }
