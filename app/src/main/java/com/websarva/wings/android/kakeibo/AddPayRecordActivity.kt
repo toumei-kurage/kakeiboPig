@@ -1,6 +1,7 @@
 package com.websarva.wings.android.kakeibo
 
 import BaseActivity
+import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.os.Build
 import android.os.Bundle
@@ -19,7 +20,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.textfield.TextInputLayout
 import com.websarva.wings.android.kakeibo.helper.DialogHelper
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
-import com.websarva.wings.android.kakeibo.room.member.AddPayRecordViewModel
+import com.websarva.wings.android.kakeibo.room.member.AddPayRecordMemberViewModel
 import com.websarva.wings.android.kakeibo.room.AppDatabase
 import com.websarva.wings.android.kakeibo.room.payrecord.Payment
 import com.websarva.wings.android.kakeibo.room.payrecord.PaymentDao
@@ -34,7 +35,7 @@ import java.util.Calendar
 class AddPayRecordActivity :
     BaseActivity(R.layout.activity_add_pay_record, R.string.title_add_pay_record) {
 
-    private lateinit var addPayRecordViewModel: AddPayRecordViewModel
+    private lateinit var addPayRecordMemberViewModel: AddPayRecordMemberViewModel
 
     private lateinit var paymentDao: PaymentDao
 
@@ -82,11 +83,11 @@ class AddPayRecordActivity :
         buttonPayRecordAdd = findViewById(R.id.buttonPayRecordAdd)
 
         // ViewModelのセットアップ
-        addPayRecordViewModel = ViewModelProvider(this).get(AddPayRecordViewModel::class.java)
+        addPayRecordMemberViewModel = ViewModelProvider(this)[AddPayRecordMemberViewModel::class.java]
 
 
         // Personデータを取得しSpinnerにセット
-        addPayRecordViewModel.getPersons(userID).observe(this) { persons ->
+        addPayRecordMemberViewModel.getPersons(userID).observe(this) { persons ->
             val personNames = persons.map { it.memberName } // Personから名前のリストを作成
             val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, personNames)
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -150,7 +151,7 @@ class AddPayRecordActivity :
             clearErrorMessage()
             // コルーチンを使って非同期にIDを取得
             lifecycleScope.launch {
-                val payerId = addPayRecordViewModel.getPersonId(userID, spPerson.selectedItem.toString())
+                val payerId = addPayRecordMemberViewModel.getPersonId(userID, spPerson.selectedItem.toString())
                 val purpose = spPayList.selectedItem.toString()
                 val paymentDateStr = payDateEditText.text.toString()
                 val format = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -192,6 +193,7 @@ class AddPayRecordActivity :
         payDone.clearFocus()
     }
 
+    @SuppressLint("DefaultLocale")
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showDatePickerDialog() {
         val calendar = Calendar.getInstance()

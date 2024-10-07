@@ -13,7 +13,6 @@ class MemberListViewModel(application: Application) : AndroidViewModel(applicati
 
     // メンバーリストを保持するLiveData
     private val _personList = MutableLiveData<List<Person>>()
-    val personList: LiveData<List<Person>> = _personList
 
     // メンバーリストを取得するメソッド
     fun getPersons(userId: String): LiveData<List<Person>> {
