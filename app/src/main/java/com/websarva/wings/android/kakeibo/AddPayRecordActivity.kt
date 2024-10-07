@@ -4,7 +4,6 @@ import BaseActivity
 import android.app.DatePickerDialog
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
@@ -14,7 +13,6 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.Spinner
 import android.widget.TextView
-import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -25,8 +23,6 @@ import com.websarva.wings.android.kakeibo.room.member.AddPayRecordViewModel
 import com.websarva.wings.android.kakeibo.room.AppDatabase
 import com.websarva.wings.android.kakeibo.room.payrecord.Payment
 import com.websarva.wings.android.kakeibo.room.payrecord.PaymentDao
-import com.websarva.wings.android.kakeibo.room.payrecord.PaymentViewModel
-import com.websarva.wings.android.kakeibo.room.payrecord.PaymentViewModelFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -37,9 +33,6 @@ import java.util.Calendar
 
 class AddPayRecordActivity :
     BaseActivity(R.layout.activity_add_pay_record, R.string.title_add_pay_record) {
-    private val paymentViewModel: PaymentViewModel by viewModels {
-        PaymentViewModelFactory(AppDatabase.getDatabase(this).paymentDao())
-    }
 
     private lateinit var addPayRecordViewModel: AddPayRecordViewModel
 
