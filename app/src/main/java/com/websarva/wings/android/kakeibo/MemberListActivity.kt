@@ -10,15 +10,12 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.websarva.wings.android.kakeibo.room.AppDatabase
 import com.websarva.wings.android.kakeibo.room.member.MemberListViewModel
 import com.websarva.wings.android.kakeibo.room.member.Person
 import com.websarva.wings.android.kakeibo.room.member.PersonAdapter
-import com.websarva.wings.android.kakeibo.room.member.PersonDao
 
 class MemberListActivity : BaseActivity(R.layout.activity_member_list,R.string.title_member_list) {
     private lateinit var viewModel: MemberListViewModel
-    private lateinit var personDao: PersonDao
     private lateinit var recyclerView: RecyclerView
     private lateinit var personAdapter: PersonAdapter
 
@@ -28,10 +25,6 @@ class MemberListActivity : BaseActivity(R.layout.activity_member_list,R.string.t
         setContentView(R.layout.activity_member_list)
 
         setupDrawerAndToolbar()
-
-        // データベースのインスタンスを取得
-        val db = AppDatabase.getDatabase(applicationContext)
-        personDao = db.personDao() // DAOのインスタンスを取得
 
         // ViewModelのインスタンスを生成し、ユーザーIDを渡す
         viewModel = ViewModelProvider(this)[MemberListViewModel::class.java]
