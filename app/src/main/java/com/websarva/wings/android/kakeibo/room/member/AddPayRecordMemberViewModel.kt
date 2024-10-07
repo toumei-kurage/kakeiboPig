@@ -3,11 +3,9 @@ package com.websarva.wings.android.kakeibo.room.member
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.viewModelScope
 import com.websarva.wings.android.kakeibo.room.AppDatabase
-import kotlinx.coroutines.launch
 
-class AddPayRecordViewModel(application: Application) : AndroidViewModel(application) {
+class AddPayRecordMemberViewModel(application: Application) : AndroidViewModel(application) {
     private val personDao: PersonDao = AppDatabase.getDatabase(application).personDao()
 
     fun getPersons(userId: String): LiveData<List<Person>> {
