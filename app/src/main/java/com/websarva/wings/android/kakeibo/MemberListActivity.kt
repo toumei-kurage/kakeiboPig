@@ -34,7 +34,7 @@ class MemberListActivity : BaseActivity(R.layout.activity_member_list,R.string.t
         personDao = db.personDao() // DAOのインスタンスを取得
 
         // ViewModelのインスタンスを生成し、ユーザーIDを渡す
-        viewModel = ViewModelProvider(this).get(MemberListViewModel::class.java)
+        viewModel = ViewModelProvider(this)[MemberListViewModel::class.java]
 
         //画面部品の取得
         //メンバー追加ボタン
