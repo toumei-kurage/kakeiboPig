@@ -12,7 +12,7 @@ class AddPayRecordMemberViewModel(application: Application) : AndroidViewModel(a
         return personDao.getAllPersonsByUserId(userId)
     }
 
-    // 特定のメンバーを取得するメソッド
+    // 特定のメンバーのIDを取得するメソッド
     suspend fun getPersonId(userId: String, memberName: String): Int {
         return personDao.getPersonId(userId, memberName)
     }
