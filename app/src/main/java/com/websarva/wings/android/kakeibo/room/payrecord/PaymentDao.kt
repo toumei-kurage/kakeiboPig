@@ -13,7 +13,7 @@ interface PaymentDao {
     @Query("SELECT * FROM payment WHERE payerId = :payerId AND userId = :userId")
     fun getPaymentsByPayerIdAndUserId(payerId: Int, userId: String): LiveData<List<Payment>>
 
-    @Query("SELECT * FROM payment WHERE userId = :userId")
+    @Query("SELECT * FROM payment WHERE userId = :userId ORDER BY paymentDate")
     fun getPaymentsByUserId(userId: String): LiveData<List<Payment>>
 
     @Query("SELECT * FROM payment")

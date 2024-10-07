@@ -2,27 +2,30 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginTop="15dp"
     android:orientation="horizontal">
 
     <TextView
         android:id="@+id/paymentDateTextView"
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
-        android:layout_weight="0.3"
+        android:textSize="16sp"
+        android:layout_marginRight="50dp"
         android:text="支払日" />
 
     <TextView
         android:id="@+id/paymentPurposeTextView"
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
-        android:layout_weight="0.3"
+        android:textSize="16sp"
+        android:layout_marginRight="50dp"
         android:text="支払い目的"/>
 
     <TextView
         android:id="@+id/paymentPersonNameTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="0.3"
+        android:textSize="16sp"
         android:text="登録者"/>
 
 </LinearLayout>
