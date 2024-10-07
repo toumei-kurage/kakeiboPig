@@ -10,6 +10,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.websarva.wings.android.kakeibo.AddPayRecordActivity
 import com.websarva.wings.android.kakeibo.HomeActivity
 import com.websarva.wings.android.kakeibo.MemberListActivity
+import com.websarva.wings.android.kakeibo.PayRecordListActivity
 import com.websarva.wings.android.kakeibo.R
 
 abstract class BaseActivity(private val layoutResId: Int, private val title: Int) :
@@ -71,8 +72,8 @@ abstract class BaseActivity(private val layoutResId: Int, private val title: Int
                 startActivity(intent)
             }
 
-            R.id.nav_pay_record_add -> {
-                val intent = Intent(this, AddPayRecordActivity::class.java)
+            R.id.nav_pay_record_list -> {
+                val intent = Intent(this, PayRecordListActivity::class.java)
                 startActivity(intent)
             }
             // 他のメニューアイテムを追加する場合はここに追加

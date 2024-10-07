@@ -7,6 +7,8 @@
     <string name="title_member_list">メンバー</string>
     <string name="title_member_add">メンバー登録</string>
     <string name="title_add_pay_record">出費登録</string>
+    <string name="title_pay_record_list">家計簿</string>
+
 
     <!--    ボタン名-->
     <string name="button_login">ログイン</string>

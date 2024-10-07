@@ -24,4 +24,6 @@ interface PersonDao {
     @Query("SELECT id FROM person_table WHERE userID = :userID AND memberName = :memberName")
     suspend fun getPersonId(userID: String, memberName: String): Int
 
+    @Query("SELECT * FROM person_table WHERE id = :id")
+    fun getPerson(id:Int):Person
 }
