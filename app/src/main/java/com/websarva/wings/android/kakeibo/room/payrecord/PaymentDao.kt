@@ -18,4 +18,7 @@ interface PaymentDao {
 
     @Query("SELECT * FROM payment")
     fun getAllPayments(): LiveData<List<Payment>>
+
+    @Query("SELECT * FROM payment WHERE id = :id")
+    fun getPayment(id:Int?):LiveData<Payment>
 }

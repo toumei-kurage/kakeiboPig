@@ -6,8 +6,9 @@
     <string name="title_login">ログイン</string>
     <string name="title_member_list">メンバー</string>
     <string name="title_member_add">メンバー登録</string>
-    <string name="title_add_pay_record">出費登録</string>
+    <string name="title_add_pay_record">支払い登録</string>
     <string name="title_pay_record_list">家計簿</string>
+    <string name="title_detail_pay_record">支払い明細</string>
 
 
     <!--    ボタン名-->
@@ -17,7 +18,8 @@
     <string name="button_member_regist">メンバー登録</string>
     <string name="button_member_update">更新</string>
     <string name="button_member_delete">削除</string>
-    <string name="button_pay_record_add">出費登録</string>
+    <string name="button_pay_record_add">登録</string>
+    <string name="button_pay_record_update">更新</string>
 
     <!--    ヒント-->
     <string name="hint_password">パスワード</string>
@@ -55,4 +57,13 @@
 
     <!--    チェックボックスメッセージ-->
     <string name="check_pay_done">領収しました</string>
+
+    <!--    支払い明細画面-->
+    <string name="payer">支払者：</string>
+    <string name="pay_date">支払日：</string>
+    <string name="pay_purpose">支払い目的：</string>
+    <string name="pay_amount">支払額：</string>
+    <string name="pay_done_check">領収状態：</string>
+    <string name="pay_note">備考：</string>
+
 </resources>

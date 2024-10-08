@@ -13,6 +13,9 @@
         android:theme="@style/Theme.Kakeibo"
         tools:targetApi="31">
         <activity
+            android:name=".DetailPayRecordActivity"
+            android:exported="false" />
+        <activity
             android:name=".PayRecordListActivity"
             android:exported="false" />
         <activity

@@ -21,13 +21,27 @@ import java.util.Locale
 class PaymentAdapter(
     private val payRecordList: List<Payment>,
     private val context: Context,
-    private val lifecycleOwner: LifecycleOwner
+    private val lifecycleOwner: LifecycleOwner,
+    private val listener: OnPaymentClickListener
 ) : RecyclerView.Adapter<PaymentAdapter.PaymentViewHolder>() {
+
+    interface OnPaymentClickListener {
+        fun onPaymentClick(payment: Payment)
+    }
 
     inner class PaymentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val paymentDateTextView: TextView = itemView.findViewById(R.id.paymentDateTextView)
         val paymentPurposeTextView: TextView = itemView.findViewById(R.id.paymentPurposeTextView)
         val paymentPersonNameTextView: TextView = itemView.findViewById(R.id.paymentPersonNameTextView)
+
+        init {
+            itemView.setOnClickListener {
+                val position = adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    listener.onPaymentClick(payRecordList[position]) // リスナーを呼び出す
+                }
+            }
+        }
     }
 
     // 新しいViewHolderを作成するメソッド（レイアウトの初期化）
@@ -42,7 +56,6 @@ class PaymentAdapter(
     override fun onBindViewHolder(holder: PaymentViewHolder, position: Int) {
         val payment = payRecordList[position]
         val personDao: PersonDao = AppDatabase.getDatabase(context).personDao()
-        // コルーチンを使って非同期にデータを取得
         lifecycleOwner.lifecycleScope.launch {
             val person = withContext(Dispatchers.IO) {
                 personDao.getPerson(payment.payerId) // バックグラウンドスレッドで呼び出す
@@ -54,7 +67,6 @@ class PaymentAdapter(
         }
     }
 
-
     // リストのサイズを返すメソッド
     override fun getItemCount(): Int {
         return payRecordList.size // 表示するアイテムの数を返す
@@ -63,8 +75,8 @@ class PaymentAdapter(
     private fun formatLongToDateString(timestamp: Long): String {
         // Long型のtimestampをDate型に変換
         val date = Date(timestamp)
-        // yyyy-MM-ddフォーマットのSimpleDateFormatを作成
-        val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        // yyyy/MM/ddフォーマットのSimpleDateFormatを作成
+        val format = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
         // Dateをフォーマットして文字列を返す
         return format.format(date)
     }
