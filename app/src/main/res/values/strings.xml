@@ -9,6 +9,7 @@
     <string name="title_add_pay_record">支払い登録</string>
     <string name="title_pay_record_list">家計簿</string>
     <string name="title_detail_pay_record">支払い明細</string>
+    <string name="title_update_pay_record">支払い明細更新</string>
 
 
     <!--    ボタン名-->

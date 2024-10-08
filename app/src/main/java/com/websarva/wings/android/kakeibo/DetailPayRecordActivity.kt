@@ -1,7 +1,10 @@
 package com.websarva.wings.android.kakeibo
 
 import BaseActivity
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.view.Menu
 import android.widget.Button
 import android.widget.TextView
 import com.websarva.wings.android.kakeibo.room.payrecord.DetailPayRecordViewModel
@@ -29,9 +32,34 @@ class DetailPayRecordActivity :
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_detail_pay_record)
 
+        viewModel = DetailPayRecordViewModel(application)
+        val itemId = intent.getStringExtra("item_id")?.toInt()
+
         setupDrawerAndToolbar()
 
-        viewModel = DetailPayRecordViewModel(application)
+        toolbar.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_delete -> {
+                    viewModel.getPayment(itemId).observe(this) { payment ->
+                        if (payment != null) {
+                            viewModel.deletePayment(payment)
+                            // 削除が完了した後に次のアクティビティに移動
+                            val intent = Intent(this, PayRecordListActivity::class.java)
+                            startActivity(intent)
+                        } else {
+                            // paymentがnullの場合のエラーハンドリング
+                            Log.e("DetailPayRecordActivity", "Payment data is null")
+                            // 必要に応じてエラーメッセージを表示
+                        }
+                    }
+                    true
+                }
+                else -> false
+            }
+        }
+
+
+
 
         // 画面部品の取得
         payerTextView = findViewById(R.id.payerTextView)
@@ -42,29 +70,44 @@ class DetailPayRecordActivity :
         payNoteTextView = findViewById(R.id.payNoteTextView)
         buttonPayRecordUpdate = findViewById(R.id.buttonPayRecordUpdate)
 
-        val itemId = intent.getStringExtra("item_id")?.toInt()
+
+
         viewModel.getPayment(itemId).observe(this) { payment ->
-            val payDate = formatLongToDateString(payment.paymentDate)
-            val state = if (payment.isReceiptChecked) "領収済み" else "未完了"
-            val note = if(payment.notes == "") "特になし" else payment.notes
+            if (payment != null) {
+                val payDate = formatLongToDateString(payment.paymentDate)
+                val state = if (payment.isReceiptChecked) "領収済み" else "未完了"
+                val note = payment.notes ?: ""
 
-            CoroutineScope(Dispatchers.IO).launch {
-                // データ取得などのバックグラウンド処理
-                val payerName = viewModel.getPerson(payment.payerId).memberName
+                CoroutineScope(Dispatchers.IO).launch {
+                    val payerName = viewModel.getPerson(payment.payerId).memberName
 
-                // UI更新はメインスレッドで行う
-                withContext(Dispatchers.Main) {
-                    payerTextView.text = payerName
-                    payDateTextView.text = payDate
-                    payPurposeTextView.text = payment.purpose
-                    payAmountTextView.text = payment.amount.toString()
-                    payDoneCheckTextView.text = state
-                    payNoteTextView.text = note
+                    withContext(Dispatchers.Main) {
+                        payerTextView.text = payerName
+                        payDateTextView.text = payDate
+                        payPurposeTextView.text = payment.purpose
+                        payAmountTextView.text = payment.amount.toString()
+                        payDoneCheckTextView.text = state
+                        payNoteTextView.text = note
+                    }
                 }
+            } else {
+                // paymentがnullの場合のエラーハンドリング
+                Log.e("DetailPayRecordActivity", "Payment data is null")
+                // 必要に応じてエラーメッセージを表示
             }
         }
 
 
+        buttonPayRecordUpdate.setOnClickListener{
+            val intent = Intent(this,UpdatePayRecordActivity::class.java)
+            startActivity(intent)
+        }
+    }
+
+    // メニューをインフレートする
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_delete, menu)
+        return true
     }
 
     private fun formatLongToDateString(timestamp: Long): String {
