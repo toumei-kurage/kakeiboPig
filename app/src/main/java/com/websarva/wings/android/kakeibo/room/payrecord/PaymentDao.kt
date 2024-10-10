@@ -5,6 +5,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 
 @Dao
 interface PaymentDao {
@@ -13,6 +14,9 @@ interface PaymentDao {
 
     @Delete
     suspend fun deletePayment(payment: Payment)
+
+    @Update
+    suspend fun updatePayment(payment: Payment)
 
     @Query("SELECT * FROM payment WHERE payerId = :payerId AND userId = :userId")
     fun getPaymentsByPayerIdAndUserId(payerId: Int, userId: String): LiveData<List<Payment>>
