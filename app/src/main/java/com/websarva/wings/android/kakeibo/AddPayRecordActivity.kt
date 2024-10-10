@@ -154,7 +154,7 @@ class AddPayRecordActivity :
                 val payerId = addPayRecordMemberViewModel.getPersonId(userID, spPerson.selectedItem.toString())
                 val purpose = spPayList.selectedItem.toString()
                 val paymentDateStr = payDateEditText.text.toString()
-                val format = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                val format = DateTimeFormatter.ofPattern("yyyy/MM/dd")
                 val paymentDate = LocalDate.parse(paymentDateStr, format)
                 // LocalDateをZonedDateTimeに変換（デフォルトのタイムゾーンを使用）
                 val zonedDateTime = paymentDate.atStartOfDay(ZoneId.systemDefault())
@@ -205,7 +205,7 @@ class AddPayRecordActivity :
             DatePickerDialog(this, { _, selectedYear, selectedMonth, selectedDay ->
                 // 日付を選択したときの処理
                 val formattedDate =
-                    String.format("%04d-%02d-%02d", selectedYear, selectedMonth + 1, selectedDay)
+                    String.format("%04d/%02d/%02d", selectedYear, selectedMonth + 1, selectedDay)
                 payDateEditText.setText(formattedDate) // EditTextに日付を設定
 
                 // OKボタンが押されたときにバリデーションを行う

@@ -110,7 +110,7 @@ class ValidateHelper(private val context: Context) {
         }
         val MaxDate = LocalDate.now()
         val MinDate = LocalDate.of(1900,1,1)
-        val format = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val format = DateTimeFormatter.ofPattern("yyy/MM/dd")
         val payDate = LocalDate.parse(payDateStr,format)
         if(!((payDate.isEqual(MaxDate) || payDate.isBefore(MaxDate)) && payDate.isAfter(MinDate))){
             return Pair(false,context.getString(R.string.error_range_pay_date))
