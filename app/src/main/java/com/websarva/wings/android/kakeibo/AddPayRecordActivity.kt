@@ -1,7 +1,9 @@
 package com.websarva.wings.android.kakeibo
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.app.DatePickerDialog
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -21,8 +23,8 @@ import com.websarva.wings.android.kakeibo.helper.DialogHelper
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 import com.websarva.wings.android.kakeibo.room.member.AddPayRecordMemberViewModel
 import com.websarva.wings.android.kakeibo.room.AppDatabase
-import com.websarva.wings.android.kakeibo.room.payrecord.Payment
-import com.websarva.wings.android.kakeibo.room.payrecord.PaymentDao
+import com.websarva.wings.android.kakeibo.room.payRecord.Payment
+import com.websarva.wings.android.kakeibo.room.payRecord.PaymentDao
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -150,29 +152,44 @@ class AddPayRecordActivity :
             clearErrorMessage()
             // コルーチンを使って非同期にIDを取得
             lifecycleScope.launch {
-                val payerId = addPayRecordMemberViewModel.getPersonId(userID, spPerson.selectedItem.toString())
-                val purpose = spPayList.selectedItem.toString()
-                val paymentDateStr = payDateEditText.text.toString()
-                val format = DateTimeFormatter.ofPattern("yyyy/MM/dd")
-                val paymentDate = LocalDate.parse(paymentDateStr, format)
-                // LocalDateをZonedDateTimeに変換（デフォルトのタイムゾーンを使用）
-                val zonedDateTime = paymentDate.atStartOfDay(ZoneId.systemDefault())
-                // ZonedDateTimeをUNIXタイムスタンプ（ミリ秒）に変換
-                val paymentDateMillis = zonedDateTime.toInstant().toEpochMilli()
-                val amountStr = payAmountEditText.text.toString()
-                val amount = amountStr.toInt()
-                val isReceiptChecked = payDone.isChecked
-                val payment = Payment(
-                    payerId = payerId,
-                    userId = userID,
-                    purpose = purpose,
-                    paymentDate = paymentDateMillis,
-                    amount = amount,
-                    isReceiptChecked = isReceiptChecked,
-                    notes = noteEditText.text.toString()
-                )
-                addPayment(payment)
-                dialogHelper.dialogOkOnly("","支払い明細が登録されました")
+                try{
+                    val payerId = addPayRecordMemberViewModel.getPersonId(userID, spPerson.selectedItem.toString())
+                    val purpose = spPayList.selectedItem.toString()
+                    val paymentDateStr = payDateEditText.text.toString()
+                    val format = DateTimeFormatter.ofPattern("yyyy/MM/dd")
+                    val paymentDate = LocalDate.parse(paymentDateStr, format)
+                    // LocalDateをZonedDateTimeに変換（デフォルトのタイムゾーンを使用）
+                    val zonedDateTime = paymentDate.atStartOfDay(ZoneId.systemDefault())
+                    // ZonedDateTimeをUNIXタイムスタンプ（ミリ秒）に変換
+                    val paymentDateMillis = zonedDateTime.toInstant().toEpochMilli()
+                    val amountStr = payAmountEditText.text.toString()
+                    val amount = amountStr.toInt()
+                    val isReceiptChecked = payDone.isChecked
+
+                    val payment = Payment(
+                        payerId = payerId,
+                        userId = userID,
+                        purpose = purpose,
+                        paymentDate = paymentDateMillis,
+                        amount = amount,
+                        isReceiptChecked = isReceiptChecked,
+                        notes = noteEditText.text.toString()
+                    )
+                    addPayment(payment)
+                    dialogHelper.dialogOkOnly("","支払い明細が登録されました")
+                }catch (e:NullPointerException){
+                    AlertDialog.Builder(this@AddPayRecordActivity)
+                        .setTitle("登録失敗")
+                        .setMessage("メンバーが登録されていません")
+                        .setPositiveButton("OK"){ _, _->
+                            // OKボタンを押したらMemberAddActivityに遷移
+                            val intent = Intent(this@AddPayRecordActivity, MemberAddActivity::class.java)
+                            startActivity(intent)
+                            finish()
+                        }
+                        .setCancelable(false) // ダイアログの外をタップしても閉じないようにする
+                        .show()
+                }
             }
         }
     }

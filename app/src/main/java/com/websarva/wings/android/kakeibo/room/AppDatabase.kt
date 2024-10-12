@@ -6,8 +6,8 @@ import androidx.room.RoomDatabase
 import android.content.Context
 import com.websarva.wings.android.kakeibo.room.member.Person
 import com.websarva.wings.android.kakeibo.room.member.PersonDao
-import com.websarva.wings.android.kakeibo.room.payrecord.Payment
-import com.websarva.wings.android.kakeibo.room.payrecord.PaymentDao
+import com.websarva.wings.android.kakeibo.room.payRecord.Payment
+import com.websarva.wings.android.kakeibo.room.payRecord.PaymentDao
 
 @Database(entities = [Person::class, Payment::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {

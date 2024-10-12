@@ -22,8 +22,8 @@ import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 import com.websarva.wings.android.kakeibo.room.AppDatabase
 import com.websarva.wings.android.kakeibo.room.member.AddPayRecordMemberViewModel
 import com.websarva.wings.android.kakeibo.room.member.Person
-import com.websarva.wings.android.kakeibo.room.payrecord.Payment
-import com.websarva.wings.android.kakeibo.room.payrecord.PaymentDao
+import com.websarva.wings.android.kakeibo.room.payRecord.Payment
+import com.websarva.wings.android.kakeibo.room.payRecord.PaymentDao
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
