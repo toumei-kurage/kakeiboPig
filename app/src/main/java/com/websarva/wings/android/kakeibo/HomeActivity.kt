@@ -1,6 +1,5 @@
 package com.websarva.wings.android.kakeibo
 
-import BaseActivity
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle

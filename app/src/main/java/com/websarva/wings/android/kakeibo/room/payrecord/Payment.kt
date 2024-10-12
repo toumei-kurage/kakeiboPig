@@ -37,8 +37,7 @@ data class Payment(
         parcel.readInt(),
         parcel.readByte() != 0.toByte(),
         parcel.readString()
-    ) {
-    }
+    )
 
     override fun describeContents(): Int {
         return 0

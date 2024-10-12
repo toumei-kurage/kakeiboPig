@@ -8,7 +8,6 @@ import androidx.annotation.RequiresApi
 import com.websarva.wings.android.kakeibo.R
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Date
 
 /**
  * 入力フォームのバリデーションチェック
