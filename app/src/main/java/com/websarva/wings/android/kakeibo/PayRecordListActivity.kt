@@ -42,6 +42,7 @@ class PayRecordListActivity :
         buttonPayRecordAdd.setOnClickListener {
             val intent = Intent(this, AddPayRecordActivity::class.java)
             startActivity(intent)
+            finish()
         }
 
         payRecordListViewModel.getPaymentsByUserId(userID).observe(this) { payments ->
@@ -62,5 +63,6 @@ class PayRecordListActivity :
         val intent = Intent(this, DetailPayRecordActivity::class.java)
         intent.putExtra("item_id", payment.id.toString()) // 必要なデータを渡す
         startActivity(intent)
+        finish()
     }
 }

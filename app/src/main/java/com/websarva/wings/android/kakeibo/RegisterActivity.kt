@@ -136,6 +136,7 @@ class RegisterActivity : AppCompatActivity() {
                 // MainActivityに遷移する処理
                 val intent = Intent(this, LoginActivity::class.java)
                 startActivity(intent)
+                finish()
                 true
             }
             else -> super.onOptionsItemSelected(item)

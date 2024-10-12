@@ -45,6 +45,7 @@ class DetailPayRecordActivity :
                             // 削除が完了した後に次のアクティビティに移動
                             val intent = Intent(this, PayRecordListActivity::class.java)
                             startActivity(intent)
+                            finish()
                         } else {
                             // paymentがnullの場合のエラーハンドリング
                             Log.e("DetailPayRecordActivity", "Payment data is null")
@@ -104,6 +105,7 @@ class DetailPayRecordActivity :
                 if (payment != null) {
                     intent.putExtra("支払い明細", payment) // Paymentオブジェクトを直接渡す
                     startActivity(intent)
+                    finish()
                 }
             }
         }
