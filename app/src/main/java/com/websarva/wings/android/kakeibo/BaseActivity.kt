@@ -76,6 +76,11 @@ abstract class BaseActivity(private val layoutResId: Int, private val title: Int
                 startActivity(intent)
                 finish()
             }
+            R.id.nav_secession ->{
+                val intent = Intent(this,SecessionActivity::class.java)
+                startActivity(intent)
+                finish()
+            }
             // 他のメニューアイテムを追加する場合はここに追加
         }
     }
