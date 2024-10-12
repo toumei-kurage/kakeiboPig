@@ -42,6 +42,7 @@ class MemberListActivity : BaseActivity(R.layout.activity_member_list,R.string.t
         buttonMemberAdd.setOnClickListener {
             val intent = Intent(this, MemberAddActivity::class.java)
             startActivity(intent)
+            finish()
         }
 
         // メンバーのリストを監視して更新する

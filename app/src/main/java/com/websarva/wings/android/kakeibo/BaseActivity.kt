@@ -62,16 +62,19 @@ abstract class BaseActivity(private val layoutResId: Int, private val title: Int
             R.id.nav_home -> {
                 val intent = Intent(this, HomeActivity::class.java)
                 startActivity(intent)
+                finish()
             }
 
             R.id.nav_member_list -> {
                 val intent = Intent(this, MemberListActivity::class.java)
                 startActivity(intent)
+                finish()
             }
 
             R.id.nav_pay_record_list -> {
                 val intent = Intent(this, PayRecordListActivity::class.java)
                 startActivity(intent)
+                finish()
             }
             // 他のメニューアイテムを追加する場合はここに追加
         }
