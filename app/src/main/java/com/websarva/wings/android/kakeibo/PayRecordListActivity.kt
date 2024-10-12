@@ -8,9 +8,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.websarva.wings.android.kakeibo.helper.DialogHelper
-import com.websarva.wings.android.kakeibo.room.payrecord.PayRecordListViewModel
-import com.websarva.wings.android.kakeibo.room.payrecord.Payment
-import com.websarva.wings.android.kakeibo.room.payrecord.PaymentAdapter
+import com.websarva.wings.android.kakeibo.room.payRecord.PayRecordListViewModel
+import com.websarva.wings.android.kakeibo.room.payRecord.Payment
+import com.websarva.wings.android.kakeibo.room.payRecord.PaymentAdapter
 
 class PayRecordListActivity :
     BaseActivity(R.layout.activity_pay_record_list, R.string.title_pay_record_list),PaymentAdapter.OnPaymentClickListener {

@@ -1,4 +1,4 @@
-package com.websarva.wings.android.kakeibo.room.payrecord
+package com.websarva.wings.android.kakeibo.room.payRecord
 
 import androidx.lifecycle.LiveData
 import androidx.room.Dao

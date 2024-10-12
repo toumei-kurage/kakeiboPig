@@ -6,7 +6,7 @@ import android.util.Log
 import android.view.Menu
 import android.widget.Button
 import android.widget.TextView
-import com.websarva.wings.android.kakeibo.room.payrecord.DetailPayRecordViewModel
+import com.websarva.wings.android.kakeibo.room.payRecord.DetailPayRecordViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

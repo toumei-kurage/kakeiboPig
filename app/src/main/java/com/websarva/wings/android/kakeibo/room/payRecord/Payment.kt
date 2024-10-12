@@ -1,4 +1,4 @@
-package com.websarva.wings.android.kakeibo.room.payrecord
+package com.websarva.wings.android.kakeibo.room.payRecord
 
 import android.os.Parcel
 import android.os.Parcelable

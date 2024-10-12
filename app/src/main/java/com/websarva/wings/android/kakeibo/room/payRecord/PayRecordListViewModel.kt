@@ -1,12 +1,9 @@
-package com.websarva.wings.android.kakeibo.room.payrecord
+package com.websarva.wings.android.kakeibo.room.payRecord
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import com.websarva.wings.android.kakeibo.room.AppDatabase
-import com.websarva.wings.android.kakeibo.room.member.Person
-import com.websarva.wings.android.kakeibo.room.member.PersonDao
 
 class PayRecordListViewModel(application: Application) : AndroidViewModel(application)  {
     private val paymentDao: PaymentDao = AppDatabase.getDatabase(application).paymentDao()
