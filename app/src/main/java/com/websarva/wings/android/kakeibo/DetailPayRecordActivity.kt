@@ -1,6 +1,5 @@
 package com.websarva.wings.android.kakeibo
 
-import BaseActivity
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -8,7 +7,6 @@ import android.view.Menu
 import android.widget.Button
 import android.widget.TextView
 import com.websarva.wings.android.kakeibo.room.payrecord.DetailPayRecordViewModel
-import com.websarva.wings.android.kakeibo.room.payrecord.Payment
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

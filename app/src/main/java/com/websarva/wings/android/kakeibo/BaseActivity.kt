@@ -1,3 +1,5 @@
+package com.websarva.wings.android.kakeibo
+
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -7,11 +9,6 @@ import androidx.appcompat.widget.Toolbar
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
-import com.websarva.wings.android.kakeibo.AddPayRecordActivity
-import com.websarva.wings.android.kakeibo.HomeActivity
-import com.websarva.wings.android.kakeibo.MemberListActivity
-import com.websarva.wings.android.kakeibo.PayRecordListActivity
-import com.websarva.wings.android.kakeibo.R
 
 abstract class BaseActivity(private val layoutResId: Int, private val title: Int) :
     AppCompatActivity() {

@@ -1,6 +1,5 @@
 package com.websarva.wings.android.kakeibo
 
-import BaseActivity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.EditText

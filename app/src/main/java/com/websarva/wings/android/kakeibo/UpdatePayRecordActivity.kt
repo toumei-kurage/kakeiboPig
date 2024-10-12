@@ -1,6 +1,5 @@
 package com.websarva.wings.android.kakeibo
 
-import BaseActivity
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.os.Build
@@ -25,8 +24,6 @@ import com.websarva.wings.android.kakeibo.room.member.AddPayRecordMemberViewMode
 import com.websarva.wings.android.kakeibo.room.member.Person
 import com.websarva.wings.android.kakeibo.room.payrecord.Payment
 import com.websarva.wings.android.kakeibo.room.payrecord.PaymentDao
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -36,6 +33,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
+@Suppress("DEPRECATION")
 class UpdatePayRecordActivity :
     BaseActivity(R.layout.activity_update_pay_record, R.string.title_update_pay_record) {
     private lateinit var addPayRecordMemberViewModel: AddPayRecordMemberViewModel
@@ -290,7 +288,7 @@ class UpdatePayRecordActivity :
 
     private fun getPayPurposePosition(purpose: String): Int {
         // Spinnerのアダプタを取得
-        val adapter = spPayList.adapter as ArrayAdapter<String>
+        val adapter = spPayList.adapter as ArrayAdapter<*>
 
         // 各目的を比較してインデックスを返す
         for (i in 0 until adapter.count) {
