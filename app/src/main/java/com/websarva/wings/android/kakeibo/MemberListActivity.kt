@@ -9,15 +9,16 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.websarva.wings.android.kakeibo.helper.DialogHelper
 import com.websarva.wings.android.kakeibo.room.member.MemberViewModel
 import com.websarva.wings.android.kakeibo.room.member.Person
 import com.websarva.wings.android.kakeibo.room.member.PersonAdapter
 
 class MemberListActivity : BaseActivity(R.layout.activity_member_list,R.string.title_member_list) {
-    private lateinit var viewModel: MemberViewModel
+    private lateinit var memberViewModel: MemberViewModel
     private lateinit var recyclerView: RecyclerView
     private lateinit var personAdapter: PersonAdapter
-
+    private lateinit var dialogHelper:DialogHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,7 +27,9 @@ class MemberListActivity : BaseActivity(R.layout.activity_member_list,R.string.t
         setupDrawerAndToolbar()
 
         // ViewModelのインスタンスを生成し、ユーザーIDを渡す
-        viewModel = ViewModelProvider(this)[MemberViewModel::class.java]
+        memberViewModel = ViewModelProvider(this)[MemberViewModel::class.java]
+
+        dialogHelper = DialogHelper(this)
 
         //画面部品の取得
         //メンバー追加ボタン
@@ -46,7 +49,7 @@ class MemberListActivity : BaseActivity(R.layout.activity_member_list,R.string.t
         }
 
         // メンバーのリストを監視して更新する
-        viewModel.getPersons(userID).observe(this) { persons ->
+        memberViewModel.getPersons(userID).observe(this) { persons ->
             if (persons != null && persons.isNotEmpty()) {
                 personAdapter = PersonAdapter(
                     personList = persons,
@@ -54,7 +57,7 @@ class MemberListActivity : BaseActivity(R.layout.activity_member_list,R.string.t
                         showUpdateDialog(person)
                     },
                     onDeleteClick = { person ->
-                        viewModel.deletePerson(person)
+                        memberViewModel.deletePerson(person)
                     }
                 )
                 recyclerView.adapter = personAdapter
@@ -81,9 +84,17 @@ class MemberListActivity : BaseActivity(R.layout.activity_member_list,R.string.t
             .setView(editText)
             .setPositiveButton("更新") { dialog, _ ->
                 val newName = editText.text.toString()
+                val oldName = person.memberName //退避
                 if (newName.isNotEmpty()) {
                     person.memberName = newName
-                    viewModel.updatePerson(person)
+                    memberViewModel.updatePerson(person){result->
+                        if (result.success) {
+                            dialogHelper.dialogOkOnly("登録成功", result.message)
+                        } else {
+                            dialogHelper.dialogOkOnly("登録失敗", result.message)
+                            person.memberName = oldName
+                        }
+                    }
                 }
                 dialog.dismiss()
             }
