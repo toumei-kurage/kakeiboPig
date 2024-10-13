@@ -5,25 +5,26 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
+import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.textfield.TextInputLayout
 import com.websarva.wings.android.kakeibo.helper.DialogHelper
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 import com.websarva.wings.android.kakeibo.room.AppDatabase
+import com.websarva.wings.android.kakeibo.room.member.MemberViewModel
 import com.websarva.wings.android.kakeibo.room.member.Person
 import com.websarva.wings.android.kakeibo.room.member.PersonDao
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
-class MemberAddActivity : BaseActivity(R.layout.activity_member_add,R.string.title_member_add) {
+class MemberAddActivity : BaseActivity(R.layout.activity_member_add, R.string.title_member_add) {
     private val validateHelper = ValidateHelper(this)
     private val dialogHelper = DialogHelper(this)
 
     private lateinit var personDao: PersonDao
 
-    private lateinit var memberNameError:TextInputLayout
+    private lateinit var memberViewModel: MemberViewModel
+
+    private lateinit var memberNameError: TextInputLayout
     private lateinit var memberNameEditText: EditText
-    private lateinit var buttonMemberAdd:Button
+    private lateinit var buttonMemberAdd: Button
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,6 +32,8 @@ class MemberAddActivity : BaseActivity(R.layout.activity_member_add,R.string.tit
         setContentView(R.layout.activity_member_add)
 
         setupDrawerAndToolbar()
+
+        memberViewModel = ViewModelProvider(this)[MemberViewModel::class.java]
 
         // データベースのインスタンスを取得
         val db = AppDatabase.getDatabase(applicationContext)
@@ -54,25 +57,35 @@ class MemberAddActivity : BaseActivity(R.layout.activity_member_add,R.string.tit
             }
         }
 
-        buttonMemberAdd.setOnClickListener{
+        buttonMemberAdd.setOnClickListener {
             clearBordFocus()
-            val(resultMemberName:Boolean,memberNameMsg:String) = validateHelper.usernameCheck(memberNameEditText)
-            if(!resultMemberName){
+            val (resultMemberName: Boolean, memberNameMsg: String) = validateHelper.usernameCheck(
+                memberNameEditText
+            )
+            if (!resultMemberName) {
                 memberNameError.error = memberNameMsg
                 return@setOnClickListener
-            }
-            else{
+            } else {
                 val memberName = memberNameEditText.text.toString()
                 val person = Person(userID = userID, memberName = memberName)
+
                 // Personエンティティをデータベースに登録
-                addPerson(person)
-                dialogHelper.dialogOkOnly("","メンバーが登録されました")
+                // メンバー追加処理を呼び出す
+                memberViewModel.addPerson(person) { result ->
+                    if (result.success) {
+                        dialogHelper.dialogOkOnly("登録成功", result.message)
+                    } else {
+                        dialogHelper.dialogOkOnly("登録失敗", result.message)
+                    }
+
+                }
             }
+
         }
 
     }
 
-    private fun clearBordFocus(){
+    private fun clearBordFocus() {
         val memberNameEditText = findViewById<EditText>(R.id.memberNameEditText)
         // キーボードを閉じる処理
         val inputMethodManager = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
@@ -80,12 +93,4 @@ class MemberAddActivity : BaseActivity(R.layout.activity_member_add,R.string.tit
         //フォーカスを外す処理
         memberNameEditText.clearFocus()
     }
-
-    private fun addPerson(person: Person) {
-        // データベースに登録
-        CoroutineScope(Dispatchers.IO).launch {
-            personDao.insert(person)
-        }
-    }
-
 }

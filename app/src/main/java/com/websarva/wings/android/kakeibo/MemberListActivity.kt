@@ -9,12 +9,12 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.websarva.wings.android.kakeibo.room.member.MemberListViewModel
+import com.websarva.wings.android.kakeibo.room.member.MemberViewModel
 import com.websarva.wings.android.kakeibo.room.member.Person
 import com.websarva.wings.android.kakeibo.room.member.PersonAdapter
 
 class MemberListActivity : BaseActivity(R.layout.activity_member_list,R.string.title_member_list) {
-    private lateinit var viewModel: MemberListViewModel
+    private lateinit var viewModel: MemberViewModel
     private lateinit var recyclerView: RecyclerView
     private lateinit var personAdapter: PersonAdapter
 
@@ -26,7 +26,7 @@ class MemberListActivity : BaseActivity(R.layout.activity_member_list,R.string.t
         setupDrawerAndToolbar()
 
         // ViewModelのインスタンスを生成し、ユーザーIDを渡す
-        viewModel = ViewModelProvider(this)[MemberListViewModel::class.java]
+        viewModel = ViewModelProvider(this)[MemberViewModel::class.java]
 
         //画面部品の取得
         //メンバー追加ボタン
