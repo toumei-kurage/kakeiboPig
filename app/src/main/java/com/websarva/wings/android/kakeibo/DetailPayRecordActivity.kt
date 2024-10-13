@@ -6,7 +6,9 @@ import android.util.Log
 import android.view.Menu
 import android.widget.Button
 import android.widget.TextView
-import com.websarva.wings.android.kakeibo.room.payRecord.DetailPayRecordViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.websarva.wings.android.kakeibo.room.member.MemberViewModel
+import com.websarva.wings.android.kakeibo.room.payRecord.PayRecordViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -17,7 +19,8 @@ import java.util.Locale
 
 class DetailPayRecordActivity :
     BaseActivity(R.layout.activity_detail_pay_record, R.string.title_detail_pay_record) {
-    private lateinit var viewModel:DetailPayRecordViewModel
+    private lateinit var payRecordViewModel:PayRecordViewModel
+    private lateinit var memberViewModel:MemberViewModel
 
     private lateinit var payerTextView: TextView
     private lateinit var payDateTextView: TextView
@@ -31,7 +34,9 @@ class DetailPayRecordActivity :
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_detail_pay_record)
 
-        viewModel = DetailPayRecordViewModel(application)
+        payRecordViewModel = ViewModelProvider(this)[PayRecordViewModel::class.java]
+        memberViewModel = ViewModelProvider(this)[MemberViewModel::class.java]
+
         val itemId = intent.getStringExtra("item_id")?.toInt()
 
         setupDrawerAndToolbar()
@@ -39,9 +44,9 @@ class DetailPayRecordActivity :
         toolbar.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.action_delete -> {
-                    viewModel.getPayment(itemId).observe(this) { payment ->
+                    payRecordViewModel.getPayment(itemId).observe(this) { payment ->
                         if (payment != null) {
-                            viewModel.deletePayment(payment)
+                            payRecordViewModel.deletePayment(payment)
                             // 削除が完了した後に次のアクティビティに移動
                             val intent = Intent(this, PayRecordListActivity::class.java)
                             startActivity(intent)
@@ -72,14 +77,14 @@ class DetailPayRecordActivity :
 
 
 
-        viewModel.getPayment(itemId).observe(this) { payment ->
+        payRecordViewModel.getPayment(itemId).observe(this) { payment ->
             if (payment != null) {
                 val payDate = formatLongToDateString(payment.paymentDate)
                 val state = if (payment.isReceiptChecked) "領収済み" else "未完了"
                 val note = payment.notes ?: ""
 
                 CoroutineScope(Dispatchers.IO).launch {
-                    val payerName = viewModel.getPerson(payment.payerId).memberName
+                    val payerName = memberViewModel.getPerson(payment.payerId).memberName
 
                     withContext(Dispatchers.Main) {
                         payerTextView.text = payerName
@@ -101,7 +106,7 @@ class DetailPayRecordActivity :
         buttonPayRecordUpdate.setOnClickListener {
             val intent = Intent(this, UpdatePayRecordActivity::class.java)
 
-            viewModel.getPayment(itemId).observe(this) { payment ->
+            payRecordViewModel.getPayment(itemId).observe(this) { payment ->
                 if (payment != null) {
                     intent.putExtra("支払い明細", payment) // Paymentオブジェクトを直接渡す
                     startActivity(intent)

@@ -21,11 +21,10 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.textfield.TextInputLayout
 import com.websarva.wings.android.kakeibo.helper.DialogHelper
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
-import com.websarva.wings.android.kakeibo.room.member.AddPayRecordMemberViewModel
 import com.websarva.wings.android.kakeibo.room.AppDatabase
+import com.websarva.wings.android.kakeibo.room.member.MemberViewModel
 import com.websarva.wings.android.kakeibo.room.payRecord.Payment
 import com.websarva.wings.android.kakeibo.room.payRecord.PaymentDao
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -36,7 +35,7 @@ import java.util.Calendar
 class AddPayRecordActivity :
     BaseActivity(R.layout.activity_add_pay_record, R.string.title_add_pay_record) {
 
-    private lateinit var addPayRecordMemberViewModel: AddPayRecordMemberViewModel
+    private lateinit var memberViewModel: MemberViewModel
 
     private lateinit var paymentDao: PaymentDao
 
@@ -84,11 +83,11 @@ class AddPayRecordActivity :
         buttonPayRecordAdd = findViewById(R.id.buttonPayRecordAdd)
 
         // ViewModelのセットアップ
-        addPayRecordMemberViewModel = ViewModelProvider(this)[AddPayRecordMemberViewModel::class.java]
+        memberViewModel = ViewModelProvider(this)[MemberViewModel::class.java]
 
 
         // Personデータを取得しSpinnerにセット
-        addPayRecordMemberViewModel.getPersons(userID).observe(this) { persons ->
+        memberViewModel.getPersons(userID).observe(this) { persons ->
             val personNames = persons.map { it.memberName } // Personから名前のリストを作成
             val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, personNames)
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -153,7 +152,7 @@ class AddPayRecordActivity :
             // コルーチンを使って非同期にIDを取得
             lifecycleScope.launch {
                 try{
-                    val payerId = addPayRecordMemberViewModel.getPersonId(userID, spPerson.selectedItem.toString())
+                    val payerId = memberViewModel.getPersonId(userID, spPerson.selectedItem.toString())
                     val purpose = spPayList.selectedItem.toString()
                     val paymentDateStr = payDateEditText.text.toString()
                     val format = DateTimeFormatter.ofPattern("yyyy/MM/dd")
@@ -247,9 +246,9 @@ class AddPayRecordActivity :
         payDateError.error = null
     }
 
-    private fun addPayment(payment:Payment){
-        // データベースに登録
-        CoroutineScope(Dispatchers.IO).launch {
+    private fun addPayment(payment: Payment) {
+        //データベースへの登録
+        lifecycleScope.launch(Dispatchers.IO) {
             paymentDao.insert(payment)
         }
     }

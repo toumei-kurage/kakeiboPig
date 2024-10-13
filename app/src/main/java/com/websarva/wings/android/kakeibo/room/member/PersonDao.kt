@@ -4,12 +4,13 @@ import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 
 @Dao
 interface PersonDao {
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(person: Person)
 
     @Update
@@ -26,4 +27,7 @@ interface PersonDao {
 
     @Query("SELECT * FROM person_table WHERE id = :id")
     fun getPerson(id:Int):Person
+
+    @Query("SELECT COUNT(*) FROM person_table WHERE userID = :userID AND memberName = :memberName")
+    suspend fun countByUserIdAndMemberName(userID: String, memberName: String): Int
 }

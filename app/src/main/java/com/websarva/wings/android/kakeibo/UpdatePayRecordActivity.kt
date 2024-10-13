@@ -1,7 +1,9 @@
 package com.websarva.wings.android.kakeibo
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.app.DatePickerDialog
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -20,7 +22,7 @@ import com.google.android.material.textfield.TextInputLayout
 import com.websarva.wings.android.kakeibo.helper.DialogHelper
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 import com.websarva.wings.android.kakeibo.room.AppDatabase
-import com.websarva.wings.android.kakeibo.room.member.AddPayRecordMemberViewModel
+import com.websarva.wings.android.kakeibo.room.member.MemberViewModel
 import com.websarva.wings.android.kakeibo.room.member.Person
 import com.websarva.wings.android.kakeibo.room.payRecord.Payment
 import com.websarva.wings.android.kakeibo.room.payRecord.PaymentDao
@@ -36,7 +38,7 @@ import java.util.Locale
 @Suppress("DEPRECATION")
 class UpdatePayRecordActivity :
     BaseActivity(R.layout.activity_update_pay_record, R.string.title_update_pay_record) {
-    private lateinit var addPayRecordMemberViewModel: AddPayRecordMemberViewModel
+    private lateinit var memberViewModel: MemberViewModel
 
     private lateinit var paymentDao: PaymentDao
 
@@ -88,15 +90,15 @@ class UpdatePayRecordActivity :
         buttonPayRecordUpdate = findViewById(R.id.buttonPayRecordUpdate)
 
         // ViewModelのセットアップ
-        addPayRecordMemberViewModel =
-            ViewModelProvider(this)[AddPayRecordMemberViewModel::class.java]
+        memberViewModel =
+            ViewModelProvider(this)[MemberViewModel::class.java]
 
         // IntentからPaymentオブジェクトを受け取る
         payment = intent.getParcelableExtra("支払い明細") ?: throw IllegalArgumentException("Payment data is required")
 
 
         // Personデータを取得しSpinnerにセット
-        addPayRecordMemberViewModel.getPersons(userID).observe(this) { persons ->
+        memberViewModel.getPersons(userID).observe(this) { persons ->
             val personNames = persons.map { it.memberName } // Personから名前のリストを作成
             val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, personNames)
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -171,7 +173,16 @@ class UpdatePayRecordActivity :
             // 更新処理
             lifecycleScope.launch {
                 updatePayment()
-                dialogHelper.dialogOkOnly("", "支払い明細が更新されました")
+                AlertDialog.Builder(this@UpdatePayRecordActivity)
+                    .setTitle("")
+                    .setMessage("支払い明細が更新されました")
+                    .setPositiveButton("OK"){_,_->
+                        val intent = Intent(this@UpdatePayRecordActivity,PayRecordListActivity::class.java)
+                        startActivity(intent)
+                        finish()
+                    }
+                    .setCancelable(false)
+                    .show()
             }
         }
     }
@@ -252,7 +263,7 @@ class UpdatePayRecordActivity :
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun updatePayment() {
         lifecycleScope.launch {
-            val payerId = addPayRecordMemberViewModel.getPersonId(userID, spPerson.selectedItem.toString())
+            val payerId = memberViewModel.getPersonId(userID, spPerson.selectedItem.toString())
             val purpose = spPayList.selectedItem.toString()
             // 更新用のPaymentオブジェクトを作成
             val updatedPayment = payment.copy(

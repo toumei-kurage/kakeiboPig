@@ -8,13 +8,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.websarva.wings.android.kakeibo.helper.DialogHelper
-import com.websarva.wings.android.kakeibo.room.payRecord.PayRecordListViewModel
+import com.websarva.wings.android.kakeibo.room.payRecord.PayRecordViewModel
 import com.websarva.wings.android.kakeibo.room.payRecord.Payment
 import com.websarva.wings.android.kakeibo.room.payRecord.PaymentAdapter
 
 class PayRecordListActivity :
     BaseActivity(R.layout.activity_pay_record_list, R.string.title_pay_record_list),PaymentAdapter.OnPaymentClickListener {
-    private lateinit var payRecordListViewModel: PayRecordListViewModel
+    private lateinit var payRecordViewModel: PayRecordViewModel
     private lateinit var paymentAdapter: PaymentAdapter
     private lateinit var recyclerView: RecyclerView
     private lateinit var buttonPayRecordAdd: FloatingActionButton
@@ -27,7 +27,7 @@ class PayRecordListActivity :
 
         setupDrawerAndToolbar()
 
-        payRecordListViewModel = ViewModelProvider(this)[PayRecordListViewModel::class.java]
+        payRecordViewModel = ViewModelProvider(this)[PayRecordViewModel::class.java]
         dialogHelper = DialogHelper(this)
 
         //画面部品の取得
@@ -45,7 +45,7 @@ class PayRecordListActivity :
             finish()
         }
 
-        payRecordListViewModel.getPaymentsByUserId(userID).observe(this) { payments ->
+        payRecordViewModel.getPaymentsByUserId(userID).observe(this) { payments ->
             if (payments != null && payments.isNotEmpty()) {
                 paymentAdapter = PaymentAdapter(payRecordList = payments,this,this,this)
                 recyclerView.adapter = paymentAdapter

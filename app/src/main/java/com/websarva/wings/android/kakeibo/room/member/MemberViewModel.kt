@@ -1,13 +1,10 @@
 package com.websarva.wings.android.kakeibo.room.member
 
 import android.app.Application
-import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.websarva.wings.android.kakeibo.helper.MemberCollisionException
 import com.websarva.wings.android.kakeibo.room.AppDatabase
 import kotlinx.coroutines.launch
 
