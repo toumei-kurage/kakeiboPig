@@ -1,14 +1,19 @@
 package com.websarva.wings.android.kakeibo.room.member
 
 import android.app.Application
+import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.websarva.wings.android.kakeibo.helper.MemberCollisionException
 import com.websarva.wings.android.kakeibo.room.AppDatabase
 import kotlinx.coroutines.launch
 
-class MemberListViewModel(application: Application) : AndroidViewModel(application) {
+data class AddMemberResult(val success: Boolean, val message: String)
+
+class MemberViewModel(application: Application) : AndroidViewModel(application) {
     private val personDao: PersonDao = AppDatabase.getDatabase(application).personDao()
 
     // メンバーリストを保持するLiveData
@@ -34,6 +39,29 @@ class MemberListViewModel(application: Application) : AndroidViewModel(applicati
             personDao.deletePerson(person)
             // 削除後にリストを再取得
             _personList.value = personDao.getAllPersonsByUserId(person.userID).value
+        }
+    }
+
+    fun getPerson(id:Int): Person {
+        return personDao.getPerson(id)
+    }
+
+    // 特定のメンバーのIDを取得するメソッド
+    suspend fun getPersonId(userId: String, memberName: String): Int {
+        return personDao.getPersonId(userId, memberName)
+    }
+
+    //メンバー追加の処理
+    fun addPerson(person: Person,onResult: (AddMemberResult) -> Unit) {
+        viewModelScope.launch {
+            val count = personDao.countByUserIdAndMemberName(person.userID, person.memberName)
+            if (count == 0) {
+               personDao.insert(person)
+                onResult(AddMemberResult(true, "メンバーが登録されました"))
+            } else {
+                // ユーザーに重複エラーを通知する処理を追加
+                onResult(AddMemberResult(false,"あなたのアカウントですでに同じ名前のメンバーが存在します"))
+            }
         }
     }
 }
