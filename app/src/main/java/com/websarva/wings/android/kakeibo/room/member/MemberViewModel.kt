@@ -21,15 +21,6 @@ class MemberViewModel(application: Application) : AndroidViewModel(application) 
         return personDao.getAllPersonsByUserId(userId)
     }
 
-    // 更新メソッド
-//    fun updatePerson(person: Person) {
-//        viewModelScope.launch {
-//            personDao.updatePerson(person)
-//            // 更新後にリストを再取得
-//            _personList.value = personDao.getAllPersonsByUserId(person.userID).value
-//        }
-//    }
-
     // 削除メソッド
     fun deletePerson(person: Person) {
         viewModelScope.launch {
