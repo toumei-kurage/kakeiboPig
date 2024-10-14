@@ -86,7 +86,6 @@ class MemberAddActivity : BaseActivity(R.layout.activity_member_add, R.string.ti
     }
 
     private fun clearBordFocus() {
-        val memberNameEditText = findViewById<EditText>(R.id.memberNameEditText)
         // キーボードを閉じる処理
         val inputMethodManager = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         inputMethodManager.hideSoftInputFromWindow(memberNameEditText.windowToken, 0)
