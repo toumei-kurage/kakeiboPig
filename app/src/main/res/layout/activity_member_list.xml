@@ -43,22 +43,19 @@
                         android:layout_height="match_parent"
                         android:layout_margin="16dp"
                         android:scrollbars="vertical" />
-
                 </FrameLayout>
             </ScrollView>
-
-            <!-- FloatingActionButton -->
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/buttonMemberAdd"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end|bottom"
-                android:layout_marginBottom="30dp"
-                android:layout_marginEnd="30dp"
-                android:src="@drawable/ic_member_add"
-                tools:ignore="ContentDescription"/>
-
         </LinearLayout>
+
+        <!-- FloatingActionButton -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/buttonMemberAdd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|bottom"
+            android:layout_margin="30dp"
+            android:src="@drawable/ic_member_add"
+            tools:ignore="ContentDescription"/>
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
