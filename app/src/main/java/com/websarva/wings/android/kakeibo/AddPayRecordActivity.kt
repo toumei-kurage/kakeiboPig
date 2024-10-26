@@ -8,7 +8,6 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CheckBox
@@ -23,6 +22,7 @@ import com.websarva.wings.android.kakeibo.helper.DialogHelper
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 import com.websarva.wings.android.kakeibo.room.AppDatabase
 import com.websarva.wings.android.kakeibo.room.member.MemberViewModel
+import com.websarva.wings.android.kakeibo.room.payPurpose.PayPurposeViewModel
 import com.websarva.wings.android.kakeibo.room.payRecord.Payment
 import com.websarva.wings.android.kakeibo.room.payRecord.PaymentDao
 import kotlinx.coroutines.Dispatchers
@@ -36,6 +36,7 @@ class AddPayRecordActivity :
     BaseActivity(R.layout.activity_add_pay_record, R.string.title_add_pay_record) {
 
     private lateinit var memberViewModel: MemberViewModel
+    private lateinit var payPurposeViewModel: PayPurposeViewModel
 
     private lateinit var paymentDao: PaymentDao
 
@@ -52,8 +53,6 @@ class AddPayRecordActivity :
     private lateinit var payDone: CheckBox
     private lateinit var noteEditText: EditText
     private lateinit var buttonPayRecordAdd: Button
-
-    private var firstCreate: Boolean = true
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,6 +83,7 @@ class AddPayRecordActivity :
 
         // ViewModelのセットアップ
         memberViewModel = ViewModelProvider(this)[MemberViewModel::class.java]
+        payPurposeViewModel = ViewModelProvider(this)[PayPurposeViewModel::class.java]
 
 
         // Personデータを取得しSpinnerにセット
@@ -94,30 +94,11 @@ class AddPayRecordActivity :
             spPerson.adapter = adapter
         }
 
-        //バリデーションチェック（フォーカス外れた時の処理）
-        spPayList.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: AdapterView<*>,
-                view: View?,
-                position: Int,
-                id: Long
-            ) {
-                if (!firstCreate) {
-                    // アイテムが選択されたときの処理
-                    val (result, errorMessage) = validateHelper.payListCheck(spPayList)
-                    if (!result) {
-                        payListError.text = errorMessage
-                    } else {
-                        payListError.text = null // エラーメッセージをクリア
-                    }
-                } else {
-                    firstCreate = false
-                }
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>) {
-                // 何も選択されていない場合の処理（必要に応じて）
-            }
+        payPurposeViewModel.getPayPurposes(userID).observe(this){payPurposes ->
+            val payPurposeNames = payPurposes.map{it.payPurposeName}
+            val adapter = ArrayAdapter(this,android.R.layout.simple_spinner_item,payPurposeNames)
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            spPayList.adapter = adapter
         }
 
         payAmountEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
@@ -137,13 +118,11 @@ class AddPayRecordActivity :
 
         buttonPayRecordAdd.setOnClickListener {
             clearBordFocus()
-            val (resultPayList, payListMessage) = validateHelper.payListCheck(spPayList)
             val (resultPayAmount, payAmountMessage) = validateHelper.payAmountCheck(
                 payAmountEditText
             )
             val (resultPayDate, payDateMessage) = validateHelper.payDateCheck(payDateEditText)
-            if (!(resultPayList && resultPayAmount && resultPayDate)) {
-                payListError.text = payListMessage
+            if (!(resultPayAmount && resultPayDate)) {
                 payAmountError.error = payAmountMessage
                 payDateError.error = payDateMessage
                 return@setOnClickListener
@@ -151,16 +130,20 @@ class AddPayRecordActivity :
             clearErrorMessage()
             // コルーチンを使って非同期にIDを取得
             lifecycleScope.launch {
-                try{
-                    val payerId = memberViewModel.getPersonId(userID, spPerson.selectedItem.toString())
-                    val purpose = spPayList.selectedItem.toString()
+                try {
+                    spPerson.selectedItem ?:throw NullPointerException("メンバーが登録されていません")
+                    spPayList.selectedItem?: throw NullPointerException("支払い目的が登録されていません")
+                    val payerId = memberViewModel.getPersonID(userID, spPerson.selectedItem.toString())
+                    val purposeId = payPurposeViewModel.getPayPurposeID(userID, spPayList.selectedItem.toString())
                     val paymentDateStr = payDateEditText.text.toString()
                     val format = DateTimeFormatter.ofPattern("yyyy/MM/dd")
                     val paymentDate = LocalDate.parse(paymentDateStr, format)
+
                     // LocalDateをZonedDateTimeに変換（デフォルトのタイムゾーンを使用）
                     val zonedDateTime = paymentDate.atStartOfDay(ZoneId.systemDefault())
                     // ZonedDateTimeをUNIXタイムスタンプ（ミリ秒）に変換
                     val paymentDateMillis = zonedDateTime.toInstant().toEpochMilli()
+
                     val amountStr = payAmountEditText.text.toString()
                     val amount = amountStr.toInt()
                     val isReceiptChecked = payDone.isChecked
@@ -168,21 +151,28 @@ class AddPayRecordActivity :
                     val payment = Payment(
                         payerId = payerId,
                         userId = userID,
-                        purpose = purpose,
+                        purposeId = purposeId,
                         paymentDate = paymentDateMillis,
                         amount = amount,
                         isReceiptChecked = isReceiptChecked,
                         notes = noteEditText.text.toString()
                     )
                     addPayment(payment)
-                    dialogHelper.dialogOkOnly("","支払い明細が登録されました")
-                }catch (e:NullPointerException){
+                    dialogHelper.dialogOkOnly("", "支払い明細が登録されました")
+                } catch (e: NullPointerException) {
+                    // 例外メッセージを取り出す
+                    val errorMessage = e.message ?: "不明なエラーが発生しました"
+
                     AlertDialog.Builder(this@AddPayRecordActivity)
                         .setTitle("登録失敗")
-                        .setMessage("メンバーが登録されていません")
-                        .setPositiveButton("OK"){ _, _->
-                            // OKボタンを押したらMemberAddActivityに遷移
-                            val intent = Intent(this@AddPayRecordActivity, MemberAddActivity::class.java)
+                        .setMessage(errorMessage)
+                        .setPositiveButton("OK") { _, _ ->
+                            // OKボタンを押したら適切なアクティビティに遷移
+                            val intent = if (errorMessage == "メンバーが登録されていません")
+                                Intent(this@AddPayRecordActivity, MemberAddActivity::class.java)
+                            else
+                                Intent(this@AddPayRecordActivity, PayPurposeAddActivity::class.java)
+
                             startActivity(intent)
                             finish()
                         }
@@ -190,6 +180,7 @@ class AddPayRecordActivity :
                         .show()
                 }
             }
+
         }
     }
 
