@@ -81,6 +81,11 @@ abstract class BaseActivity(private val layoutResId: Int, private val title: Int
                 startActivity(intent)
                 finish()
             }
+            R.id.nav_pay_purpose_list ->{
+                val intent = Intent(this,PayPurposeListActivity::class.java)
+                startActivity(intent)
+                finish()
+            }
             // 他のメニューアイテムを追加する場合はここに追加
         }
     }
