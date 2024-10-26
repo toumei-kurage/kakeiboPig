@@ -11,6 +11,8 @@
     <string name="title_detail_pay_record">支払い明細</string>
     <string name="title_update_pay_record">支払い明細更新</string>
     <string name="title_secession">退会</string>
+    <string name="title_pay_purpose_add">支払い目的の登録</string>
+    <string name="title_pay_purpose_list">支払い目的一覧</string>
 
 
     <!--    ボタン名-->
@@ -24,6 +26,9 @@
     <string name="button_pay_record_update">更新</string>
     <string name="button_secession_ok">はい</string>
     <string name="button_secession_ng">いいえ</string>
+    <string name="button_pay_purpose_add">登録</string>
+    <string name="button_pay_purpose_update">更新</string>
+    <string name="button_pay_purpose_delete">削除</string>
 
     <!--    ヒント-->
     <string name="hint_password">パスワード</string>
@@ -33,6 +38,7 @@
     <string name="hint_pay_amount">金額</string>
     <string name="hint_pay_date">支払日を選択してください</string>
     <string name="hint_pay_note">備考(支払い場所などをメモ)</string>
+    <string name="hint_pay_purpose_name">支払い目的</string>
 
     <!--    エラーメッセージ-->
     <string name="error_empty">入力必須です</string>
@@ -45,19 +51,6 @@
     <!--    メニューバー-->
     <string name="open">開く</string>
     <string name="close">閉じる</string>
-
-    <!--    勘定科目リスト-->
-    <string-array name="pay_list">
-        <item>支払い目的を選択してください</item>
-        <item>食費日用雑貨</item>
-        <item>医療費</item>
-        <item>酒</item>
-        <item>床屋</item>
-        <item>交通費</item>
-        <item>控え</item>
-        <item>和賀子</item>
-        <item>宗俊</item>
-    </string-array>
 
     <!--    チェックボックスメッセージ-->
     <string name="check_pay_done">領収しました</string>

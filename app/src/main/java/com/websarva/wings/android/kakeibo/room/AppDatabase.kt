@@ -6,13 +6,16 @@ import androidx.room.RoomDatabase
 import android.content.Context
 import com.websarva.wings.android.kakeibo.room.member.Person
 import com.websarva.wings.android.kakeibo.room.member.PersonDao
+import com.websarva.wings.android.kakeibo.room.payPurpose.PayPurpose
+import com.websarva.wings.android.kakeibo.room.payPurpose.PayPurposeDao
 import com.websarva.wings.android.kakeibo.room.payRecord.Payment
 import com.websarva.wings.android.kakeibo.room.payRecord.PaymentDao
 
-@Database(entities = [Person::class, Payment::class], version = 1, exportSchema = false)
+@Database(entities = [Person::class, Payment::class, PayPurpose::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun personDao(): PersonDao
     abstract fun paymentDao(): PaymentDao
+    abstract fun payPurposeDao(): PayPurposeDao
 
     companion object {
         @Volatile
