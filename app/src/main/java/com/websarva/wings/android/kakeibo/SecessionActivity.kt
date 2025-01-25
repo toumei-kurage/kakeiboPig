@@ -3,13 +3,8 @@ package com.websarva.wings.android.kakeibo
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.google.firebase.auth.FirebaseAuth
 import com.websarva.wings.android.kakeibo.helper.DialogHelper
-import javax.xml.transform.OutputKeys
 
 class SecessionActivity : BaseActivity(R.layout.activity_secession,R.string.title_secession) {
     private lateinit var buttonSecessionOK:Button
