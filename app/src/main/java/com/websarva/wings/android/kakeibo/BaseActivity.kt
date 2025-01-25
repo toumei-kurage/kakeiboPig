@@ -1,6 +1,7 @@
 package com.websarva.wings.android.kakeibo
 
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Bundle
 import androidx.appcompat.app.ActionBarDrawerToggle
@@ -76,6 +77,9 @@ abstract class BaseActivity(private val layoutResId: Int, private val title: Int
                 startActivity(intent)
                 finish()
             }
+            R.id.nav_logout ->{
+                logout()
+            }
             R.id.nav_secession ->{
                 val intent = Intent(this,SecessionActivity::class.java)
                 startActivity(intent)
@@ -96,5 +100,20 @@ abstract class BaseActivity(private val layoutResId: Int, private val title: Int
             return true
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun logout() {
+        // SharedPreferencesを使用してセッションをクリアする
+        val sharedPreferences: SharedPreferences = getSharedPreferences("userSession", MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.clear() // セッション情報をクリア
+        editor.apply()
+
+        // LoginActivityへ遷移
+        val intent = Intent(this, LoginActivity::class.java)
+        startActivity(intent)
+
+        // HomeActivityを終了して戻れないようにする
+        finish()
     }
 }
