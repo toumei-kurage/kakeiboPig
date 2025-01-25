@@ -19,6 +19,10 @@
         android:title="@string/title_pay_record_list"/>
 
     <item
+        android:id="@+id/nav_logout"
+        android:title="@string/title_logout"/>
+
+    <item
         android:id="@+id/nav_secession"
         android:title="@string/title_secession"/>
 
