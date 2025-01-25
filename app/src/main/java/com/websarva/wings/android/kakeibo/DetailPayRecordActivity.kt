@@ -1,27 +1,18 @@
 package com.websarva.wings.android.kakeibo
 
+import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
+import android.view.MenuItem
 import android.widget.Button
 import android.widget.TextView
-import androidx.lifecycle.ViewModelProvider
-import com.websarva.wings.android.kakeibo.room.member.MemberViewModel
-import com.websarva.wings.android.kakeibo.room.payRecord.PayRecordViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import android.widget.Toast
+import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
 
-class DetailPayRecordActivity :
-    BaseActivity(R.layout.activity_detail_pay_record, R.string.title_detail_pay_record) {
-    private lateinit var payRecordViewModel:PayRecordViewModel
-    private lateinit var memberViewModel:MemberViewModel
-
+class DetailPayRecordActivity : BaseActivity(R.layout.activity_detail_pay_record, R.string.title_detail_pay_record) {
+    //画面部品の用意
     private lateinit var payerTextView: TextView
     private lateinit var payDateTextView: TextView
     private lateinit var payPurposeTextView: TextView
@@ -30,42 +21,19 @@ class DetailPayRecordActivity :
     private lateinit var payNoteTextView: TextView
     private lateinit var buttonPayRecordUpdate: Button
 
+    //支払い履歴のID
+    private var payRecordId = -1
+
+    //ヘルパークラス
+    private val databaseHelper = DatabaseHelper(this)
+
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_detail_pay_record)
 
-        payRecordViewModel = ViewModelProvider(this)[PayRecordViewModel::class.java]
-        memberViewModel = ViewModelProvider(this)[MemberViewModel::class.java]
-
-        val itemId = intent.getStringExtra("item_id")?.toInt()
-
         setupDrawerAndToolbar()
-
-        toolbar.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                R.id.action_delete -> {
-                    payRecordViewModel.getPayment(itemId).observe(this) { payment ->
-                        if (payment != null) {
-                            payRecordViewModel.deletePayment(payment)
-                            // 削除が完了した後に次のアクティビティに移動
-                            val intent = Intent(this, PayRecordListActivity::class.java)
-                            startActivity(intent)
-                            finish()
-                        } else {
-                            // paymentがnullの場合のエラーハンドリング
-                            Log.e("DetailPayRecordActivity", "Payment data is null")
-                            // 必要に応じてエラーメッセージを表示
-                        }
-                    }
-                    true
-                }
-                else -> false
-            }
-        }
-
-
-
-
+        
         // 画面部品の取得
         payerTextView = findViewById(R.id.payerTextView)
         payDateTextView = findViewById(R.id.payDateTextView)
@@ -75,60 +43,88 @@ class DetailPayRecordActivity :
         payNoteTextView = findViewById(R.id.payNoteTextView)
         buttonPayRecordUpdate = findViewById(R.id.buttonPayRecordUpdate)
 
-
-
-        payRecordViewModel.getPayment(itemId).observe(this) { payment ->
-            if (payment != null) {
-                val payDate = formatLongToDateString(payment.paymentDate)
-                val state = if (payment.isReceiptChecked) "領収済み" else "未完了"
-                val note = payment.notes ?: ""
-
-                CoroutineScope(Dispatchers.IO).launch {
-                    val payerName = memberViewModel.getPerson(payment.payerId).memberName
-
-                    withContext(Dispatchers.Main) {
-                        payerTextView.text = payerName
-                        payDateTextView.text = payDate
-                        payPurposeTextView.text = payment.purpose
-                        payAmountTextView.text = payment.amount.toString()
-                        payDoneCheckTextView.text = state
-                        payNoteTextView.text = note
-                    }
-                }
-            } else {
-                // paymentがnullの場合のエラーハンドリング
-                Log.e("DetailPayRecordActivity", "Payment data is null")
-                // 必要に応じてエラーメッセージを表示
-            }
-        }
-
+        //前画面からもらった値を取得
+        payRecordId = intent.getLongExtra("PAY_RECORD_ID",-1).toInt()
+        val memberId = intent.getLongExtra("MEMBER_ID",-1).toInt()
+        val payDate = intent.getStringExtra("PAY_DATE")
+        val payPurposeId = intent.getLongExtra("PAY_PURPOSE_ID",-1).toInt()
+        val payAmount = intent.getIntExtra("PAY_AMOUNT",-1)
+        val isReceptChecked = intent.getBooleanExtra("IS_RECEPT_CHECKED",false)
+        val note = intent.getStringExtra("NOTE")
+        
+        payerTextView.text = databaseHelper.getMemberNameById(memberId)
+        payDateTextView.text = payDate
+        payPurposeTextView.text = databaseHelper.getPayPurposeNameById(payPurposeId)
+        payAmountTextView.text = "${payAmount}円"
+        payDoneCheckTextView.text = if(isReceptChecked) "領収済み" else "未受領"
+        payNoteTextView.text = note
 
         buttonPayRecordUpdate.setOnClickListener {
             val intent = Intent(this, UpdatePayRecordActivity::class.java)
-
-            payRecordViewModel.getPayment(itemId).observe(this) { payment ->
-                if (payment != null) {
-                    intent.putExtra("支払い明細", payment) // Paymentオブジェクトを直接渡す
-                    startActivity(intent)
-                    finish()
-                }
-            }
+            intent.putExtra("PAY_RECORD_ID",payRecordId)
+            intent.putExtra("MEMBER_ID",memberId)
+            intent.putExtra("PAY_DATE",payDate)
+            intent.putExtra("PAY_PURPOSE_ID",payPurposeId)
+            intent.putExtra("PAY_AMOUNT",payAmount)
+            intent.putExtra("IS_RECEPT_CHECKED",isReceptChecked)
+            intent.putExtra("NOTE",note)
+            startActivity(intent)
+            finish()
         }
-
     }
 
-    // メニューをインフレートする
+    // メニュー（ActionBar）の作成
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_delete, menu)
         return true
     }
 
-    private fun formatLongToDateString(timestamp: Long): String {
-        // Long型のtimestampをDate型に変換
-        val date = Date(timestamp)
-        // yyyy/MM/ddフォーマットのSimpleDateFormatを作成
-        val format = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
-        // Dateをフォーマットして文字列を返す
-        return format.format(date)
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_delete -> {
+                showDeleteConfirmationDialog()  // 削除確認ダイアログを表示
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    // 削除確認ダイアログを表示
+    private fun showDeleteConfirmationDialog() {
+        val builder = AlertDialog.Builder(this)
+        builder.setMessage("本当に削除しますか？")
+            .setCancelable(false)
+            .setPositiveButton("YES") { _, _ ->
+                deletePayRecord()
+            }
+            .setNegativeButton("NO") { dialog, _ ->
+                dialog.dismiss()
+            }
+
+        val alert = builder.create()
+        alert.show()
+    }
+
+    // メンバーを削除する処理
+    private fun deletePayRecord() {
+        val db = DatabaseHelper(this).writableDatabase
+
+        val rowsDeleted = db.delete(
+            "payment_history",
+            "_id = ?",
+            arrayOf(payRecordId.toString())
+        )
+
+        if (rowsDeleted > 0) {
+            Toast.makeText(this, "削除されました", Toast.LENGTH_SHORT).show()
+            // 削除成功した場合、親Activityに通知する
+            val resultIntent = Intent()
+            resultIntent.putExtra("PAY_RECORD_DELETE", true)  // 削除フラグを渡す
+            setResult(RESULT_OK, resultIntent)  // 削除成功の結果を返す
+            finish()  // アクティビティを終了し、前の画面に戻る
+        } else {
+            Toast.makeText(this, "削除できませんでした", Toast.LENGTH_SHORT).show()
+        }
+        db.close()
     }
 }

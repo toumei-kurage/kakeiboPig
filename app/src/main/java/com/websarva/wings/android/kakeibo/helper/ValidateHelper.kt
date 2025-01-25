@@ -14,12 +14,12 @@ import java.time.format.DateTimeFormatter
  */
 class ValidateHelper(private val context: Context) {
     //未入力チェック(空白の時false)
-    private fun emptyCheck(text:String):Boolean{
+    private fun emptyCheck(text: String): Boolean {
         return text != ""
     }
 
     //電子メールの形式チェック(@が含まれていればtrue)
-    private fun emailFormatCheck(email:String):Boolean{
+    private fun emailFormatCheck(email: String): Boolean {
         return email.contains("@")
     }
 
@@ -28,12 +28,12 @@ class ValidateHelper(private val context: Context) {
      * @param[text] 桁数チェックをしたい文字列
      * @param[digit] 対象文字列の文字数の下限値
      */
-    private fun lengthCheck(text:String,digit:Int):Boolean{
+    private fun lengthCheck(text: String, digit: Int): Boolean {
         return text.length >= digit
     }
 
     //半角数字チェック
-    private fun numberFormatCheck(text:String):Boolean{
+    private fun numberFormatCheck(text: String): Boolean {
         val regex = Regex("^[0-9]+$")
         return regex.matches(text)
     }
@@ -41,78 +41,110 @@ class ValidateHelper(private val context: Context) {
     /**
      * 電子メールのバリデーションチェック
      */
-    fun emailCheck(editTextEmail:EditText):Pair<Boolean,String>{
+    fun emailCheck(editTextEmail: EditText): Pair<Boolean, String> {
         val email = editTextEmail.text.toString()
-        if(!emptyCheck(email)){
-            return Pair(false,context.getString(R.string.error_empty))
+        if (!emptyCheck(email)) {
+            return Pair(false, context.getString(R.string.error_empty))
         }
-        if(!emailFormatCheck(email)){
-            return Pair(false,context.getString(R.string.error_email))
+        if (!emailFormatCheck(email)) {
+            return Pair(false, context.getString(R.string.error_email))
         }
-        return Pair(true,"")
+        return Pair(true, "")
     }
 
     /**
      * パスワードのバリデーションチェック
      */
-    fun passwordCheck(editTextPassword:EditText):Pair<Boolean,String>{
+    fun passwordCheck(editTextPassword: EditText): Pair<Boolean, String> {
         val password = editTextPassword.text.toString()
-        if(!emptyCheck(password)){
-            return Pair(false,context.getString(R.string.error_empty))
+        if (!emptyCheck(password)) {
+            return Pair(false, context.getString(R.string.error_empty))
         }
-        if(!lengthCheck(password,6)){
-            return Pair(false,context.getString(R.string.error_digit_6))
+        if (!lengthCheck(password, 6)) {
+            return Pair(false, context.getString(R.string.error_digit_6))
         }
-        return Pair(true,"")
+        return Pair(true, "")
     }
 
     /**
      * ユーザー名のバリデーションチェック
      */
-    fun usernameCheck(editTextUsername:EditText):Pair<Boolean,String>{
+    fun usernameCheck(editTextUsername: EditText): Pair<Boolean, String> {
         val username = editTextUsername.text.toString()
-        if(!emptyCheck(username)){
-            return Pair(false,context.getString(R.string.error_empty))
+        if (!emptyCheck(username)) {
+            return Pair(false, context.getString(R.string.error_empty))
         }
-        return Pair(true,"")
+        return Pair(true, "")
     }
 
-    //支払い項目スピナーのバリデーションチェック
-    fun payListCheck(spPayList:Spinner):Pair<Boolean,String>{
+    /**
+     *支払い項目スピナーのバリデーションチェック
+     */
+    fun payListCheck(spPayList: Spinner): Pair<Boolean, String> {
         val selectItem = spPayList.selectedItem.toString()
-        if(selectItem == "支払い目的を選択してください"){
-            return Pair(false,"未選択です")
+        if (selectItem == "支払い目的を選択してください") {
+            return Pair(false, "未選択です")
         }
-        return Pair(true,"")
+        return Pair(true, "")
     }
 
-    //支払金額のバリデーションチェック
-    fun payAmountCheck(payAmountEditText: EditText):Pair<Boolean,String>{
+    /**
+     * 支払金額のバリデーションチェック
+     */
+    fun payAmountCheck(payAmountEditText: EditText): Pair<Boolean, String> {
         val payAmount = payAmountEditText.text.toString()
-        if(!emptyCheck(payAmount)){
-            return Pair(false,context.getString(R.string.error_empty))
+        if (!emptyCheck(payAmount)) {
+            return Pair(false, context.getString(R.string.error_empty))
         }
-        if(!numberFormatCheck(payAmount)){
-            return Pair(false,context.getString(R.string.error_number_format))
+        if (!numberFormatCheck(payAmount)) {
+            return Pair(false, context.getString(R.string.error_number_format))
         }
-        if(payAmount.toInt() !in 1..1000000){
-            return Pair(false,context.getString(R.string.error_range_pay_amount))
+        if (payAmount.toInt() !in 1..1000000) {
+            return Pair(false, context.getString(R.string.error_range_pay_amount))
         }
-        return Pair(true,"")
+        return Pair(true, "")
     }
 
+    /**
+     * 支払日のバリデーションチェック
+     */
     @RequiresApi(Build.VERSION_CODES.O)
-    fun payDateCheck(payDateEditText: EditText):Pair<Boolean,String>{
+    fun payDateCheck(payDateEditText: EditText): Pair<Boolean, String> {
         val payDateStr = payDateEditText.text.toString()
-        if(!emptyCheck(payDateStr)){
-            return Pair(false,context.getString(R.string.error_empty))
+        if (!emptyCheck(payDateStr)) {
+            return Pair(false, context.getString(R.string.error_empty))
         }
         val MaxDate = LocalDate.now()
-        val MinDate = LocalDate.of(1900,1,1)
+        val MinDate = LocalDate.of(1900, 1, 1)
         val format = DateTimeFormatter.ofPattern("yyy/MM/dd")
-        val payDate = LocalDate.parse(payDateStr,format)
-        if(!((payDate.isEqual(MaxDate) || payDate.isBefore(MaxDate)) && payDate.isAfter(MinDate))){
-            return Pair(false,context.getString(R.string.error_range_pay_date))
+        val payDate = LocalDate.parse(payDateStr, format)
+        if (!((payDate.isEqual(MaxDate) || payDate.isBefore(MaxDate)) && payDate.isAfter(MinDate))) {
+            return Pair(false, context.getString(R.string.error_range_pay_date))
+        }
+        return Pair(true, "")
+    }
+
+    /**
+     * 支払い目的名のバリデーションチェック
+     */
+    fun payPurposeNameCheck(payPurposeNameEditText: EditText):Pair<Boolean,String>{
+        val payPurposeName = payPurposeNameEditText.text.toString()
+        if(!emptyCheck(payPurposeName)){
+            return Pair(false,context.getString(R.string.error_empty))
+        }
+        return Pair(true,"")
+    }
+
+    /**
+     * 支払い目的の月予算のバリデーションチェック
+     */
+    fun payPurposeBudgetCheck(payPurposeBudgetEditText: EditText):Pair<Boolean,String>{
+        val payPurposeBudgetStr = payPurposeBudgetEditText.text.toString()
+        if(!emptyCheck(payPurposeBudgetStr)){
+            return Pair(false,context.getString(R.string.error_email))
+        }
+        if(!numberFormatCheck(payPurposeBudgetStr)){
+            return Pair(false,context.getString(R.string.error_number_format))
         }
         return Pair(true,"")
     }
