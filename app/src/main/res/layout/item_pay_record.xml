@@ -8,26 +8,26 @@
     android:orientation="horizontal">
 
     <TextView
-        android:id="@+id/paymentDateTextView"
+        android:id="@+id/payDateTextView"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:textSize="16sp"
-        android:layout_marginRight="50dp"
-        android:text="支払日" />
+        android:layout_marginEnd="20dp"
+        android:text="2025/01/25" />
 
     <TextView
-        android:id="@+id/paymentPurposeTextView"
+        android:id="@+id/payPurposeNameTextView"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:textSize="16sp"
-        android:layout_marginRight="50dp"
-        android:text="支払い目的"/>
+        android:layout_marginEnd="30dp"
+        android:text="酒"/>
 
     <TextView
-        android:id="@+id/paymentPersonNameTextView"
+        android:id="@+id/payAmountTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="16sp"
-        android:text="登録者"/>
+        android:text="2000"/>
 
 </LinearLayout>

@@ -1,36 +1,30 @@
 package com.websarva.wings.android.kakeibo
 
+import android.annotation.SuppressLint
 import android.content.Intent
+import android.database.Cursor
 import android.os.Bundle
-import android.widget.EditText
-import android.widget.LinearLayout
-import androidx.appcompat.app.AlertDialog
-import androidx.lifecycle.ViewModelProvider
+import android.widget.Toast
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.websarva.wings.android.kakeibo.helper.DialogHelper
-import com.websarva.wings.android.kakeibo.room.member.PayPurposeAdapter
-import com.websarva.wings.android.kakeibo.room.payPurpose.PayPurpose
-import com.websarva.wings.android.kakeibo.room.payPurpose.PayPurposeViewModel
+import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
 
-class PayPurposeListActivity :
-    BaseActivity(R.layout.activity_pay_purpose_list, R.string.title_pay_purpose_list) {
-    private lateinit var payPurposeViewModel: PayPurposeViewModel
+class PayPurposeListActivity : BaseActivity(R.layout.activity_pay_purpose_list, R.string.title_pay_purpose_list) {
+    //画面部品の用意
     private lateinit var recyclerView: RecyclerView
     private lateinit var buttonPayPurposeAdd: FloatingActionButton
+    private var payPurposeList: List<PayPurpose> = mutableListOf()
     private lateinit var payPurposeAdapter: PayPurposeAdapter
-    private lateinit var dialogHelper: DialogHelper
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pay_purpose_list)
 
         setupDrawerAndToolbar()
 
-        payPurposeViewModel = ViewModelProvider(this)[PayPurposeViewModel::class.java]
-        dialogHelper = DialogHelper(this)
-
+        //画面部品の取得
         buttonPayPurposeAdd = findViewById(R.id.buttonPayPurposeAdd)
         recyclerView = findViewById(R.id.recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -39,74 +33,55 @@ class PayPurposeListActivity :
         val itemDecoration = DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
         recyclerView.addItemDecoration(itemDecoration)
 
+        payPurposeAdapter = PayPurposeAdapter(this, payPurposeList)
+        recyclerView.adapter = payPurposeAdapter
+
+        // データベースから member のデータを取得して RecyclerView に表示
+        loadPayPurposeList()
+
         buttonPayPurposeAdd.setOnClickListener {
             val intent = Intent(this, PayPurposeAddActivity::class.java)
             startActivity(intent)
             finish()
         }
-        
-        payPurposeViewModel.getPayPurposes(userID).observe(this){payPurposes ->
-            if(payPurposes != null && payPurposes.isNotEmpty()){
-                payPurposeAdapter = PayPurposeAdapter(
-                    payPurposeList = payPurposes,
-                    onUpdateClick = { payPurpose ->
-                        showUpdateDialog(payPurpose)
-                    },
-                    onDeleteClick = { payPurpose ->
-                        payPurposeViewModel.deletePayPurpose(payPurpose)
-                    }
-                )
-                recyclerView.adapter = payPurposeAdapter
-            }else{
-                // payPurposesがnullまたは空の場合に適切な処理を追加
-                // 例えば、"支払い目的が登録されていません"と表示するなど
-                payPurposeAdapter = PayPurposeAdapter(
-                    payPurposeList = listOf(), // 空のリストを渡す
-                    onUpdateClick = { /* 空のリストなので操作なし */ },
-                    onDeleteClick = { /* 空のリストなので操作なし */ }
-                )
-                recyclerView.adapter = payPurposeAdapter
+    }
+
+    @SuppressLint("Range", "NotifyDataSetChanged")
+    private fun loadPayPurposeList() {
+        val db = DatabaseHelper(this).readableDatabase
+        val cursor: Cursor = db.rawQuery("SELECT * FROM payment_purpose WHERE user_id = ?", arrayOf(userID))
+        val newPayPurposeList = mutableListOf<PayPurpose>()
+        if (cursor.moveToFirst()) {
+            do {
+                val id = cursor.getLong(cursor.getColumnIndex("_id"))
+                val userId = cursor.getString(cursor.getColumnIndex("user_id"))
+                val payPurposeName = cursor.getString(cursor.getColumnIndex("pay_purpose_name"))
+                newPayPurposeList.add(PayPurpose(id, userId, payPurposeName))
+
+            } while (cursor.moveToNext())
+        } else {
+            Toast.makeText(this, "支払い目的が登録されていません。", Toast.LENGTH_SHORT).show()
+        }
+
+        cursor.close()
+        db.close()
+
+        // データセットを更新
+        payPurposeList = newPayPurposeList
+        payPurposeAdapter.updateData(payPurposeList)
+        payPurposeAdapter.notifyDataSetChanged()
+    }
+
+    // onActivityResultをオーバーライドして削除結果を受け取る
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (resultCode == RESULT_OK) {
+            // 削除された場合の処理
+            if (data?.getBooleanExtra("PAY_PURPOSE_DELETED", false) == true) {
+                // 削除後にデータを再読み込みしてRecyclerViewを更新
+                loadPayPurposeList()
             }
         }
     }
-
-    // 更新用のダイアログを表示
-    private fun showUpdateDialog(payPurpose: PayPurpose) {
-        // LinearLayoutを作成
-        val layout = LinearLayout(this)
-        layout.orientation = LinearLayout.VERTICAL
-
-        // 支払い目的名用のEditText
-        val payPurposeNameEditText1 = EditText(this)
-        payPurposeNameEditText1.setText(payPurpose.payPurposeName)
-        payPurposeNameEditText1.hint = "支払い目的名"
-
-        // LinearLayoutにEditTextを追加
-        layout.addView(payPurposeNameEditText1)
-
-        // AlertDialogを構築
-        AlertDialog.Builder(this)
-            .setTitle("支払い目的を更新")
-            .setView(layout) // LinearLayoutをViewとして設定
-            .setPositiveButton("更新") { dialog, _ ->
-                val newName = payPurposeNameEditText1.text.toString()
-                val oldName = payPurpose.payPurposeName // 退避
-
-                if (newName.isNotEmpty()) {
-                    payPurpose.payPurposeName = newName
-                    payPurposeViewModel.updatePayPurpose(payPurpose) { result ->
-                        if (result.success) {
-                            dialogHelper.dialogOkOnly("登録成功", result.message)
-                        } else {
-                            dialogHelper.dialogOkOnly("登録失敗", result.message)
-                            payPurpose.payPurposeName = oldName
-                        }
-                    }
-                }
-                dialog.dismiss()
-            }
-            .setNegativeButton("キャンセル", null)
-            .show()
-    }
-
 }

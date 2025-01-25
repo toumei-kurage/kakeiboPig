@@ -6,12 +6,14 @@
     <string name="title_login">ログイン</string>
     <string name="title_member_list">メンバー</string>
     <string name="title_member_add">メンバー登録</string>
+    <string name="title_member_update">メンバー更新</string>
     <string name="title_add_pay_record">支払い登録</string>
-    <string name="title_pay_record_list">家計簿</string>
+    <string name="title_pay_record_list">支払い履歴</string>
     <string name="title_detail_pay_record">支払い明細</string>
     <string name="title_update_pay_record">支払い明細更新</string>
     <string name="title_secession">退会</string>
     <string name="title_pay_purpose_add">支払い目的の登録</string>
+    <string name="title_pay_purpose_update">支払い目的の更新</string>
     <string name="title_pay_purpose_list">支払い目的一覧</string>
 
 
