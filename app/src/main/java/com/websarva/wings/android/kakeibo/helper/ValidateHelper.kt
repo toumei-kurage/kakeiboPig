@@ -3,7 +3,6 @@ package com.websarva.wings.android.kakeibo.helper
 import android.content.Context
 import android.os.Build
 import android.widget.EditText
-import android.widget.Spinner
 import androidx.annotation.RequiresApi
 import com.websarva.wings.android.kakeibo.R
 import java.time.LocalDate
@@ -78,17 +77,6 @@ class ValidateHelper(private val context: Context) {
     }
 
     /**
-     *支払い項目スピナーのバリデーションチェック
-     */
-    fun payListCheck(spPayList: Spinner): Pair<Boolean, String> {
-        val selectItem = spPayList.selectedItem.toString()
-        if (selectItem == "支払い目的を選択してください") {
-            return Pair(false, "未選択です")
-        }
-        return Pair(true, "")
-    }
-
-    /**
      * 支払金額のバリデーションチェック
      */
     fun payAmountCheck(payAmountEditText: EditText): Pair<Boolean, String> {
@@ -114,11 +102,11 @@ class ValidateHelper(private val context: Context) {
         if (!emptyCheck(payDateStr)) {
             return Pair(false, context.getString(R.string.error_empty))
         }
-        val MaxDate = LocalDate.now()
-        val MinDate = LocalDate.of(1900, 1, 1)
+        val maxDate = LocalDate.now()
+        val minDate = LocalDate.of(1900, 1, 1)
         val format = DateTimeFormatter.ofPattern("yyy/MM/dd")
         val payDate = LocalDate.parse(payDateStr, format)
-        if (!((payDate.isEqual(MaxDate) || payDate.isBefore(MaxDate)) && payDate.isAfter(MinDate))) {
+        if (!((payDate.isEqual(maxDate) || payDate.isBefore(maxDate)) && payDate.isAfter(minDate))) {
             return Pair(false, context.getString(R.string.error_range_pay_date))
         }
         return Pair(true, "")
@@ -131,20 +119,6 @@ class ValidateHelper(private val context: Context) {
         val payPurposeName = payPurposeNameEditText.text.toString()
         if(!emptyCheck(payPurposeName)){
             return Pair(false,context.getString(R.string.error_empty))
-        }
-        return Pair(true,"")
-    }
-
-    /**
-     * 支払い目的の月予算のバリデーションチェック
-     */
-    fun payPurposeBudgetCheck(payPurposeBudgetEditText: EditText):Pair<Boolean,String>{
-        val payPurposeBudgetStr = payPurposeBudgetEditText.text.toString()
-        if(!emptyCheck(payPurposeBudgetStr)){
-            return Pair(false,context.getString(R.string.error_email))
-        }
-        if(!numberFormatCheck(payPurposeBudgetStr)){
-            return Pair(false,context.getString(R.string.error_number_format))
         }
         return Pair(true,"")
     }

@@ -1,6 +1,5 @@
 package com.websarva.wings.android.kakeibo
 
-import android.app.AlertDialog
 import android.content.ContentValues
 import android.database.sqlite.SQLiteConstraintException
 import android.os.Bundle

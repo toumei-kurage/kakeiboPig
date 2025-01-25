@@ -3,13 +3,11 @@ package com.websarva.wings.android.kakeibo
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.database.sqlite.SQLiteDatabase
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
 
 // Member のデータクラス
 data class Member(val id: Long, val userId: String, var memberName: String)
