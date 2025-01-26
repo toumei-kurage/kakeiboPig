@@ -45,6 +45,7 @@
     <string name="hint_pay_date">支払日を選択してください</string>
     <string name="hint_pay_note">備考(支払い場所などをメモ)</string>
     <string name="hint_pay_purpose_name">支払い目的</string>
+    <string name="hint_budget">予算</string>
 
     <!--    初期選択肢-->
     <string name="un_selected">選択してください</string>
@@ -57,6 +58,7 @@
     <string name="error_number_format">半角数字で入力して下さい</string>
     <string name="error_range_pay_amount">1~1,000,000の間で入力してください</string>
     <string name="error_range_pay_date">1900年1月1日から本日までの間で選択してください</string>
+    <string name="error_range_date">1900年1月1日以降の日付を選択してください</string>
 
     <!--    メニューバー-->
     <string name="open">開く</string>
@@ -77,6 +79,14 @@
     <string name="explain">退会手続きを実行します。</string>
     <string name="explain_warning">下記のボタンを押すと退会手続きを実行します。</string>
     <string name="final_check">お客様の情報はすべて削除されますがよろしいですか？</string>
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!--    家計簿画面-->
+    <string name="date_range">期間：</string>
+    <string name="budget">予算：</string>
+    <string name="sum_expenditure">支出合計額：</string>
+    <string name="leftover">繰越：</string>
+    <string name="purpose_name">%1s：</string>
+    <string name="date_range_set">%1s ～ %2s</string>
+    <string name="button_set_info">期間と予算の設定</string>
 </resources>

@@ -5,6 +5,8 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.util.Log
+import java.util.Date
 
 class DatabaseHelper(context: Context): SQLiteOpenHelper(context,
     DATABASE_NAME,null,
@@ -228,4 +230,66 @@ class DatabaseHelper(context: Context): SQLiteOpenHelper(context,
 
         return memberId
     }
+
+    @SuppressLint("Range")
+    fun getAmountByPurposeNameForUserInDateRange(userId: String, startDate: String, endDate: String): Map<String, Int> {
+        val db = this.readableDatabase
+        val amountByPurposeName = mutableMapOf<String, Int>()
+
+        // SQLクエリでpurpose_idごとにamountの合計を計算し、pay_purpose_nameを取得
+        val query = """
+        SELECT pp.pay_purpose_name, SUM(ph.amount) as total_amount
+        FROM payment_history ph
+        INNER JOIN payment_purpose pp ON ph.purpose_id = pp._id
+        WHERE ph.user_id = ? 
+        AND ph.payment_date BETWEEN ? AND ?
+        GROUP BY pp.pay_purpose_name
+    """
+
+        // クエリ実行
+        val cursor = db.rawQuery(query, arrayOf(userId, startDate, endDate))
+
+        // 結果をMapに格納
+        while (cursor.moveToNext()) {
+            val payPurposeName = cursor.getString(cursor.getColumnIndex("pay_purpose_name"))
+            val totalAmount = cursor.getInt(cursor.getColumnIndex("total_amount"))
+
+            // pay_purpose_nameごとのamountをマップに追加
+            amountByPurposeName[payPurposeName] = totalAmount
+        }
+
+        cursor.close() // クローズ処理
+        return amountByPurposeName
+    }
+
+    fun getTotalAmountForUserInDateRange(userId: String, startDate: String, endDate: String): Int {
+        val db = this.readableDatabase
+
+        // SQLクエリでamountの合計を計算
+        val query = """
+        SELECT SUM(amount) FROM payment_history 
+        WHERE user_id = ? 
+        AND payment_date BETWEEN ? AND ?
+    """
+
+        // クエリ実行
+        val cursor = db.rawQuery(query, arrayOf(userId, startDate, endDate))
+
+        var totalAmount = 0
+
+        // 結果があれば合計を取得
+        if (cursor.moveToFirst()) {
+            // SUM(amount) が null でないかを確認
+            totalAmount = cursor.getInt(0) // SUM(amount) の結果
+        }
+
+        cursor.close() // クローズ処理
+        db.close()
+
+        return totalAmount
+    }
+
+
+
+
 }

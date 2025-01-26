@@ -112,6 +112,23 @@ class ValidateHelper(private val context: Context) {
         return Pair(true, "")
     }
 
+    //日付型のバリデーションチェック
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun dateCheck(dateEditText: EditText): Pair<Boolean, String> {
+        val payDateStr = dateEditText.text.toString()
+        if (!emptyCheck(payDateStr)) {
+            return Pair(false, context.getString(R.string.error_empty))
+        }
+        val minDate = LocalDate.of(1900, 1, 1)
+        val format = DateTimeFormatter.ofPattern("yyy/MM/dd")
+        val payDate = LocalDate.parse(payDateStr, format)
+        if (!payDate.isAfter(minDate)) {
+            return Pair(false, context.getString(R.string.error_range_date))
+        }
+        return Pair(true, "")
+    }
+
+
     /**
      * 支払い目的名のバリデーションチェック
      */
