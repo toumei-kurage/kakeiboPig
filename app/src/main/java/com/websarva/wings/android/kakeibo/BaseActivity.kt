@@ -77,6 +77,11 @@ abstract class BaseActivity(private val layoutResId: Int, private val title: Int
                 startActivity(intent)
                 finish()
             }
+            R.id.nav_user_update -> {
+                val intent = Intent(this,UserUpdateActivity::class.java)
+                startActivity(intent)
+                finish()
+            }
             R.id.nav_logout ->{
                 logout()
             }
