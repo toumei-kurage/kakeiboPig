@@ -3,6 +3,7 @@
     <string name="app_name">家計簿アプリ</string>
     <string name="title_home">ホーム</string>
     <string name="title_register">アカウント作成</string>
+    <string name="title_user_update">アカウント情報の変更</string>
     <string name="title_login">ログイン</string>
     <string name="title_member_list">メンバー</string>
     <string name="title_member_add">メンバー登録</string>
@@ -22,6 +23,7 @@
     <string name="button_login">ログイン</string>
     <string name="button_signup">アカウント作成</string>
     <string name="button_register">アカウント登録</string>
+    <string name="button_update_user">アカウント更新</string>
     <string name="button_member_regist">メンバー登録</string>
     <string name="button_member_update">更新</string>
     <string name="button_member_delete">削除</string>

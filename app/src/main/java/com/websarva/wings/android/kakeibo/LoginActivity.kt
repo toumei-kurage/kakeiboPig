@@ -88,7 +88,7 @@ class LoginActivity : AppCompatActivity() {
 
         signUpButton.setOnClickListener {
             clearBordFocus()
-            val intent = Intent(this, RegisterActivity::class.java)
+            val intent = Intent(this, UserAddActivity::class.java)
             startActivity(intent)
             finish() // このアクティビティを終了して、戻れないようにする
         }

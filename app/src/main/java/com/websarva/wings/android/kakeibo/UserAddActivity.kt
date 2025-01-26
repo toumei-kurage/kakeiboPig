@@ -20,7 +20,7 @@ import com.websarva.wings.android.kakeibo.helper.ValidateHelper
  * アカウント作成画面
  * １家族につき１アカウント作成予定
  */
-class RegisterActivity : AppCompatActivity() {
+class UserAddActivity : AppCompatActivity() {
 
     // FirebaseAuthのインスタンスを準備
     private lateinit var auth: FirebaseAuth
@@ -30,7 +30,7 @@ class RegisterActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_register)
+        setContentView(R.layout.activity_user_add)
 
         // ToolbarをActionBarとして設定
         val toolbar: Toolbar = findViewById(R.id.toolbar)
@@ -46,25 +46,11 @@ class RegisterActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
 
         // UIの要素を取得
-        val usernameEditText = findViewById<EditText>(R.id.usernameEditText)
         val emailEditText = findViewById<EditText>(R.id.emailEditText)
         val passwordEditText = findViewById<EditText>(R.id.passwordEditText)
         val buttonRegister = findViewById<Button>(R.id.buttonRegister)
-        val usernameError = findViewById<TextInputLayout>(R.id.username)
         val emailError = findViewById<TextInputLayout>(R.id.email)
         val passwordError = findViewById<TextInputLayout>(R.id.password)
-
-        usernameEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus) {
-                // フォーカスが外れたときの処理
-                val (result: Boolean, errorMsg: String) = validateHelper.usernameCheck(usernameEditText)
-                if (!result) {
-                    usernameError.error = errorMsg
-                    return@OnFocusChangeListener
-                }
-                usernameError.error = ""
-            }
-        }
 
         emailEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
@@ -94,16 +80,13 @@ class RegisterActivity : AppCompatActivity() {
         buttonRegister.setOnClickListener {
             clearBordFocus()
             //すべての入力項目のバリデーションチェック
-            val (resultUsername: Boolean, usernameMsg: String) = validateHelper.usernameCheck(
-                usernameEditText
-            )
             val (resultEmail: Boolean, emailMsg: String) = validateHelper.emailCheck(emailEditText)
             val (resultPassword: Boolean, passwordMsg) = validateHelper.passwordCheck(passwordEditText)
 
-            if (!(resultUsername && resultEmail && resultPassword)) {
-                usernameError.error = usernameMsg
-                emailError.error = emailMsg
-                passwordError.error = passwordMsg
+            emailError.error = if(!resultEmail) emailMsg else null
+            passwordError.error = if(!resultPassword) passwordMsg else null
+
+            if (!(resultEmail && resultPassword)) {
                 return@setOnClickListener
             }
 
@@ -144,17 +127,14 @@ class RegisterActivity : AppCompatActivity() {
     }
 
 
-    private fun clearBordFocus(){
-        val usernameEditText = findViewById<EditText>(R.id.usernameEditText)
+    private fun clearBordFocus() {
         val emailEditText = findViewById<EditText>(R.id.emailEditText)
         val passwordEditText = findViewById<EditText>(R.id.passwordEditText)
         // キーボードを閉じる処理
         val inputMethodManager = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-        inputMethodManager.hideSoftInputFromWindow(usernameEditText.windowToken,0)
         inputMethodManager.hideSoftInputFromWindow(emailEditText.windowToken, 0)
         inputMethodManager.hideSoftInputFromWindow(passwordEditText.windowToken, 0)
         //フォーカスを外す処理
-        usernameEditText.clearFocus()
         emailEditText.clearFocus()
         passwordEditText.clearFocus()
     }
