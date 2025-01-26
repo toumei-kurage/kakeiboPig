@@ -42,7 +42,7 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
         loadPayRecordList()
 
         buttonPayRecordAdd.setOnClickListener {
-            val intent = Intent(this, AddPayRecordActivity::class.java)
+            val intent = Intent(this, PayRecordAddActivity::class.java)
             startActivity(intent)
             finish()
         }

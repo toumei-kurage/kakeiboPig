@@ -17,7 +17,7 @@ import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
 import com.websarva.wings.android.kakeibo.helper.DialogHelper
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 
-class UpdatePayPurposeActivity :BaseActivity(R.layout.activity_update_pay_purpose, R.string.title_pay_purpose_update)  {
+class PayPurposeUpdateActivity :BaseActivity(R.layout.activity_pay_purpose_update, R.string.title_pay_purpose_update)  {
     //画面部品の用意
     private lateinit var payPurposeNameError: TextInputLayout
     private lateinit var payPurposeNameEditText: EditText
@@ -32,7 +32,7 @@ class UpdatePayPurposeActivity :BaseActivity(R.layout.activity_update_pay_purpos
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_update_pay_purpose)
+        setContentView(R.layout.activity_pay_purpose_update)
 
         setupDrawerAndToolbar()
 

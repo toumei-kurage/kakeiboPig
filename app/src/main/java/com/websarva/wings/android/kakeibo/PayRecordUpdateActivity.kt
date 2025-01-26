@@ -21,7 +21,7 @@ import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 import java.util.Calendar
 
-class AddPayRecordActivity : BaseActivity(R.layout.activity_add_pay_record, R.string.title_add_pay_record) {
+class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update, R.string.title_update_pay_record) {
     //画面部品の用意
     private lateinit var spMember: Spinner
     private lateinit var memberListError:TextView
@@ -33,7 +33,8 @@ class AddPayRecordActivity : BaseActivity(R.layout.activity_add_pay_record, R.st
     private lateinit var payDateError: TextInputLayout
     private lateinit var payDone: CheckBox
     private lateinit var noteEditText: EditText
-    private lateinit var buttonPayRecordAdd: Button
+    private lateinit var buttonPayRecordUpdate: Button
+
 
     //スピナーで選ばれたものを格納する変数
     private lateinit var selectedMemberName:String
@@ -43,10 +44,13 @@ class AddPayRecordActivity : BaseActivity(R.layout.activity_add_pay_record, R.st
     private val validateHelper = ValidateHelper(this)
     private val databaseHelper = DatabaseHelper(this)
 
+    private var payRecordId: Int = -1
+
     @RequiresApi(Build.VERSION_CODES.O)
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_add_pay_record)
+        setContentView(R.layout.activity_pay_record_update)
 
         setupDrawerAndToolbar()
 
@@ -61,7 +65,16 @@ class AddPayRecordActivity : BaseActivity(R.layout.activity_add_pay_record, R.st
         payDateError = findViewById(R.id.payDate)
         payDone = findViewById(R.id.PayDone)
         noteEditText = findViewById(R.id.payNoteEditText)
-        buttonPayRecordAdd = findViewById(R.id.buttonPayRecordAdd)
+        buttonPayRecordUpdate = findViewById(R.id.buttonPayRecordUpdate)
+
+        //前画面からもらった値を取得
+        payRecordId = intent.getIntExtra("PAY_RECORD_ID",-1)
+        val memberId = intent.getIntExtra("MEMBER_ID",-1)
+        val payDate = intent.getStringExtra("PAY_DATE")
+        val payPurposeId = intent.getIntExtra("PAY_PURPOSE_ID",-1)
+        val payAmount = intent.getIntExtra("PAY_AMOUNT",-1)
+        val isReceptChecked = intent.getBooleanExtra("IS_RECEPT_CHECKED",false)
+        val note = intent.getStringExtra("NOTE")
 
         // PayPurposeデータを取得しSpinnerにセット
         val paymentPurposes = arrayOf(getString(R.string.un_selected)) + databaseHelper.getPaymentPurposesForUser(userID)
@@ -74,6 +87,21 @@ class AddPayRecordActivity : BaseActivity(R.layout.activity_add_pay_record, R.st
         val memberArrayAdapter = ArrayAdapter(this,android.R.layout.simple_spinner_item, member)
         memberArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spMember.adapter = memberArrayAdapter
+
+        //前画面からもらった値をもとに。データをセット
+        val memberList = databaseHelper.getMemberForUser(userID)
+        val selectedMemberIndex = memberList.indexOf(databaseHelper.getMemberNameById(memberId)) + 1
+        spMember.setSelection(selectedMemberIndex)
+
+        val payPurposeList = databaseHelper.getPaymentPurposesForUser(userID)
+        val selectedPayPurposeIndex = payPurposeList.indexOf(databaseHelper.getPayPurposeNameById(payPurposeId)) + 1
+        spPayPurposeList.setSelection(selectedPayPurposeIndex)
+
+        payDateEditText.setText(payDate ?: "")
+        payAmountEditText.setText(payAmount.toString())
+        payDone.isChecked = isReceptChecked
+        noteEditText.setText(note ?: "")
+
 
         spPayPurposeList.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parentView: AdapterView<*>, selectedView:View?, position: Int, id: Long) {
@@ -107,7 +135,7 @@ class AddPayRecordActivity : BaseActivity(R.layout.activity_add_pay_record, R.st
             showDatePickerDialog()
         }
 
-        buttonPayRecordAdd.setOnClickListener {
+        buttonPayRecordUpdate.setOnClickListener {
             clearBordFocus()
             val (resultPayAmount, payAmountMessage) = validateHelper.payAmountCheck(
                 payAmountEditText
@@ -131,7 +159,7 @@ class AddPayRecordActivity : BaseActivity(R.layout.activity_add_pay_record, R.st
                 return@setOnClickListener
             }
             clearErrorMessage()
-            onSaveButtonClick()
+            updatePayRecord()
         }
     }
 
@@ -181,11 +209,15 @@ class AddPayRecordActivity : BaseActivity(R.layout.activity_add_pay_record, R.st
         datePickerDialog.show()
     }
 
-    @SuppressLint("SimpleDateFormat")
-    private fun onSaveButtonClick(){
+    override fun onDestroy() {
+        databaseHelper.close()
+        super.onDestroy()
+    }
+
+    private fun updatePayRecord() {
         val memberId = databaseHelper.getMemberId(userID,selectedMemberName)
         val payPurposeId = databaseHelper.getPaymentPurposeId(userID,selectedPayPurposeName)
-        val db = databaseHelper.writableDatabase
+        val db = DatabaseHelper(this).writableDatabase
         val values = ContentValues().apply {
             put("member_id",memberId)
             put("user_id",userID)
@@ -195,22 +227,18 @@ class AddPayRecordActivity : BaseActivity(R.layout.activity_add_pay_record, R.st
             put("is_recept_checked",payDone.isChecked)
             put("note",noteEditText.text.toString())
         }
-
-        // 挿入処理
-        try {
-            val newRowId = db.insert("payment_history", null, values)
-            if (newRowId != -1L) {
-                Toast.makeText(this, "支払い履歴が追加されました", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "データベースに挿入できませんでした", Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: Exception) {
-            // エラーハンドリング
-            Toast.makeText(this, "エラーが発生しました: ${e.message}", Toast.LENGTH_SHORT).show()
-        } finally {
-            // 操作が終わった後でデータベースを閉じる
-            db.close()
+        val rowsAffected = db.update(
+            "payment_history",
+            values,
+            "_id = ?",
+            arrayOf(payRecordId.toString())
+        )
+        if (rowsAffected > 0) {
+            Toast.makeText(this, "更新されました", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "更新できませんでした", Toast.LENGTH_SHORT).show()
         }
+        db.close()
     }
 
     private fun clearErrorMessage() {
@@ -220,8 +248,4 @@ class AddPayRecordActivity : BaseActivity(R.layout.activity_add_pay_record, R.st
         memberListError.text = null
     }
 
-    override fun onDestroy() {
-        databaseHelper.close()
-        super.onDestroy()
-    }
 }

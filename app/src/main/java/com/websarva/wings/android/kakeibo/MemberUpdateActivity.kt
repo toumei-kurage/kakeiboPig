@@ -17,7 +17,7 @@ import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
 import com.websarva.wings.android.kakeibo.helper.DialogHelper
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 
-class UpdateMemberActivity :BaseActivity(R.layout.activity_update_member, R.string.title_member_update)  {
+class MemberUpdateActivity :BaseActivity(R.layout.activity_member_update, R.string.title_member_update)  {
     //画面部品の用意
     private lateinit var memberNameError: TextInputLayout
     private lateinit var memberNameEditText: EditText
@@ -32,7 +32,7 @@ class UpdateMemberActivity :BaseActivity(R.layout.activity_update_member, R.stri
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_update_member)
+        setContentView(R.layout.activity_member_update)
 
         setupDrawerAndToolbar()
 

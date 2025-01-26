@@ -36,7 +36,7 @@ class MemberAdapter(private val context: Context, private var memberList: List<M
 
         // アイテムをタップした時の処理
         holder.itemView.setOnClickListener {
-            val intent = Intent(context, UpdateMemberActivity::class.java)
+            val intent = Intent(context, MemberUpdateActivity::class.java)
             // 編集するデータを渡す
             intent.putExtra("MEMBER_ID", member.id)
             intent.putExtra("MEMBER_NAME", member.memberName)

@@ -42,7 +42,7 @@ class PayRecordAdapter(private val context: Context, private var payRecordList: 
 
         // アイテムをタップした時の処理
         holder.itemView.setOnClickListener {
-            val intent = Intent(context, DetailPayRecordActivity::class.java)
+            val intent = Intent(context, PayRecordDetailActivity::class.java)
             // 編集するデータを渡す
             intent.putExtra("PAY_RECORD_ID", payRecord.id)
             intent.putExtra("USER_ID",payRecord.userId)
