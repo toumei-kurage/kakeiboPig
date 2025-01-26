@@ -27,10 +27,10 @@ class PayRecordListRefinementFragment : DialogFragment() {
     private lateinit var startDateEditText: EditText
     private lateinit var finishDateEditText: EditText
     private lateinit var buttonOK: Button
-    private lateinit var databaseHelper: DatabaseHelper
-
     //ヘルパークラス
+    private lateinit var databaseHelper: DatabaseHelper
     private lateinit var validateHelper:ValidateHelper
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
@@ -90,7 +90,7 @@ class PayRecordListRefinementFragment : DialogFragment() {
             // 日付の入力チェック
             if ((startDate != null && finishDate == null) || (startDate == null && finishDate != null)) {
                 // 両方の入力がある場合にのみ処理を進める
-                Toast.makeText(context, "開始日と終了日は両方入力してください", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "開始日と終了日は両方入力してください。", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
