@@ -26,6 +26,14 @@
                 android:background="?attr/colorPrimary"
                 android:elevation="10dp" />
 
+            <Button
+                android:id="@+id/buttonRefinement"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:text="@string/button_refinement_pay_record"
+                tools:ignore="RtlHardcoded" />
+
             <!-- FloatingActionButton -->
             <ScrollView
                 android:layout_width="match_parent"
