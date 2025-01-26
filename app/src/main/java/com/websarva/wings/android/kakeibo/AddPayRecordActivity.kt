@@ -24,6 +24,7 @@ import java.util.Calendar
 class AddPayRecordActivity : BaseActivity(R.layout.activity_add_pay_record, R.string.title_add_pay_record) {
     //画面部品の用意
     private lateinit var spMember: Spinner
+    private lateinit var memberListError:TextView
     private lateinit var spPayPurposeList: Spinner
     private lateinit var payPurposeListError: TextView
     private lateinit var payAmountEditText: EditText
@@ -51,6 +52,7 @@ class AddPayRecordActivity : BaseActivity(R.layout.activity_add_pay_record, R.st
 
         //画面部品の取得
         spMember = findViewById(R.id.spPerson)
+        memberListError = findViewById(R.id.memberListError)
         spPayPurposeList = findViewById(R.id.spPayList)
         payPurposeListError = findViewById(R.id.PayListError)
         payAmountEditText = findViewById(R.id.payAmountEditText)
@@ -62,13 +64,13 @@ class AddPayRecordActivity : BaseActivity(R.layout.activity_add_pay_record, R.st
         buttonPayRecordAdd = findViewById(R.id.buttonPayRecordAdd)
 
         // PayPurposeデータを取得しSpinnerにセット
-        val paymentPurposes = databaseHelper.getPaymentPurposesForUser(userID)
+        val paymentPurposes = arrayOf(getString(R.string.un_selected)) + databaseHelper.getPaymentPurposesForUser(userID)
         val payPurposeArrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, paymentPurposes)
         payPurposeArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spPayPurposeList.adapter = payPurposeArrayAdapter
 
         //Memberデータを取得しSpinnerにセット
-        val member = databaseHelper.getMemberForUser(userID)
+        val member = arrayOf(getString(R.string.un_selected)) + databaseHelper.getMemberForUser(userID)
         val memberArrayAdapter = ArrayAdapter(this,android.R.layout.simple_spinner_item, member)
         memberArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spMember.adapter = memberArrayAdapter
@@ -110,10 +112,22 @@ class AddPayRecordActivity : BaseActivity(R.layout.activity_add_pay_record, R.st
             val (resultPayAmount, payAmountMessage) = validateHelper.payAmountCheck(
                 payAmountEditText
             )
-            val (resultPayDate, payDateMessage) = validateHelper.payDateCheck(payDateEditText)
-            if (!(resultPayAmount && resultPayDate)) {
+            if(!resultPayAmount){
                 payAmountError.error = payAmountMessage
+            }
+            val (resultPayDate, payDateMessage) = validateHelper.payDateCheck(payDateEditText)
+            if (!resultPayDate) {
                 payDateError.error = payDateMessage
+            }
+            val (resultPayPurpose,payPurposeMessage) = validateHelper.selectedCheck(selectedPayPurposeName)
+            if(!resultPayPurpose){
+                payPurposeListError.text = payPurposeMessage
+            }
+            val (resultMember,memberMessage) = validateHelper.selectedCheck(selectedMemberName)
+            if(!resultMember){
+                memberListError.text = memberMessage
+            }
+            if(!(resultPayAmount && resultPayDate && resultPayPurpose && resultMember)){
                 return@setOnClickListener
             }
             clearErrorMessage()
@@ -203,6 +217,7 @@ class AddPayRecordActivity : BaseActivity(R.layout.activity_add_pay_record, R.st
         payAmountError.error = null
         payPurposeListError.text = null
         payDateError.error = null
+        memberListError.text = null
     }
 
     override fun onDestroy() {

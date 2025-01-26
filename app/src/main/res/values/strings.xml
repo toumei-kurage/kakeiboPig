@@ -32,6 +32,7 @@
     <string name="button_pay_purpose_add">登録</string>
     <string name="button_pay_purpose_update">更新</string>
     <string name="button_pay_purpose_delete">削除</string>
+    <string name="button_refinement_pay_record">絞り込み</string>
 
     <!--    ヒント-->
     <string name="hint_password">パスワード</string>
@@ -43,8 +44,12 @@
     <string name="hint_pay_note">備考(支払い場所などをメモ)</string>
     <string name="hint_pay_purpose_name">支払い目的</string>
 
+    <!--    初期選択肢-->
+    <string name="un_selected">選択してください</string>
+
     <!--    エラーメッセージ-->
     <string name="error_empty">入力必須です</string>
+    <string name="error_selected">未選択です。</string>
     <string name="error_digit_6">6桁以上で入力して下さい</string>
     <string name="error_email">正しいメールアドレス形式で入力してください</string>
     <string name="error_number_format">半角数字で入力して下さい</string>
@@ -70,4 +75,6 @@
     <string name="explain">退会手続きを実行します。</string>
     <string name="explain_warning">下記のボタンを押すと退会手続きを実行します。</string>
     <string name="final_check">お客様の情報はすべて削除されますがよろしいですか？</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
