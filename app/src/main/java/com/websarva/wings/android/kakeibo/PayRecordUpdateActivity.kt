@@ -35,7 +35,6 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
     private lateinit var noteEditText: EditText
     private lateinit var buttonPayRecordUpdate: Button
 
-
     //スピナーで選ばれたものを格納する変数
     private lateinit var selectedMemberName:String
     private lateinit var selectedPayPurposeName:String

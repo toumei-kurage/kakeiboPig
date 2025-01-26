@@ -39,6 +39,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
         android:padding="3dp"
+        app:passwordToggleEnabled="true"
         app:counterEnabled="true"
         app:errorEnabled="true">
 
