@@ -13,10 +13,10 @@
         android:theme="@style/Theme.Kakeibo"
         tools:targetApi="31">
         <activity
-            android:name=".UpdatePayPurposeActivity"
+            android:name=".PayPurposeUpdateActivity"
             android:exported="false" />
         <activity
-            android:name=".UpdateMemberActivity"
+            android:name=".MemberUpdateActivity"
             android:exported="false" />
         <activity
             android:name=".PayPurposeListActivity"
@@ -28,16 +28,16 @@
             android:name=".SecessionActivity"
             android:exported="false" />
         <activity
-            android:name=".UpdatePayRecordActivity"
+            android:name=".PayRecordUpdateActivity"
             android:exported="false" />
         <activity
-            android:name=".DetailPayRecordActivity"
+            android:name=".PayRecordDetailActivity"
             android:exported="false" />
         <activity
             android:name=".PayRecordListActivity"
             android:exported="false" />
         <activity
-            android:name=".AddPayRecordActivity"
+            android:name=".PayRecordAddActivity"
             android:exported="false" />
         <activity
             android:name=".BaseActivity"

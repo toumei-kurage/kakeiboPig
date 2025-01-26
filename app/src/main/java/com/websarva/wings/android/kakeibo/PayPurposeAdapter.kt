@@ -36,7 +36,7 @@ class PayPurposeAdapter(private val context: Context, private var payPurposeList
 
         // アイテムをタップした時の処理
         holder.itemView.setOnClickListener {
-            val intent = Intent(context, UpdatePayPurposeActivity::class.java)
+            val intent = Intent(context, PayPurposeUpdateActivity::class.java)
             // 編集するデータを渡す
             intent.putExtra("PAY_PURPOSE_ID", payPurpose.id)
             intent.putExtra("PAY_PURPOSE_NAME", payPurpose.payPurposeName)

@@ -11,7 +11,7 @@ import android.widget.TextView
 import android.widget.Toast
 import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
 
-class DetailPayRecordActivity : BaseActivity(R.layout.activity_detail_pay_record, R.string.title_detail_pay_record) {
+class PayRecordDetailActivity : BaseActivity(R.layout.activity_pay_record_detail, R.string.title_detail_pay_record) {
     //画面部品の用意
     private lateinit var payerTextView: TextView
     private lateinit var payDateTextView: TextView
@@ -30,7 +30,7 @@ class DetailPayRecordActivity : BaseActivity(R.layout.activity_detail_pay_record
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_detail_pay_record)
+        setContentView(R.layout.activity_pay_record_detail)
 
         setupDrawerAndToolbar()
         
@@ -60,7 +60,7 @@ class DetailPayRecordActivity : BaseActivity(R.layout.activity_detail_pay_record
         payNoteTextView.text = note
 
         buttonPayRecordUpdate.setOnClickListener {
-            val intent = Intent(this, UpdatePayRecordActivity::class.java)
+            val intent = Intent(this, PayRecordUpdateActivity::class.java)
             intent.putExtra("PAY_RECORD_ID",payRecordId)
             intent.putExtra("MEMBER_ID",memberId)
             intent.putExtra("PAY_DATE",payDate)
