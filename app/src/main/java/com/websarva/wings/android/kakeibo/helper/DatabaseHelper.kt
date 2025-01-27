@@ -55,6 +55,18 @@ class DatabaseHelper(context: Context): SQLiteOpenHelper(context,
             );
         """
         db.execSQL(paymentPurposeTable)
+
+        //balance_historyテーブルの作成
+        val balanceHistoryTable = """
+             CREATE TABLE balance_history (
+                 _id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT,
+                start_date DATE,
+                finish_date DATE,
+                budget INTEGER
+            );
+        """
+        db.execSQL(balanceHistoryTable)
     }
 
     override fun onUpgrade(db:SQLiteDatabase,oldVersion:Int,newVersion:Int){
@@ -62,6 +74,7 @@ class DatabaseHelper(context: Context): SQLiteOpenHelper(context,
             db.execSQL("DROP TABLE IF EXISTS member")
             db.execSQL("DROP TABLE IF EXISTS payment_history")
             db.execSQL("DROP TABLE IF EXISTS payment_purpose")
+            db.execSQL("DROP TABLE IF EXISTS balance_history")
             onCreate(db)
         }
     }
@@ -288,8 +301,4 @@ class DatabaseHelper(context: Context): SQLiteOpenHelper(context,
 
         return totalAmount
     }
-
-
-
-
 }

@@ -1,11 +1,13 @@
 package com.websarva.wings.android.kakeibo
 
 import android.annotation.SuppressLint
+import android.content.ContentValues
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Button
+import android.widget.Toast
 import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
 
 class HomeActivity : BaseActivity(R.layout.activity_home,R.string.title_home) {
@@ -16,11 +18,12 @@ class HomeActivity : BaseActivity(R.layout.activity_home,R.string.title_home) {
     private lateinit var sumExpenditureTextView: TextView
     private lateinit var leftoverTextView: TextView
     private lateinit var buttonSetInfo: Button
+    private lateinit var buttonBalanceSheetAdd: Button
 
     // Fragmentからもらう値の用意
     private var budgetSet: String = "0"
-    private var startDate: String = ""
-    private var finishDate: String = ""
+    private var startDateString: String = ""
+    private var finishDateString: String = ""
 
     // ヘルパークラス
     private val databaseHelper = DatabaseHelper(this)
@@ -40,8 +43,8 @@ class HomeActivity : BaseActivity(R.layout.activity_home,R.string.title_home) {
 
         // 取得したデータをフィールドにセット
         budgetSet = savedBudgetSet ?: "0"
-        startDate = savedStartDate ?: ""
-        finishDate = savedFinishDate ?: ""
+        startDateString = savedStartDate ?: ""
+        finishDateString = savedFinishDate ?: ""
 
         // 画面部品の取得
         dateRangeTextView = findViewById(R.id.dateRangeTextView)
@@ -50,15 +53,16 @@ class HomeActivity : BaseActivity(R.layout.activity_home,R.string.title_home) {
         sumExpenditureTextView = findViewById(R.id.sumExpenditureTextView)
         leftoverTextView = findViewById(R.id.leftoverTextView)
         buttonSetInfo = findViewById(R.id.buttonSetInfo)
+        buttonBalanceSheetAdd = findViewById(R.id.buttonBalanceSheetAdd)
 
         // 期間のセット
-        dateRangeTextView.text = getString(R.string.date_range_set, startDate, finishDate)
+        dateRangeTextView.text = getString(R.string.date_range_set, startDateString, finishDateString)
 
         // 予算額のセット
         budgetTextView.text = "${budgetSet}円"
 
         // 合計額のセット
-        val sumExpenditure = databaseHelper.getTotalAmountForUserInDateRange(userID, startDate, finishDate)
+        val sumExpenditure = databaseHelper.getTotalAmountForUserInDateRange(userID, startDateString, finishDateString)
         sumExpenditureTextView.text = "${sumExpenditure}円"
 
         // 繰越額のセット
@@ -74,13 +78,22 @@ class HomeActivity : BaseActivity(R.layout.activity_home,R.string.title_home) {
             val fragment = BalanceSheetSetInfoFragment()
             fragment.show(supportFragmentManager, "BalanceSheetSetInfoFragment")
         }
+
+        buttonBalanceSheetAdd.setOnClickListener{
+            if(budgetSet != "0" && startDateString != "" && finishDateString != "") {
+                saveBalanceHistory()
+            }else {
+                Toast.makeText(this,"予算と期間を設定してください。",Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+        }
     }
 
     // Fragmentから情報を受け取る
     fun setInfo(budget: Int, startDate: String, finishDate: String) {
         budgetSet = budget.toString()
-        this.startDate = startDate
-        this.finishDate = finishDate
+        this.startDateString = startDate
+        this.finishDateString = finishDate
 
         // データをSharedPreferencesに保存する
         val sharedPreferences = getSharedPreferences("MyPreferences", MODE_PRIVATE)
@@ -98,11 +111,11 @@ class HomeActivity : BaseActivity(R.layout.activity_home,R.string.title_home) {
     @SuppressLint("SetTextI18n")
     private fun updateUI() {
         // 期間の再設定
-        dateRangeTextView.text = getString(R.string.date_range_set, startDate, finishDate)
+        dateRangeTextView.text = getString(R.string.date_range_set, startDateString, finishDateString)
         // 予算額の再設定
         budgetTextView.text = "${budgetSet}円"
         // 合計額の再計算
-        val sumExpenditure = databaseHelper.getTotalAmountForUserInDateRange(userID, startDate, finishDate)
+        val sumExpenditure = databaseHelper.getTotalAmountForUserInDateRange(userID, startDateString, finishDateString)
         sumExpenditureTextView.text = "${sumExpenditure}円"
 
         // 繰越額の再計算
@@ -116,7 +129,7 @@ class HomeActivity : BaseActivity(R.layout.activity_home,R.string.title_home) {
     // レコードに基づいて動的にLinearLayoutを追加する処理
     @SuppressLint("SetTextI18n", "InflateParams")
     private fun addLayoutsForRecords(records: List<String>) {
-        val payAmountByPurposeList = databaseHelper.getAmountByPurposeNameForUserInDateRange(userID, startDate, finishDate)
+        val payAmountByPurposeList = databaseHelper.getAmountByPurposeNameForUserInDateRange(userID, startDateString, finishDateString)
         linearLayoutContainer.removeAllViews()
         for (record in records) {
             val layout = LayoutInflater.from(this).inflate(R.layout.layout_item, null) as LinearLayout
@@ -127,4 +140,49 @@ class HomeActivity : BaseActivity(R.layout.activity_home,R.string.title_home) {
             linearLayoutContainer.addView(layout)
         }
     }
+
+    private fun saveBalanceHistory() {
+        val db = databaseHelper.writableDatabase
+
+        // 重複をチェックするためのSQLクエリ
+        val checkQuery = """
+        SELECT COUNT(*) FROM balance_history
+        WHERE user_id = ? AND start_date = ? AND finish_date = ?
+    """
+
+        val cursor = db.rawQuery(checkQuery, arrayOf(userID, startDateString, finishDateString))
+
+        cursor.moveToFirst()
+        val count = cursor.getInt(0)
+        cursor.close()
+
+        if (count > 0) {
+            // 同じユーザーで同じ日付範囲が存在する場合
+            Toast.makeText(this, "この期間は既に存在します", Toast.LENGTH_SHORT).show()
+        } else {
+            // 重複がなければデータを挿入
+            val values = ContentValues().apply {
+                put("user_id", userID)
+                put("start_date", startDateString)
+                put("finish_date", finishDateString)
+                put("budget", budgetSet.toInt())
+            }
+
+            try {
+                val newRowId = db.insert("balance_history", null, values)
+                if (newRowId != -1L) {
+                    Toast.makeText(this, "家計簿が追加されました", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "データベースに挿入できませんでした", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                // エラーハンドリング
+                Toast.makeText(this, "エラーが発生しました: ${e.message}", Toast.LENGTH_SHORT).show()
+            } finally {
+                db.close()
+            }
+        }
+    }
+
+
 }
