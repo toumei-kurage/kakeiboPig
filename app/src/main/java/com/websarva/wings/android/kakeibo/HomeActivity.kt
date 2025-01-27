@@ -35,17 +35,6 @@ class HomeActivity : BaseActivity(R.layout.activity_home,R.string.title_home) {
 
         setupDrawerAndToolbar()
 
-        // SharedPreferencesから保存されていた値を取得
-        val sharedPreferences = getSharedPreferences("MyPreferences", MODE_PRIVATE)
-        val savedBudgetSet = sharedPreferences.getString("budgetSet", "0") // デフォルト値は "0"
-        val savedStartDate = sharedPreferences.getString("startDate", "")
-        val savedFinishDate = sharedPreferences.getString("finishDate", "")
-
-        // 取得したデータをフィールドにセット
-        budgetSet = savedBudgetSet ?: "0"
-        startDateString = savedStartDate ?: ""
-        finishDateString = savedFinishDate ?: ""
-
         // 画面部品の取得
         dateRangeTextView = findViewById(R.id.dateRangeTextView)
         linearLayoutContainer = findViewById(R.id.linearLayoutContainer)
@@ -55,11 +44,13 @@ class HomeActivity : BaseActivity(R.layout.activity_home,R.string.title_home) {
         buttonSetInfo = findViewById(R.id.buttonSetInfo)
         buttonBalanceSheetAdd = findViewById(R.id.buttonBalanceSheetAdd)
 
-        // 期間のセット
-        dateRangeTextView.text = getString(R.string.date_range_set, startDateString, finishDateString)
-
-        // 予算額のセット
-        budgetTextView.text = "${budgetSet}円"
+        loadLatestBalanceHistory()
+//
+//        // 期間のセット
+//        dateRangeTextView.text = getString(R.string.date_range_set, startDateString, finishDateString)
+//
+//        // 予算額のセット
+//        budgetTextView.text = "${budgetSet}円"
 
         // 合計額のセット
         val sumExpenditure = databaseHelper.getTotalAmountForUserInDateRange(userID, startDateString, finishDateString)
@@ -95,14 +86,6 @@ class HomeActivity : BaseActivity(R.layout.activity_home,R.string.title_home) {
         this.startDateString = startDate
         this.finishDateString = finishDate
 
-        // データをSharedPreferencesに保存する
-        val sharedPreferences = getSharedPreferences("MyPreferences", MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        editor.putString("budgetSet", budgetSet)
-        editor.putString("startDate", startDate)
-        editor.putString("finishDate", finishDate)
-        editor.apply()
-
         // 新しいデータで画面を再描画
         updateUI()
     }
@@ -110,10 +93,18 @@ class HomeActivity : BaseActivity(R.layout.activity_home,R.string.title_home) {
     // UIを更新するメソッド
     @SuppressLint("SetTextI18n")
     private fun updateUI() {
-        // 期間の再設定
-        dateRangeTextView.text = getString(R.string.date_range_set, startDateString, finishDateString)
-        // 予算額の再設定
-        budgetTextView.text = "${budgetSet}円"
+        // 画面に表示する内容を更新
+        dateRangeTextView.text = if (startDateString != "" && finishDateString != "") {
+            getString(R.string.date_range_set, startDateString, finishDateString)
+        } else {
+            getString(R.string.date_range_set, "未設定", "未設定")
+        }
+
+        budgetTextView.text = if (budgetSet != "0") {
+            "${budgetSet}円"
+        } else {
+            "未設定"
+        }
         // 合計額の再計算
         val sumExpenditure = databaseHelper.getTotalAmountForUserInDateRange(userID, startDateString, finishDateString)
         sumExpenditureTextView.text = "${sumExpenditure}円"
@@ -182,6 +173,36 @@ class HomeActivity : BaseActivity(R.layout.activity_home,R.string.title_home) {
                 db.close()
             }
         }
+    }
+
+    private fun loadLatestBalanceHistory() {
+        val db = databaseHelper.readableDatabase
+        val query = """
+            SELECT budget, start_date, finish_date 
+            FROM balance_history
+            WHERE user_id = ?
+            ORDER BY _id DESC
+            LIMIT 1
+        """
+        val cursor = db.rawQuery(query, arrayOf(userID))
+
+        if (cursor.moveToFirst()) {
+            // レコードが見つかった場合
+            budgetSet = cursor.getString(cursor.getColumnIndex("budget"))
+            startDateString = cursor.getString(cursor.getColumnIndex("start_date"))
+            finishDateString = cursor.getString(cursor.getColumnIndex("finish_date"))
+        } else {
+            // レコードが見つからなかった場合
+            budgetSet= "0"
+            startDateString = ""
+            finishDateString = ""
+        }
+
+        cursor.close()
+        db.close()
+
+        // 取得した値をUIにセット
+        updateUI()
     }
 
 
