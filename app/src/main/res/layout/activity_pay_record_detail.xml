@@ -152,7 +152,7 @@
                 android:id="@+id/buttonPayRecordUpdate"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/button_pay_record_update"/>
+                android:text="@string/button_update"/>
         </LinearLayout>
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

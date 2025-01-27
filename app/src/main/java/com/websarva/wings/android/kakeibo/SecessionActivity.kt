@@ -90,4 +90,9 @@ class SecessionActivity : BaseActivity(R.layout.activity_secession,R.string.titl
             }
         }
     }
+
+    override fun onDestroy() {
+        databaseHelper.close()
+        super.onDestroy()
+    }
 }

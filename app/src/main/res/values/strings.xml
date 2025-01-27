@@ -14,6 +14,7 @@
     <string name="title_update_pay_record">支払い明細更新</string>
     <string name="title_balance_list">家計簿の履歴</string>
     <string name="title_balance_detail">家計簿</string>
+    <string name="title_balance_update">家計簿の更新</string>
     <string name="title_secession">退会</string>
     <string name="title_pay_purpose_add">支払い目的の登録</string>
     <string name="title_pay_purpose_update">支払い目的の更新</string>
@@ -27,16 +28,12 @@
     <string name="button_register">アカウント登録</string>
     <string name="button_update_user">アカウント更新</string>
     <string name="button_member_regist">メンバー登録</string>
-    <string name="button_member_update">更新</string>
-    <string name="button_member_delete">削除</string>
-    <string name="button_pay_record_add">登録</string>
-    <string name="button_pay_record_update">更新</string>
+    <string name="button_update">更新</string>
+    <string name="button_delete">削除</string>
+    <string name="button_add">登録</string>
     <string name="button_secession_ok">はい</string>
     <string name="button_secession_ng">いいえ</string>
-    <string name="button_pay_purpose_add">登録</string>
-    <string name="button_pay_purpose_update">更新</string>
-    <string name="button_pay_purpose_delete">削除</string>
-    <string name="button_refinement_pay_record">絞り込み</string>
+    <string name="button_refinement">絞り込み</string>
 
     <!--    ヒント-->
     <string name="hint_password">パスワード</string>

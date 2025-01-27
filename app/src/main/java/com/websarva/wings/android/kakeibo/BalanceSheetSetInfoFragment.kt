@@ -9,20 +9,24 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity.INPUT_METHOD_SERVICE
 import androidx.fragment.app.DialogFragment
+import com.google.android.material.textfield.TextInputLayout
 import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 import java.util.Calendar
 import android.view.ViewGroup as ViewGroup1
 
 class BalanceSheetSetInfoFragment : DialogFragment() {
+    private lateinit var budgetError:TextInputLayout
     private lateinit var budgetEditText: EditText
+    private lateinit var startDateError: TextInputLayout
     private lateinit var startDateEditText: EditText
+    private lateinit var finishDateError: TextInputLayout
     private lateinit var finishDateEditText: EditText
     private lateinit var buttonOK: Button
+
     private lateinit var databaseHelper: DatabaseHelper
     private lateinit var validateHelper: ValidateHelper
 
@@ -32,9 +36,11 @@ class BalanceSheetSetInfoFragment : DialogFragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_balance_sheet_set_info, container, false)
-
+        budgetError = view.findViewById(R.id.budget)
         budgetEditText = view.findViewById(R.id.budgetEditText)
+        startDateError = view.findViewById(R.id.startDate)
         startDateEditText = view.findViewById(R.id.startDateEditText)
+        finishDateError = view.findViewById(R.id.finishDate)
         finishDateEditText = view.findViewById(R.id.finishDateEditText)
         buttonOK = view.findViewById(R.id.buttonOK)
 
@@ -45,7 +51,7 @@ class BalanceSheetSetInfoFragment : DialogFragment() {
             if (!hasFocus) {
                 val (result, errorMessage) = validateHelper.payAmountCheck(budgetEditText)
                 if (!result) {
-                    Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
+                    budgetError.error = errorMessage
                     return@OnFocusChangeListener
                 }
             }
@@ -70,13 +76,20 @@ class BalanceSheetSetInfoFragment : DialogFragment() {
             val startDate = startDateEditText.text.toString().takeIf { it.isNotEmpty() }
             val finishDate = finishDateEditText.text.toString().takeIf { it.isNotEmpty() }
 
-            if (startDate == null || finishDate == null || budget == null) {
-                Toast.makeText(context, "すべて入力してください。", Toast.LENGTH_SHORT).show()
+            val (resultBudget, budgetMsg) = validateHelper.payAmountCheck(budgetEditText)
+            val (resultStartDate,startDateMsg) = validateHelper.dateCheck(startDateEditText)
+            val (resultFinishDate,finishDateMsg) = validateHelper.dateCheck(finishDateEditText)
+
+            budgetError.error = if(!resultBudget) budgetMsg else null
+            startDateError.error = if(!resultStartDate) startDateMsg else null
+            finishDateError.error = if(!resultFinishDate) finishDateMsg else null
+
+            if(!(resultBudget && resultStartDate && resultFinishDate)){
                 return@setOnClickListener
             }
 
             // 入力された内容をアクティビティに渡す
-            (activity as? HomeActivity)?.setInfo(budget.toInt(), startDate, finishDate)
+            (activity as? HomeActivity)?.setInfo(budget!!.toInt(), startDate!!, finishDate!!)
 
             dismiss()
         }

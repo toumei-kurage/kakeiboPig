@@ -37,9 +37,11 @@ class BalanceDetailActivity : BaseActivity(R.layout.activity_balance_detail,R.st
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_balance_detail)
 
+        setupDrawerAndToolbar()
+
         // 取得したデータをフィールドにセット
         balanceId = intent.getLongExtra("BALANCE_ID",-1).toInt()
-        budgetSet = intent.getStringExtra("BUDGET").toString()
+        budgetSet = intent.getIntExtra("BUDGET",-1).toString()
         startDate = intent.getStringExtra("START_DATE").toString()
         finishDate = intent.getStringExtra("FINISH_DATE").toString()
 
@@ -70,6 +72,11 @@ class BalanceDetailActivity : BaseActivity(R.layout.activity_balance_detail,R.st
 
         buttonBalanceSheetUpdate.setOnClickListener{
             val intent = Intent(this,BalanceUpdateActivity::class.java)
+            // 編集するデータを渡す
+            intent.putExtra("BALANCE_ID", balanceId)
+            intent.putExtra("START_DATE", startDate)
+            intent.putExtra("FINISH_DATE",finishDate)
+            intent.putExtra("BUDGET",budgetSet)
             startActivity(intent)
             finish()
         }
@@ -122,7 +129,7 @@ class BalanceDetailActivity : BaseActivity(R.layout.activity_balance_detail,R.st
         alert.show()
     }
 
-    // メンバーを削除する処理
+    // 家計簿を削除する処理
     private fun deleteBalance() {
         val db = DatabaseHelper(this).writableDatabase
 
@@ -143,5 +150,10 @@ class BalanceDetailActivity : BaseActivity(R.layout.activity_balance_detail,R.st
             Toast.makeText(this, "削除できませんでした", Toast.LENGTH_SHORT).show()
         }
         db.close()
+    }
+
+    override fun onDestroy() {
+        databaseHelper.close()
+        super.onDestroy()
     }
 }

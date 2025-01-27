@@ -153,7 +153,7 @@ class PayPurposeUpdateActivity :BaseActivity(R.layout.activity_pay_purpose_updat
         alert.show()
     }
 
-    // メンバーを削除する処理
+    // 支払い目的を削除する処理
     private fun deletePayPurpose() {
         val db = DatabaseHelper(this).writableDatabase
 
