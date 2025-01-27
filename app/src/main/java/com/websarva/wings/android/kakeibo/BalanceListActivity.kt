@@ -42,7 +42,7 @@ class BalanceListActivity : BaseActivity(R.layout.activity_balance_list, R.strin
 
         if (resultCode == RESULT_OK) {
             // 削除された場合の処理
-            if (data?.getBooleanExtra("BALANCE_DETAIL", false) == true) {
+            if (data?.getBooleanExtra("BALANCE_DELETE", false) == true) {
                 // 削除後にデータを再読み込みしてRecyclerViewを更新
                 loadBalanceList()
             }
