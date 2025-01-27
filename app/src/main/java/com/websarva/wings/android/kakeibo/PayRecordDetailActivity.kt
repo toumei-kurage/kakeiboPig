@@ -105,7 +105,7 @@ class PayRecordDetailActivity : BaseActivity(R.layout.activity_pay_record_detail
         alert.show()
     }
 
-    // メンバーを削除する処理
+    // 支払い履歴を削除する処理
     private fun deletePayRecord() {
         val db = DatabaseHelper(this).writableDatabase
 
