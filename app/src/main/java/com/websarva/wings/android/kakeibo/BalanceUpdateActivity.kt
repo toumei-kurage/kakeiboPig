@@ -55,6 +55,10 @@ class BalanceUpdateActivity : BaseActivity(R.layout.activity_balance_update,R.st
         finishDateEditText = findViewById(R.id.finishDateEditText)
         buttonOK = findViewById(R.id.buttonUpdate)
 
+        budgetEditText.setText(budgetSet)
+        startDateEditText.setText(startDate)
+        finishDateEditText.setText(finishDate)
+
         budgetEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
                 val (result, errorMessage) = validateHelper.payAmountCheck(budgetEditText)
