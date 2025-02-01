@@ -13,7 +13,6 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity.INPUT_METHOD_SERVICE
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.textfield.TextInputLayout
-import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 import java.util.Calendar
 import android.view.ViewGroup as ViewGroup1
@@ -27,7 +26,6 @@ class BalanceSheetSetInfoFragment : DialogFragment() {
     private lateinit var finishDateEditText: EditText
     private lateinit var buttonOK: Button
 
-    private lateinit var databaseHelper: DatabaseHelper
     private lateinit var validateHelper: ValidateHelper
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -44,7 +42,6 @@ class BalanceSheetSetInfoFragment : DialogFragment() {
         finishDateEditText = view.findViewById(R.id.finishDateEditText)
         buttonOK = view.findViewById(R.id.buttonOK)
 
-        databaseHelper = DatabaseHelper(requireContext())
         validateHelper = ValidateHelper(requireContext())
 
         budgetEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->

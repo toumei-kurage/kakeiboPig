@@ -1,16 +1,15 @@
 package com.websarva.wings.android.kakeibo
 
 import android.annotation.SuppressLint
-import android.content.ContentValues
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Button
 import android.widget.Toast
-import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
+import com.google.firebase.firestore.FirebaseFirestore
 
-class HomeActivity : BaseActivity(R.layout.activity_home,R.string.title_home) {
+class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
     // 画面部品の用意
     private lateinit var dateRangeTextView: TextView
     private lateinit var linearLayoutContainer: LinearLayout
@@ -25,10 +24,8 @@ class HomeActivity : BaseActivity(R.layout.activity_home,R.string.title_home) {
     private var startDateString: String = ""
     private var finishDateString: String = ""
 
-    // ヘルパークラス
-    private val databaseHelper = DatabaseHelper(this)
+    private val firestore = FirebaseFirestore.getInstance()
 
-    @SuppressLint("SetTextI18n", "SimpleDateFormat")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
@@ -45,36 +42,18 @@ class HomeActivity : BaseActivity(R.layout.activity_home,R.string.title_home) {
         buttonBalanceSheetAdd = findViewById(R.id.buttonBalanceSheetAdd)
 
         loadLatestBalanceHistory()
-//
-//        // 期間のセット
-//        dateRangeTextView.text = getString(R.string.date_range_set, startDateString, finishDateString)
-//
-//        // 予算額のセット
-//        budgetTextView.text = "${budgetSet}円"
-
-        // 合計額のセット
-        val sumExpenditure = databaseHelper.getTotalAmountForUserInDateRange(userID, startDateString, finishDateString)
-        sumExpenditureTextView.text = "${sumExpenditure}円"
-
-        // 繰越額のセット
-        leftoverTextView.text = "${budgetSet.toInt() - sumExpenditure}円"
-
-        // 支払い目的リスト
-        val payPurposeList = databaseHelper.getPaymentPurposesForUser(userID)
-        addLayoutsForRecords(payPurposeList)
 
         // 「設定」ボタンのクリックリスナー
         buttonSetInfo.setOnClickListener {
-            // フラグメントを表示
             val fragment = BalanceSheetSetInfoFragment()
             fragment.show(supportFragmentManager, "BalanceSheetSetInfoFragment")
         }
 
-        buttonBalanceSheetAdd.setOnClickListener{
-            if(budgetSet != "0" && startDateString != "" && finishDateString != "") {
+        buttonBalanceSheetAdd.setOnClickListener {
+            if (budgetSet != "0" && startDateString != "" && finishDateString != "") {
                 saveBalanceHistory()
-            }else {
-                Toast.makeText(this,"予算と期間を設定してください。",Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "予算と期間を設定してください。", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
         }
@@ -93,7 +72,6 @@ class HomeActivity : BaseActivity(R.layout.activity_home,R.string.title_home) {
     // UIを更新するメソッド
     @SuppressLint("SetTextI18n")
     private fun updateUI() {
-        // 画面に表示する内容を更新
         dateRangeTextView.text = if (startDateString != "" && finishDateString != "") {
             getString(R.string.date_range_set, startDateString, finishDateString)
         } else {
@@ -105,105 +83,188 @@ class HomeActivity : BaseActivity(R.layout.activity_home,R.string.title_home) {
         } else {
             "未設定"
         }
-        // 合計額の再計算
-        val sumExpenditure = databaseHelper.getTotalAmountForUserInDateRange(userID, startDateString, finishDateString)
-        sumExpenditureTextView.text = "${sumExpenditure}円"
 
-        // 繰越額の再計算
-        leftoverTextView.text = "${budgetSet.toInt() - sumExpenditure}円"
+        // Firestore から合計額を取得
+        getTotalExpenditureInDateRange { sumExpenditure ->
+            sumExpenditureTextView.text = "${sumExpenditure}円"
+            leftoverTextView.text = "${budgetSet.toInt() - sumExpenditure}円"
+        }
 
-        // 支払い目的リストの再描画
-        val payPurposeList = databaseHelper.getPaymentPurposesForUser(userID)
-        addLayoutsForRecords(payPurposeList)
+        // 支払い目的リストを取得して表示
+        loadPaymentPurposes()
+    }
+
+    // 支払い目的リストの取得
+    private fun loadPaymentPurposes() {
+        firestore.collection("payPurposes")
+            .whereEqualTo("user_id", userID)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                val payPurposeList = querySnapshot.documents.map { it.getString("pay_purpose_name") ?: "" }
+                addLayoutsForRecords(payPurposeList)
+            }
+            .addOnFailureListener { exception ->
+                Toast.makeText(this, "支払い目的の取得に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    // 合計支出を取得する
+    private fun getTotalExpenditureInDateRange(callback: (Int) -> Unit) {
+        firestore.collection("payment_history")
+            .whereEqualTo("user_id", userID)
+            .whereGreaterThanOrEqualTo("payment_date", startDateString)
+            .whereLessThanOrEqualTo("payment_date", finishDateString)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                val sumExpenditure = querySnapshot.documents.sumOf { it.getLong("amount")?.toInt() ?: 0 }
+                callback(sumExpenditure)
+            }
+            .addOnFailureListener { exception ->
+                Toast.makeText(this, "支出の合計取得に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
+                callback(0)  // エラーが発生した場合は0円として返す
+            }
     }
 
     // レコードに基づいて動的にLinearLayoutを追加する処理
     @SuppressLint("SetTextI18n", "InflateParams")
     private fun addLayoutsForRecords(records: List<String>) {
-        val payAmountByPurposeList = databaseHelper.getAmountByPurposeNameForUserInDateRange(userID, startDateString, finishDateString)
-        linearLayoutContainer.removeAllViews()
-        for (record in records) {
-            val layout = LayoutInflater.from(this).inflate(R.layout.layout_item, null) as LinearLayout
-            val payPurposeNameTextView: TextView = layout.findViewById(R.id.payPurposeName)
-            val payAmount: TextView = layout.findViewById(R.id.payAmount)
-            payPurposeNameTextView.text = getString(R.string.purpose_name, record)
-            payAmount.text = "${payAmountByPurposeList.getOrDefault(record, 0)}円"
-            linearLayoutContainer.addView(layout)
+        // Firestore から支払い目的ごとの金額を取得
+        getAmountByPurposeForUserInDateRange(userID, startDateString, finishDateString) { payAmountByPurposeList ->
+            linearLayoutContainer.removeAllViews()
+
+            for (record in records) {
+                val layout = LayoutInflater.from(this).inflate(R.layout.layout_item, null) as LinearLayout
+                val payPurposeNameTextView: TextView = layout.findViewById(R.id.payPurposeName)
+                val payAmount: TextView = layout.findViewById(R.id.payAmount)
+
+                // 支払い目的と金額を表示
+                payPurposeNameTextView.text = getString(R.string.purpose_name, record)
+                payAmount.text = "${payAmountByPurposeList.getOrDefault(record, 0)}円"
+
+                linearLayoutContainer.addView(layout)
+            }
         }
     }
 
+    // Firestore に家計簿データを保存
     private fun saveBalanceHistory() {
-        val db = databaseHelper.writableDatabase
+        val balanceHistory = hashMapOf(
+            "user_id" to userID,
+            "start_date" to startDateString,
+            "finish_date" to finishDateString,
+            "budget" to budgetSet.toInt()
+        )
 
-        // 重複をチェックするためのSQLクエリ
-        val checkQuery = """
-        SELECT COUNT(*) FROM balance_history
-        WHERE user_id = ? AND start_date = ? AND finish_date = ?
-    """
-
-        val cursor = db.rawQuery(checkQuery, arrayOf(userID, startDateString, finishDateString))
-
-        cursor.moveToFirst()
-        val count = cursor.getInt(0)
-        cursor.close()
-
-        if (count > 0) {
-            // 同じユーザーで同じ日付範囲が存在する場合
-            Toast.makeText(this, "この期間は既に存在します", Toast.LENGTH_SHORT).show()
-        } else {
-            // 重複がなければデータを挿入
-            val values = ContentValues().apply {
-                put("user_id", userID)
-                put("start_date", startDateString)
-                put("finish_date", finishDateString)
-                put("budget", budgetSet.toInt())
-            }
-
-            try {
-                val newRowId = db.insert("balance_history", null, values)
-                if (newRowId != -1L) {
-                    Toast.makeText(this, "家計簿が追加されました", Toast.LENGTH_SHORT).show()
+        // Firestore で既に同じ期間のデータが存在するか確認
+        firestore.collection("balance_history")
+            .whereEqualTo("user_id", userID)
+            .whereEqualTo("start_date", startDateString)
+            .whereEqualTo("finish_date", finishDateString)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                if (querySnapshot.isEmpty) {
+                    firestore.collection("balance_history")
+                        .add(balanceHistory)
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "家計簿が追加されました", Toast.LENGTH_SHORT).show()
+                        }
+                        .addOnFailureListener { exception ->
+                            Toast.makeText(this, "データベースに挿入できませんでした: ${exception.message}", Toast.LENGTH_SHORT).show()
+                        }
                 } else {
-                    Toast.makeText(this, "データベースに挿入できませんでした", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "この期間は既に存在します", Toast.LENGTH_SHORT).show()
                 }
-            } catch (e: Exception) {
-                // エラーハンドリング
-                Toast.makeText(this, "エラーが発生しました: ${e.message}", Toast.LENGTH_SHORT).show()
-            } finally {
-                db.close()
             }
-        }
+            .addOnFailureListener { exception ->
+                Toast.makeText(this, "データベースの確認に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
+    // Firestore から最新の家計簿情報を取得
     private fun loadLatestBalanceHistory() {
-        val db = databaseHelper.readableDatabase
-        val query = """
-            SELECT budget, start_date, finish_date 
-            FROM balance_history
-            WHERE user_id = ?
-            ORDER BY _id DESC
-            LIMIT 1
-        """
-        val cursor = db.rawQuery(query, arrayOf(userID))
+        firestore.collection("balance_history")
+            .whereEqualTo("user_id", userID)
+            .orderBy("start_date", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                if (querySnapshot.documents.isNotEmpty()) {
+                    val document = querySnapshot.documents.first()
+                    budgetSet = document.getLong("budget")?.toString() ?: "0"
+                    startDateString = document.getString("start_date") ?: ""
+                    finishDateString = document.getString("finish_date") ?: ""
+                } else {
+                    budgetSet = "0"
+                    startDateString = ""
+                    finishDateString = ""
+                }
+                updateUI()  // 取得したデータをUIに反映
+            }
+            .addOnFailureListener { exception ->
+                Toast.makeText(this, "データの取得に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
 
-        if (cursor.moveToFirst()) {
-            // レコードが見つかった場合
-            budgetSet = cursor.getString(cursor.getColumnIndex("budget"))
-            startDateString = cursor.getString(cursor.getColumnIndex("start_date"))
-            finishDateString = cursor.getString(cursor.getColumnIndex("finish_date"))
-        } else {
-            // レコードが見つからなかった場合
-            budgetSet= "0"
-            startDateString = ""
-            finishDateString = ""
-        }
+    // 支払い目的ごとの金額を取得
+    private fun getAmountByPurposeForUserInDateRange(userID: String, startDate: String, finishDate: String, callback: (Map<String, Int>) -> Unit) {
+        firestore.collection("payment_history")
+            .whereEqualTo("user_id", userID)
+            .whereGreaterThanOrEqualTo("payment_date", startDate)
+            .whereLessThanOrEqualTo("payment_date", finishDate)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                val payAmountByPurposeList = mutableMapOf<String, Int>()
+                val totalDocuments = querySnapshot.documents.size
+                var processedDocuments = 0
 
-        cursor.close()
-        db.close()
+                if (totalDocuments == 0) {
+                    // 支払い履歴が存在しない場合
+                    callback(payAmountByPurposeList)
+                    return@addOnSuccessListener
+                }
 
-        // 取得した値をUIにセット
-        updateUI()
+                for (document in querySnapshot.documents) {
+                    val payPurposeId = document.getString("pay_purpose_id") ?: ""
+                    val amount = document.getLong("amount")?.toInt() ?: 0
+
+                    // 支払い目的名を取得
+                    getPayPurposeNameFromDocumentId(payPurposeId) { payPurposeName ->
+                        if (payPurposeName != null) {
+                            // 支払い目的ごとに金額を集計
+                            payAmountByPurposeList[payPurposeName] = payAmountByPurposeList.getOrDefault(payPurposeName, 0) + amount
+                        }
+
+                        // 最後のドキュメント処理が完了したらコールバックを呼ぶ
+                        processedDocuments++
+                        if (processedDocuments == totalDocuments) {
+                            callback(payAmountByPurposeList)
+                        }
+                    }
+                }
+            }
+            .addOnFailureListener { exception ->
+                Toast.makeText(this, "支払い目的ごとの金額取得に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
+                callback(emptyMap())  // エラーが発生した場合は空のマップを返す
+            }
     }
 
 
+    // Firestore から payPurposes コレクションの指定されたドキュメントの pay_purpose_name を取得するメソッド
+    private fun getPayPurposeNameFromDocumentId(documentId: String, callback: (String?) -> Unit) {
+        firestore.collection("payPurposes")
+            .document(documentId)  // ドキュメントIDを指定
+            .get()
+            .addOnSuccessListener { documentSnapshot ->
+                if (documentSnapshot.exists()) {
+                    val payPurposeName = documentSnapshot.getString("pay_purpose_name")  // フィールド名を指定
+                    callback(payPurposeName)
+                } else {
+                    callback(null)  // ドキュメントが存在しない場合は null を返す
+                }
+            }
+            .addOnFailureListener { exception ->
+                Toast.makeText(this, "pay_purpose_name の取得に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
+                callback(null)  // エラーが発生した場合も null を返す
+            }
+    }
 }

@@ -8,10 +8,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
 
 // Balance のデータクラス
-data class Balance(val id: Long, val userId: String, var startDate: String, var finishDate: String, var budget:Int)
+data class Balance(val id: String, val userId: String, var startDate: String, var finishDate: String, var budget:Int)
 
 class BalanceAdapter(private val context: Context, private var balanceList: List<Balance>) :
     RecyclerView.Adapter<BalanceAdapter.BalanceViewHolder>() {

@@ -9,7 +9,6 @@ import android.widget.Toast
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 
 class PayPurposeAddActivity :
@@ -21,7 +20,6 @@ class PayPurposeAddActivity :
 
     //ヘルパークラス
     private val validateHelper = ValidateHelper(this)
-    private val databaseHelper = DatabaseHelper(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -103,7 +101,7 @@ class PayPurposeAddActivity :
                     // Firestoreの「payPurposes」コレクションにデータを追加
                     firestore.collection("payPurposes")
                         .add(payPurposeData)
-                        .addOnSuccessListener { documentReference ->
+                        .addOnSuccessListener {
                             // 成功した場合の処理
                             Toast.makeText(this, "支払い目的が追加されました", Toast.LENGTH_SHORT).show()
                         }

@@ -1,7 +1,5 @@
 package com.websarva.wings.android.kakeibo
 
-import android.content.ContentValues
-import android.database.sqlite.SQLiteConstraintException
 import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.InputMethodManager
@@ -11,8 +9,6 @@ import android.widget.Toast
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
-import com.websarva.wings.android.kakeibo.helper.DialogHelper
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 
 class MemberAddActivity : BaseActivity(R.layout.activity_member_add, R.string.title_member_add) {
@@ -22,7 +18,6 @@ class MemberAddActivity : BaseActivity(R.layout.activity_member_add, R.string.ti
     private lateinit var buttonMemberAdd: Button
 
     // ヘルパークラス
-    private val databaseHelper = DatabaseHelper(this)
     private val validateHelper = ValidateHelper(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -105,7 +100,7 @@ class MemberAddActivity : BaseActivity(R.layout.activity_member_add, R.string.ti
                     // Firestoreの「members」コレクションにデータを追加
                     firestore.collection("members")
                         .add(memberData)
-                        .addOnSuccessListener { documentReference ->
+                        .addOnSuccessListener {
                             // 成功した場合の処理
                             Toast.makeText(this, "メンバーが追加されました", Toast.LENGTH_SHORT).show()
                         }

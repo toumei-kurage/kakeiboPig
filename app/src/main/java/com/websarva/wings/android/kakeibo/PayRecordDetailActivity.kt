@@ -10,7 +10,6 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import com.google.firebase.firestore.FirebaseFirestore
-import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
 
 class PayRecordDetailActivity : BaseActivity(R.layout.activity_pay_record_detail, R.string.title_detail_pay_record) {
     // 画面部品の用意

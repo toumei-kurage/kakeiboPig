@@ -11,8 +11,7 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
+import com.google.firebase.firestore.FirebaseFirestore
 
 class BalanceDetailActivity : BaseActivity(R.layout.activity_balance_detail,R.string.title_balance_detail) {
     // 画面部品の用意
@@ -23,15 +22,14 @@ class BalanceDetailActivity : BaseActivity(R.layout.activity_balance_detail,R.st
     private lateinit var leftoverTextView: TextView
     private lateinit var buttonBalanceSheetUpdate: Button
 
+    private val firestore = FirebaseFirestore.getInstance()
 
     // 前画面からもらう値の用意
-    private var balanceId = -1
+    private var balanceId: String =""
     private var budgetSet: String = "0"
     private var startDate: String = ""
     private var finishDate: String = ""
 
-    // ヘルパークラス
-    private val databaseHelper = DatabaseHelper(this)
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,7 +38,7 @@ class BalanceDetailActivity : BaseActivity(R.layout.activity_balance_detail,R.st
         setupDrawerAndToolbar()
 
         // 取得したデータをフィールドにセット
-        balanceId = intent.getLongExtra("BALANCE_ID",-1).toInt()
+        balanceId = intent.getStringExtra("BALANCE_ID")?:""
         budgetSet = intent.getIntExtra("BUDGET",-1).toString()
         startDate = intent.getStringExtra("START_DATE").toString()
         finishDate = intent.getStringExtra("FINISH_DATE").toString()
@@ -60,15 +58,16 @@ class BalanceDetailActivity : BaseActivity(R.layout.activity_balance_detail,R.st
         budgetTextView.text = "${budgetSet}円"
 
         // 合計額のセット
-        val sumExpenditure = databaseHelper.getTotalAmountForUserInDateRange(userID, startDate, finishDate)
-        sumExpenditureTextView.text = "${sumExpenditure}円"
+        getTotalExpenditureInDateRange { sumExpenditure ->
+            sumExpenditureTextView.text = "${sumExpenditure}円"
+            leftoverTextView.text = "${budgetSet.toInt() - sumExpenditure}円"
 
-        // 繰越額のセット
-        leftoverTextView.text = "${budgetSet.toInt() - sumExpenditure}円"
+            // 繰越額のセット
+            leftoverTextView.text = "${budgetSet.toInt() - sumExpenditure}円"
+        }
 
-        // 支払い目的リスト
-        val payPurposeList = databaseHelper.getPaymentPurposesForUser(userID)
-        addLayoutsForRecords(payPurposeList)
+        // 支払い目的リストを取得して表示
+        loadPaymentPurposes()
 
         buttonBalanceSheetUpdate.setOnClickListener{
             val intent = Intent(this,BalanceUpdateActivity::class.java)
@@ -80,6 +79,20 @@ class BalanceDetailActivity : BaseActivity(R.layout.activity_balance_detail,R.st
             startActivity(intent)
             finish()
         }
+    }
+
+    // 支払い目的リストの取得
+    private fun loadPaymentPurposes() {
+        firestore.collection("payPurposes")
+            .whereEqualTo("user_id", userID)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                val payPurposeList = querySnapshot.documents.map { it.getString("pay_purpose_name") ?: "" }
+                addLayoutsForRecords(payPurposeList)
+            }
+            .addOnFailureListener { exception ->
+                Toast.makeText(this, "支払い目的の取得に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
     // メニュー（ActionBar）の作成
@@ -101,16 +114,84 @@ class BalanceDetailActivity : BaseActivity(R.layout.activity_balance_detail,R.st
     // レコードに基づいて動的にLinearLayoutを追加する処理
     @SuppressLint("SetTextI18n", "InflateParams")
     private fun addLayoutsForRecords(records: List<String>) {
-        val payAmountByPurposeList = databaseHelper.getAmountByPurposeNameForUserInDateRange(userID, startDate, finishDate)
-        linearLayoutContainer.removeAllViews()
-        for (record in records) {
-            val layout = LayoutInflater.from(this).inflate(R.layout.layout_item, null) as LinearLayout
-            val payPurposeNameTextView: TextView = layout.findViewById(R.id.payPurposeName)
-            val payAmount: TextView = layout.findViewById(R.id.payAmount)
-            payPurposeNameTextView.text = getString(R.string.purpose_name, record)
-            payAmount.text = "${payAmountByPurposeList.getOrDefault(record, 0)}円"
-            linearLayoutContainer.addView(layout)
+        // Firestore から支払い目的ごとの金額を取得
+        getAmountByPurposeForUserInDateRange(userID, startDate, finishDate) { payAmountByPurposeList ->
+            linearLayoutContainer.removeAllViews()
+
+            for (record in records) {
+                val layout = LayoutInflater.from(this).inflate(R.layout.layout_item, null) as LinearLayout
+                val payPurposeNameTextView: TextView = layout.findViewById(R.id.payPurposeName)
+                val payAmount: TextView = layout.findViewById(R.id.payAmount)
+
+                // 支払い目的と金額を表示
+                payPurposeNameTextView.text = getString(R.string.purpose_name, record)
+                payAmount.text = "${payAmountByPurposeList.getOrDefault(record, 0)}円"
+
+                linearLayoutContainer.addView(layout)
+            }
         }
+    }
+
+    // 支払い目的ごとの金額を取得
+    private fun getAmountByPurposeForUserInDateRange(userID: String, startDate: String, finishDate: String, callback: (Map<String, Int>) -> Unit) {
+        firestore.collection("payment_history")
+            .whereEqualTo("user_id", userID)
+            .whereGreaterThanOrEqualTo("payment_date", startDate)
+            .whereLessThanOrEqualTo("payment_date", finishDate)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                val payAmountByPurposeList = mutableMapOf<String, Int>()
+                val totalDocuments = querySnapshot.documents.size
+                var processedDocuments = 0
+
+                if (totalDocuments == 0) {
+                    // 支払い履歴が存在しない場合
+                    callback(payAmountByPurposeList)
+                    return@addOnSuccessListener
+                }
+
+                for (document in querySnapshot.documents) {
+                    val payPurposeId = document.getString("pay_purpose_id") ?: ""
+                    val amount = document.getLong("amount")?.toInt() ?: 0
+
+                    // 支払い目的名を取得
+                    getPayPurposeNameFromDocumentId(payPurposeId) { payPurposeName ->
+                        if (payPurposeName != null) {
+                            // 支払い目的ごとに金額を集計
+                            payAmountByPurposeList[payPurposeName] = payAmountByPurposeList.getOrDefault(payPurposeName, 0) + amount
+                        }
+
+                        // 最後のドキュメント処理が完了したらコールバックを呼ぶ
+                        processedDocuments++
+                        if (processedDocuments == totalDocuments) {
+                            callback(payAmountByPurposeList)
+                        }
+                    }
+                }
+            }
+            .addOnFailureListener { exception ->
+                Toast.makeText(this, "支払い目的ごとの金額取得に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
+                callback(emptyMap())  // エラーが発生した場合は空のマップを返す
+            }
+    }
+
+    // Firestore から payPurposes コレクションの指定されたドキュメントの pay_purpose_name を取得するメソッド
+    private fun getPayPurposeNameFromDocumentId(documentId: String, callback: (String?) -> Unit) {
+        firestore.collection("payPurposes")
+            .document(documentId)  // ドキュメントIDを指定
+            .get()
+            .addOnSuccessListener { documentSnapshot ->
+                if (documentSnapshot.exists()) {
+                    val payPurposeName = documentSnapshot.getString("pay_purpose_name")  // フィールド名を指定
+                    callback(payPurposeName)
+                } else {
+                    callback(null)  // ドキュメントが存在しない場合は null を返す
+                }
+            }
+            .addOnFailureListener { exception ->
+                Toast.makeText(this, "pay_purpose_name の取得に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
+                callback(null)  // エラーが発生した場合も null を返す
+            }
     }
 
     // 削除確認ダイアログを表示
@@ -131,29 +212,36 @@ class BalanceDetailActivity : BaseActivity(R.layout.activity_balance_detail,R.st
 
     // 家計簿を削除する処理
     private fun deleteBalance() {
-        val db = DatabaseHelper(this).writableDatabase
-
-        val rowsDeleted = db.delete(
-            "balance_history",
-            "_id = ?",
-            arrayOf(balanceId.toString())
-        )
-
-        if (rowsDeleted > 0) {
-            Toast.makeText(this, "削除されました", Toast.LENGTH_SHORT).show()
-            // 削除成功した場合、親Activityに通知する
-            val resultIntent = Intent()
-            resultIntent.putExtra("BALANCE_DELETE", true)  // 削除フラグを渡す
-            setResult(RESULT_OK, resultIntent)  // 削除成功の結果を返す
-            finish()  // アクティビティを終了し、前の画面に戻る
-        } else {
-            Toast.makeText(this, "削除できませんでした", Toast.LENGTH_SHORT).show()
-        }
-        db.close()
+        firestore.collection("balance_history")
+            .document(balanceId)  // payRecordIdでドキュメントを指定
+            .delete()
+            .addOnSuccessListener {
+                Toast.makeText(this, "削除されました", Toast.LENGTH_SHORT).show()
+                // 削除成功した場合、親Activityに通知する
+                val resultIntent = Intent()
+                resultIntent.putExtra("BALANCE_DELETE", true)  // 削除フラグを渡す
+                setResult(RESULT_OK, resultIntent)  // 削除成功の結果を返す
+                finish()  // アクティビティを終了し、前の画面に戻る
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "削除できませんでした", Toast.LENGTH_SHORT).show()
+            }
     }
 
-    override fun onDestroy() {
-        databaseHelper.close()
-        super.onDestroy()
+    // 合計支出を取得する
+    private fun getTotalExpenditureInDateRange(callback: (Int) -> Unit) {
+        firestore.collection("payment_history")
+            .whereEqualTo("user_id", userID)
+            .whereGreaterThanOrEqualTo("payment_date", startDate)
+            .whereLessThanOrEqualTo("payment_date", finishDate)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                val sumExpenditure = querySnapshot.documents.sumOf { it.getLong("amount")?.toInt() ?: 0 }
+                callback(sumExpenditure)
+            }
+            .addOnFailureListener { exception ->
+                Toast.makeText(this, "支出の合計取得に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
+                callback(0)  // エラーが発生した場合は0円として返す
+            }
     }
 }
