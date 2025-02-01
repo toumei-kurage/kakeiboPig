@@ -10,7 +10,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 // Member のデータクラス
-data class Member(val id: Long, val userId: String, var memberName: String)
+data class Member(val id: String, val userId: String, var memberName: String)
 
 class MemberAdapter(private val context: Context, private var memberList: List<Member>) :
     RecyclerView.Adapter<MemberAdapter.MemberViewHolder>() {
