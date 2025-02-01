@@ -144,7 +144,7 @@ class ValidateHelper(private val context: Context) {
      * Spinnerのバリデーションチェック
      */
     fun selectedCheck(selectItem:String):Pair<Boolean,String>{
-        if(selectItem == context.getString(R.string.un_selected)){
+        if(selectItem.contains(context.getString(R.string.un_selected))){
             return Pair(false,context.getString(R.string.error_selected))
         }
         return Pair(true,"")

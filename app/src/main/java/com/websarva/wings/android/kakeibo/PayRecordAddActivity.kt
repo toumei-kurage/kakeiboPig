@@ -258,7 +258,7 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
                 // 成功した場合
                 val memberList = mutableListOf<String>()
                 // メンバー名をリストに追加（最初に「選択してください」の項目を追加）
-                memberList.add(getString(R.string.un_selected))
+                memberList.add("メンバーを" + getString(R.string.un_selected))
 
                 for (document in querySnapshot.documents) {
                     val memberName = document.getString("member_name") ?: ""
@@ -290,7 +290,7 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
                 // 成功した場合
                 val payPurposeList = mutableListOf<String>()
                 // 支払い目的をリストに追加（最初に「選択してください」の項目を追加）
-                payPurposeList.add(getString(R.string.un_selected))
+                payPurposeList.add("支払い目的を" + getString(R.string.un_selected))
 
                 for (document in querySnapshot.documents) {
                     val payPurposeName = document.getString("pay_purpose_name") ?: ""
