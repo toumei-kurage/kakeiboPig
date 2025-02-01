@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
+import android.widget.Toast
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -111,10 +112,10 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
         query.get().addOnSuccessListener { querySnapshot ->
             for (document in querySnapshot) {
                 val payRecord = PayRecord(
-                    document.getString("id") ?: "",
+                    document.id,
                     document.getString("user_id") ?: "",
                     document.getString("member_id") ?: "",
-                    document.getString("purpose_id") ?: "",
+                    document.getString("pay_purpose_id") ?: "",
                     document.getString("payment_date") ?: "",
                     document.getLong("amount")?.toInt() ?: 0,
                     document.getBoolean("is_recept_checked") == true,
@@ -125,6 +126,8 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
             payRecordList = payRecords
             payRecordAdapter.updateData(payRecordList)
             payRecordAdapter.notifyDataSetChanged()
+        }.addOnFailureListener { exception ->
+            Toast.makeText(this, "メンバーの検索に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
         }
         return payRecords
     }
@@ -140,10 +143,10 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
         query.get().addOnSuccessListener { querySnapshot ->
             for (document in querySnapshot) {
                 val payRecord = PayRecord(
-                    document.getString("id") ?: "",
+                    document.id,
                     document.getString("user_id") ?: "",
                     document.getString("member_id") ?: "",
-                    document.getString("purpose_id") ?: "",
+                    document.getString("pay_purpose_id") ?: "",
                     document.getString("payment_date") ?: "",
                     document.getLong("amount")?.toInt() ?: 0,
                     document.getBoolean("is_recept_checked") == true,
@@ -170,10 +173,10 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
         query.get().addOnSuccessListener { querySnapshot ->
             for (document in querySnapshot) {
                 val payRecord = PayRecord(
-                    document.getString("id") ?: "",
+                    document.id,
                     document.getString("user_id") ?: "",
                     document.getString("member_id") ?: "",
-                    document.getString("purpose_id") ?: "",
+                    document.getString("pay_purpose_id") ?: "",
                     document.getString("payment_date") ?: "",
                     document.getLong("amount")?.toInt() ?: 0,
                     document.getBoolean("is_recept_checked") == true,
@@ -184,6 +187,8 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
             payRecordList = payRecords
             payRecordAdapter.updateData(payRecordList)
             payRecordAdapter.notifyDataSetChanged()
+        }.addOnFailureListener { exception ->
+                Toast.makeText(this, "メンバーの検索に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
         }
         return payRecords
     }
