@@ -81,7 +81,7 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
             .whereEqualTo("user_id", userID)
             .get()
             .addOnSuccessListener { querySnapshot ->
-                val paymentPurposes = arrayOf(getString(R.string.un_selected)) + querySnapshot.documents.map { it.getString("pay_purpose_name") ?: "" }
+                val paymentPurposes = arrayOf("支払い目的を" + getString(R.string.un_selected)) + querySnapshot.documents.map { it.getString("pay_purpose_name") ?: "" }
                 val payPurposeArrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, paymentPurposes)
                 payPurposeArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 spPayPurposeList.adapter = payPurposeArrayAdapter
@@ -103,7 +103,7 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
             .whereEqualTo("user_id", userID)
             .get()
             .addOnSuccessListener { querySnapshot ->
-                val members = arrayOf(getString(R.string.un_selected)) + querySnapshot.documents.map { it.getString("member_name") ?: "" }
+                val members = arrayOf("メンバーを" + getString(R.string.un_selected)) + querySnapshot.documents.map { it.getString("member_name") ?: "" }
                 val memberArrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, members)
                 memberArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 spMember.adapter = memberArrayAdapter

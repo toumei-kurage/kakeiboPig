@@ -111,8 +111,8 @@ class PayRecordListRefinementFragment : DialogFragment() {
             return
         }
 
-        if (selectedMemberName != requireContext().getString(R.string.un_selected)) {
-            getMemberDocumentId(userID, selectedMemberName!!) { memberDocId ->
+        if (!selectedMemberName!!.contains(requireContext().getString(R.string.un_selected))) {
+            getMemberDocumentId(userID, selectedMemberName) { memberDocId ->
                 if (memberDocId != null) {
                     memberId = memberDocId
                     // 取得が完了した後にapplyRefinementを呼び出す
