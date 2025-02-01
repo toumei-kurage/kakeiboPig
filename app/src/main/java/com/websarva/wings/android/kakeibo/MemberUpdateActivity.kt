@@ -16,7 +16,6 @@ import com.google.firebase.firestore.Query
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 
 class MemberUpdateActivity : BaseActivity(R.layout.activity_member_update, R.string.title_member_update) {
-
     // 画面部品の用意
     private lateinit var memberNameError: TextInputLayout
     private lateinit var memberNameEditText: EditText
@@ -57,7 +56,7 @@ class MemberUpdateActivity : BaseActivity(R.layout.activity_member_update, R.str
                     memberNameError.error = errorMsg
                     return@OnFocusChangeListener
                 }
-                memberNameError.error = ""
+                memberNameError.error = null
             }
         }
 
@@ -102,10 +101,6 @@ class MemberUpdateActivity : BaseActivity(R.layout.activity_member_update, R.str
 
     private fun clearErrorMessage() {
         memberNameError.error = null
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
     }
 
     // 重複チェックと更新処理

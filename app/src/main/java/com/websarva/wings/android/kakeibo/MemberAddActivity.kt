@@ -24,7 +24,6 @@ class MemberAddActivity : BaseActivity(R.layout.activity_member_add, R.string.ti
     // ヘルパークラス
     private val databaseHelper = DatabaseHelper(this)
     private val validateHelper = ValidateHelper(this)
-    private val dialogHelper = DialogHelper(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,15 +45,13 @@ class MemberAddActivity : BaseActivity(R.layout.activity_member_add, R.string.ti
                     memberNameError.error = errorMsg
                     return@OnFocusChangeListener
                 }
-                memberNameError.error = ""
+                memberNameError.error = null
             }
         }
 
         buttonMemberAdd.setOnClickListener {
             clearBordFocus()
-            val (resultMemberName: Boolean, memberNameMsg: String) = validateHelper.usernameCheck(
-                memberNameEditText
-            )
+            val (resultMemberName: Boolean, memberNameMsg: String) = validateHelper.usernameCheck(memberNameEditText)
             if (!resultMemberName) {
                 memberNameError.error = memberNameMsg
                 return@setOnClickListener
@@ -77,11 +74,6 @@ class MemberAddActivity : BaseActivity(R.layout.activity_member_add, R.string.ti
         memberNameError.error = null
     }
 
-    override fun onDestroy() {
-        databaseHelper.close()
-        super.onDestroy()
-    }
-
     private fun onSaveButtonClick() {
         val firestore = FirebaseFirestore.getInstance()
 
@@ -94,11 +86,10 @@ class MemberAddActivity : BaseActivity(R.layout.activity_member_add, R.string.ti
 
         // メンバー名とユーザーIDを取得
         val memberName = memberNameEditText.text.toString()
-        val userId = currentUser.uid
 
         // 「members」コレクションから、user_idとmember_nameの組み合わせで既に存在するかチェック
         val query = firestore.collection("members")
-            .whereEqualTo("user_id", userId)
+            .whereEqualTo("user_id", userID)
             .whereEqualTo("member_name", memberName)
 
         query.get()
@@ -107,7 +98,7 @@ class MemberAddActivity : BaseActivity(R.layout.activity_member_add, R.string.ti
                 if (querySnapshot.isEmpty) {
                     // Firestoreに追加するデータ
                     val memberData = hashMapOf(
-                        "user_id" to userId,
+                        "user_id" to userID,
                         "member_name" to memberName
                     )
 

@@ -10,7 +10,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 // PayPurpose のデータクラス
-data class PayPurpose(val id: Long, val userID: String,val payPurposeName: String)
+data class PayPurpose(val id: String, val userID: String,val payPurposeName: String)
 
 class PayPurposeAdapter(private val context: Context, private var payPurposeList: List<PayPurpose>) :
     RecyclerView.Adapter<PayPurposeAdapter.PayPurposeViewHolder>() {
