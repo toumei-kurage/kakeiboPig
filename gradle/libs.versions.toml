@@ -17,6 +17,7 @@ activity = "1.9.2"
 constraintlayout = "2.1.4"
 ksp = "1.9.0-1.0.13"
 playServicesAuth = "20.7.0"
+playServicesAuthVersion = "20.0.1"
 room = "2.6.0"
 lifecycle-runtime-ktx = "2.6.2"
 
@@ -40,6 +41,7 @@ androidx-constraintlayout = { group = "androidx.constraintlayout", name = "const
 lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle-runtime-ktx" }
 # room
 play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
+play-services-auth-v2001 = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuthVersion" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }

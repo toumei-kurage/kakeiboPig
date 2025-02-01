@@ -2,23 +2,23 @@ package com.websarva.wings.android.kakeibo
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.database.Cursor
 import android.os.Bundle
 import android.widget.Button
-import android.widget.Toast
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
+import com.google.firebase.firestore.FirebaseFirestore
 
-class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.string.title_pay_record_list){
-    //画面部品の用意
+class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.string.title_pay_record_list) {
+    // 画面部品の用意
     private lateinit var recyclerView: RecyclerView
     private lateinit var buttonPayRecordAdd: FloatingActionButton
     private var payRecordList: List<PayRecord> = mutableListOf()
     private lateinit var buttonRefinement: Button
     private lateinit var payRecordAdapter: PayRecordAdapter
+
+    private val firestore = FirebaseFirestore.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,7 +26,7 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
 
         setupDrawerAndToolbar()
 
-        //画面部品の取得
+        // 画面部品の取得
         recyclerView = findViewById(R.id.recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
         buttonPayRecordAdd = findViewById(R.id.buttonPayRecordAdd)
@@ -36,10 +36,11 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
         val itemDecoration = DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
         recyclerView.addItemDecoration(itemDecoration)
 
-        payRecordAdapter = PayRecordAdapter(this,payRecordList)
+        payRecordAdapter = PayRecordAdapter(this, payRecordList)
         recyclerView.adapter = payRecordAdapter
 
-        applyRefinement(null,null,null)
+        // 初期の絞り込みを適用
+        applyRefinement(null, null, null)
 
         buttonPayRecordAdd.setOnClickListener {
             val intent = Intent(this, PayRecordAddActivity::class.java)
@@ -47,7 +48,7 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
             finish()
         }
 
-        buttonRefinement.setOnClickListener{
+        buttonRefinement.setOnClickListener {
             // フラグメントを表示
             val fragment = PayRecordListRefinementFragment()
             fragment.show(supportFragmentManager, "PayRecordListRefinementFragment")
@@ -55,6 +56,7 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
     }
 
     // onActivityResultをオーバーライドして削除結果を受け取る
+    @Deprecated("This method has been deprecated in favor of using the Activity Result API\n      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt\n      contracts for common intents available in\n      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for\n      testing, and allow receiving results in separate, testable classes independent from your\n      activity. Use\n      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}\n      with the appropriate {@link ActivityResultContract} and handling the result in the\n      {@link ActivityResultCallback#onActivityResult(Object) callback}.")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -62,14 +64,14 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
             // 削除された場合の処理
             if (data?.getBooleanExtra("PAY_RECORD_DELETE", false) == true) {
                 // 削除後にデータを再読み込みしてRecyclerViewを更新
-                applyRefinement(null,null,null)
+                applyRefinement(null, null, null)
             }
         }
     }
 
     // 絞り込み内容を受け取るメソッド
     @SuppressLint("NotifyDataSetChanged")
-    fun applyRefinement(memberId: Int?, startDate: String?, endDate: String?) {
+    fun applyRefinement(memberId: String?, startDate: String?, endDate: String?) {
         // 絞り込み条件のチェックとデータ取得
         val refinedData = when {
             memberId != null && startDate != null && endDate != null -> {
@@ -96,138 +98,121 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
         payRecordAdapter.notifyDataSetChanged()
     }
 
-    //すべてが選択された場合に絞り込むメソッド
-    @SuppressLint("Range")
-    private fun getFilteredData(memberId: Int, startDate: String, endDate: String): List<PayRecord> {
-        // SQLを使って、データベースを絞り込む処理を書く
-        val db = DatabaseHelper(this).readableDatabase
-        val selection = "user_id = ? AND member_id = ? AND payment_date BETWEEN ? AND ?"
-        val selectionArgs = arrayOf(userID, memberId.toString(), startDate, endDate)
-
-        val cursor = db.query(
-            "payment_history",
-            null,
-            selection,
-            selectionArgs,
-            null,
-            null,
-            null
-        )
+    // Firestoreから絞り込んだデータを取得
+    @SuppressLint("NotifyDataSetChanged")
+    private fun getFilteredData(memberId: String, startDate: String, endDate: String): List<PayRecord> {
+        val query = firestore.collection("payment_history")
+            .whereEqualTo("user_id", userID)
+            .whereEqualTo("member_id", memberId)
+            .whereGreaterThanOrEqualTo("payment_date", startDate)
+            .whereLessThanOrEqualTo("payment_date", endDate)
 
         val payRecords = mutableListOf<PayRecord>()
-        while (cursor.moveToNext()) {
-            val payRecord = PayRecord(
-                cursor.getLong(cursor.getColumnIndex("_id")),
-                cursor.getString(cursor.getColumnIndex("user_id")),
-                cursor.getLong(cursor.getColumnIndex("member_id")),
-                cursor.getLong(cursor.getColumnIndex("purpose_id")),
-                cursor.getString(cursor.getColumnIndex("payment_date")),
-                cursor.getInt(cursor.getColumnIndex("amount")),
-                cursor.getInt(cursor.getColumnIndex("is_recept_checked")) == 1,
-                cursor.getString(cursor.getColumnIndex("note"))
-            )
-            payRecords.add(payRecord)
-        }
-        cursor.close()
-        return payRecords
-    }
-
-    //メンバーだけが選択された場合に絞り込むメソッド
-    @SuppressLint("Range")
-    private fun getFilteredDataByMember(memberId: Int): List<PayRecord> {
-        // SQLを使って、memberIdのみでデータを絞り込む処理
-        val db = DatabaseHelper(this).readableDatabase
-        val selection = "user_id = ? AND member_id = ?"
-        val selectionArgs = arrayOf(userID, memberId.toString())
-
-        val cursor = db.query(
-            "payment_history",   // テーブル名
-            null,                // 取得する列（nullで全列を取得）
-            selection,           // 絞り込み条件
-            selectionArgs,       // 絞り込み条件の値
-            null,                // GROUP BY句（今回は使わない）
-            null,                // HAVING句（今回は使わない）
-            null                 // ORDER BY句（今回は使わない）
-        )
-
-        val payRecords = mutableListOf<PayRecord>()
-        while (cursor.moveToNext()) {
-            val payRecord = PayRecord(
-                cursor.getLong(cursor.getColumnIndex("_id")),
-                cursor.getString(cursor.getColumnIndex("user_id")),
-                cursor.getLong(cursor.getColumnIndex("member_id")),
-                cursor.getLong(cursor.getColumnIndex("purpose_id")),
-                cursor.getString(cursor.getColumnIndex("payment_date")),
-                cursor.getInt(cursor.getColumnIndex("amount")),
-                cursor.getInt(cursor.getColumnIndex("is_recept_checked")) == 1,
-                cursor.getString(cursor.getColumnIndex("note"))
-            )
-            payRecords.add(payRecord)
-        }
-        cursor.close()
-        return payRecords
-    }
-
-    @SuppressLint("Range")
-    private fun getFilteredDataByDateRange(startDate: String, endDate: String): List<PayRecord> {
-        // SQLを使って、日付範囲でデータを絞り込む処理
-        val db = DatabaseHelper(this).readableDatabase
-        val selection = "user_id = ? AND payment_date BETWEEN ? AND ?"
-        val selectionArgs = arrayOf(userID, startDate, endDate)
-
-        val cursor = db.query(
-            "payment_history",   // テーブル名
-            null,                // 取得する列（nullで全列を取得）
-            selection,           // 絞り込み条件
-            selectionArgs,       // 絞り込み条件の値
-            null,                // GROUP BY句（今回は使わない）
-            null,                // HAVING句（今回は使わない）
-            null                 // ORDER BY句（今回は使わない）
-        )
-
-        val payRecords = mutableListOf<PayRecord>()
-        while (cursor.moveToNext()) {
-            val payRecord = PayRecord(
-                cursor.getLong(cursor.getColumnIndex("_id")),
-                cursor.getString(cursor.getColumnIndex("user_id")),
-                cursor.getLong(cursor.getColumnIndex("member_id")),
-                cursor.getLong(cursor.getColumnIndex("purpose_id")),
-                cursor.getString(cursor.getColumnIndex("payment_date")),
-                cursor.getInt(cursor.getColumnIndex("amount")),
-                cursor.getInt(cursor.getColumnIndex("is_recept_checked")) == 1,
-                cursor.getString(cursor.getColumnIndex("note"))
-            )
-            payRecords.add(payRecord)
-        }
-        cursor.close()
-        return payRecords
-    }
-
-    @SuppressLint("Range")
-    private fun loadAllData(): List<PayRecord> {
-        val db = DatabaseHelper(this).readableDatabase
-        val cursor: Cursor = db.rawQuery("SELECT * FROM payment_history WHERE user_id = ?", arrayOf(userID))
-        val payRecords = mutableListOf<PayRecord>()
-
-        if (cursor.moveToFirst()) {
-            do {
+        query.get().addOnSuccessListener { querySnapshot ->
+            for (document in querySnapshot) {
                 val payRecord = PayRecord(
-                    cursor.getLong(cursor.getColumnIndex("_id")),
-                    cursor.getString(cursor.getColumnIndex("user_id")),
-                    cursor.getLong(cursor.getColumnIndex("member_id")),
-                    cursor.getLong(cursor.getColumnIndex("purpose_id")),
-                    cursor.getString(cursor.getColumnIndex("payment_date")),
-                    cursor.getInt(cursor.getColumnIndex("amount")),
-                    cursor.getInt(cursor.getColumnIndex("is_recept_checked")) == 1,
-                    cursor.getString(cursor.getColumnIndex("note"))
+                    document.getString("id") ?: "",
+                    document.getString("user_id") ?: "",
+                    document.getString("member_id") ?: "",
+                    document.getString("purpose_id") ?: "",
+                    document.getString("payment_date") ?: "",
+                    document.getLong("amount")?.toInt() ?: 0,
+                    document.getBoolean("is_recept_checked") == true,
+                    document.getString("note") ?: ""
                 )
                 payRecords.add(payRecord)
-            } while (cursor.moveToNext())
-        } else {
-            Toast.makeText(this, "支払い履歴が登録されていません。", Toast.LENGTH_SHORT).show()
+            }
+            payRecordList = payRecords
+            payRecordAdapter.updateData(payRecordList)
+            payRecordAdapter.notifyDataSetChanged()
         }
-        cursor.close()
-        db.close()
+        return payRecords
+    }
+
+    // メンバーのみで絞り込む
+    @SuppressLint("NotifyDataSetChanged")
+    private fun getFilteredDataByMember(memberId: String): List<PayRecord> {
+        val query = firestore.collection("payment_history")
+            .whereEqualTo("user_id", userID)
+            .whereEqualTo("member_id", memberId)
+
+        val payRecords = mutableListOf<PayRecord>()
+        query.get().addOnSuccessListener { querySnapshot ->
+            for (document in querySnapshot) {
+                val payRecord = PayRecord(
+                    document.getString("id") ?: "",
+                    document.getString("user_id") ?: "",
+                    document.getString("member_id") ?: "",
+                    document.getString("purpose_id") ?: "",
+                    document.getString("payment_date") ?: "",
+                    document.getLong("amount")?.toInt() ?: 0,
+                    document.getBoolean("is_recept_checked") == true,
+                    document.getString("note") ?: ""
+                )
+                payRecords.add(payRecord)
+            }
+            payRecordList = payRecords
+            payRecordAdapter.updateData(payRecordList)
+            payRecordAdapter.notifyDataSetChanged()
+        }
+        return payRecords
+    }
+
+    // 日付範囲で絞り込む
+    @SuppressLint("NotifyDataSetChanged")
+    private fun getFilteredDataByDateRange(startDate: String, endDate: String): List<PayRecord> {
+        val query = firestore.collection("payment_history")
+            .whereEqualTo("user_id", userID)
+            .whereGreaterThanOrEqualTo("payment_date", startDate)
+            .whereLessThanOrEqualTo("payment_date", endDate)
+
+        val payRecords = mutableListOf<PayRecord>()
+        query.get().addOnSuccessListener { querySnapshot ->
+            for (document in querySnapshot) {
+                val payRecord = PayRecord(
+                    document.getString("id") ?: "",
+                    document.getString("user_id") ?: "",
+                    document.getString("member_id") ?: "",
+                    document.getString("purpose_id") ?: "",
+                    document.getString("payment_date") ?: "",
+                    document.getLong("amount")?.toInt() ?: 0,
+                    document.getBoolean("is_recept_checked") == true,
+                    document.getString("note") ?: ""
+                )
+                payRecords.add(payRecord)
+            }
+            payRecordList = payRecords
+            payRecordAdapter.updateData(payRecordList)
+            payRecordAdapter.notifyDataSetChanged()
+        }
+        return payRecords
+    }
+
+    // Firestoreからすべてのデータを取得
+    @SuppressLint("NotifyDataSetChanged")
+    private fun loadAllData(): List<PayRecord> {
+        val query = firestore.collection("payment_history")
+            .whereEqualTo("user_id", userID)
+
+        val payRecords = mutableListOf<PayRecord>()
+        query.get().addOnSuccessListener { querySnapshot ->
+            for (document in querySnapshot) {
+                val payRecord = PayRecord(
+                    document.id,
+                    document.getString("user_id") ?: "",
+                    document.getString("member_id") ?: "",
+                    document.getString("pay_purpose_id") ?: "",
+                    document.getString("payment_date") ?: "",
+                    document.getLong("amount")?.toInt() ?: 0,
+                    document.getBoolean("is_recept_checked") == true,
+                    document.getString("note") ?: ""
+                )
+                payRecords.add(payRecord)
+            }
+            payRecordList = payRecords
+            payRecordAdapter.updateData(payRecordList)
+            payRecordAdapter.notifyDataSetChanged()
+        }
 
         return payRecords
     }

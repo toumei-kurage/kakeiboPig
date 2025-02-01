@@ -8,14 +8,17 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.firestore.FirebaseFirestore
 import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
 
 // PayRecord のデータクラス
-data class PayRecord(val id: Long, val userId: String,var memberId:Long,var payPurposeId:Long, var payDate: String,var payAmount:Int,var isReceptChecked:Boolean,var note:String)
+data class PayRecord(val id: String, val userId: String,var memberId: String,var payPurposeId: String, var payDate: String,var payAmount: Int,var isReceptChecked: Boolean,var note: String)
 
 class PayRecordAdapter(private val context: Context, private var payRecordList: List<PayRecord>) :
     RecyclerView.Adapter<PayRecordAdapter.PayRecordViewHolder>() {
-    private val databaseHelper = DatabaseHelper(context)
+    // Firestore インスタンスを取得
+    private val firestore = FirebaseFirestore.getInstance()
+
 
     // ViewHolder クラス
     class PayRecordViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -37,9 +40,16 @@ class PayRecordAdapter(private val context: Context, private var payRecordList: 
     override fun onBindViewHolder(holder: PayRecordViewHolder, position: Int) {
         val payRecord = payRecordList[position]
         holder.payDateTextView.text = payRecord.payDate
-        holder.payPurposeNameTextView.text = databaseHelper.getPayPurposeNameById(payRecord.payPurposeId.toInt())
         holder.payAmountTextView.text = "${payRecord.payAmount}円"
-
+        getPayPurposeName(payRecord.payPurposeId) { payPurposeName ->
+            if (payPurposeName != null) {
+                // pay_purpose_nameが正常に取得できた場合
+                holder.payPurposeNameTextView.text = payPurposeName
+            } else {
+                // エラーが発生した場合や、ドキュメントが見つからなかった場合
+                println("Failed to get pay purpose name.")
+            }
+        }
         // アイテムをタップした時の処理
         holder.itemView.setOnClickListener {
             val intent = Intent(context, PayRecordDetailActivity::class.java)
@@ -69,5 +79,25 @@ class PayRecordAdapter(private val context: Context, private var payRecordList: 
     fun updateData(newPayRecordList: List<PayRecord>) {
         payRecordList = newPayRecordList
         notifyDataSetChanged()
+    }
+
+    fun getPayPurposeName(payPurposeId: String, callback: (String?) -> Unit) {
+        firestore.collection("payPurposes")
+            .document(payPurposeId)  // payPurposeIdに一致するドキュメントを指定
+            .get()
+            .addOnSuccessListener { documentSnapshot ->
+                if (documentSnapshot.exists()) {
+                    // ドキュメントが存在する場合、pay_purpose_nameを取得
+                    val payPurposeName = documentSnapshot.getString("pay_purpose_name")
+                    callback(payPurposeName) // コールバックで結果を返す
+                } else {
+                    callback(null) // ドキュメントが存在しない場合はnullを返す
+                }
+            }
+            .addOnFailureListener { exception ->
+                // エラーハンドリング
+                println("Error getting document: $exception")
+                callback(null)
+            }
     }
 }

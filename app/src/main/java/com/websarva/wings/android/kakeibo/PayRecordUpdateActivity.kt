@@ -2,7 +2,6 @@ package com.websarva.wings.android.kakeibo
 
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
-import android.content.ContentValues
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -17,14 +16,14 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.google.android.material.textfield.TextInputLayout
-import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
+import com.google.firebase.firestore.FirebaseFirestore
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 import java.util.Calendar
 
 class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update, R.string.title_update_pay_record) {
     //画面部品の用意
     private lateinit var spMember: Spinner
-    private lateinit var memberListError:TextView
+    private lateinit var memberListError: TextView
     private lateinit var spPayPurposeList: Spinner
     private lateinit var payPurposeListError: TextView
     private lateinit var payAmountEditText: EditText
@@ -36,14 +35,16 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
     private lateinit var buttonPayRecordUpdate: Button
 
     //スピナーで選ばれたものを格納する変数
-    private lateinit var selectedMemberName:String
-    private lateinit var selectedPayPurposeName:String
+    private lateinit var selectedMemberName: String
+    private lateinit var selectedPayPurposeName: String
 
     //ヘルパークラス
     private val validateHelper = ValidateHelper(this)
-    private val databaseHelper = DatabaseHelper(this)
+    private val firestore = FirebaseFirestore.getInstance()
 
-    private var payRecordId: Int = -1
+    private var payRecordId: String = ""
+    private var memberId: String = ""
+    private var payPurposeId: String = ""
 
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("SetTextI18n")
@@ -67,55 +68,77 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
         buttonPayRecordUpdate = findViewById(R.id.buttonPayRecordUpdate)
 
         //前画面からもらった値を取得
-        payRecordId = intent.getIntExtra("PAY_RECORD_ID",-1)
-        val memberId = intent.getIntExtra("MEMBER_ID",-1)
+        payRecordId = intent.getStringExtra("PAY_RECORD_ID") ?: ""
+        memberId = intent.getStringExtra("MEMBER_ID") ?: ""
         val payDate = intent.getStringExtra("PAY_DATE")
-        val payPurposeId = intent.getIntExtra("PAY_PURPOSE_ID",-1)
-        val payAmount = intent.getIntExtra("PAY_AMOUNT",-1)
-        val isReceptChecked = intent.getBooleanExtra("IS_RECEPT_CHECKED",false)
+        payPurposeId = intent.getStringExtra("PAY_PURPOSE_ID") ?: ""
+        val payAmount = intent.getIntExtra("PAY_AMOUNT", -1)
+        val isReceptChecked = intent.getBooleanExtra("IS_RECEPT_CHECKED", false)
         val note = intent.getStringExtra("NOTE")
 
-        // PayPurposeデータを取得しSpinnerにセット
-        val paymentPurposes = arrayOf(getString(R.string.un_selected)) + databaseHelper.getPaymentPurposesForUser(userID)
-        val payPurposeArrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, paymentPurposes)
-        payPurposeArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spPayPurposeList.adapter = payPurposeArrayAdapter
+        // 支払い目的データを取得しSpinnerにセット
+        firestore.collection("payPurposes")
+            .whereEqualTo("user_id", userID)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                val paymentPurposes = arrayOf(getString(R.string.un_selected)) + querySnapshot.documents.map { it.getString("pay_purpose_name") ?: "" }
+                val payPurposeArrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, paymentPurposes)
+                payPurposeArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                spPayPurposeList.adapter = payPurposeArrayAdapter
 
-        //Memberデータを取得しSpinnerにセット
-        val member = arrayOf(getString(R.string.un_selected)) + databaseHelper.getMemberForUser(userID)
-        val memberArrayAdapter = ArrayAdapter(this,android.R.layout.simple_spinner_item, member)
-        memberArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spMember.adapter = memberArrayAdapter
+                // 前画面からもらった値をもとにデータをセット
+                firestore.collection("payPurposes")
+                    .document(payPurposeId)
+                    .get()
+                    .addOnSuccessListener { document ->
+                        val payPurposeName = document.getString("pay_purpose_name") ?: ""
+                        // Spinnerのadapterが設定されてから選択肢を設定
+                        val position = (spPayPurposeList.adapter as ArrayAdapter<String>).getPosition(payPurposeName)
+                        spPayPurposeList.setSelection(position)
+                    }
+            }
 
-        //前画面からもらった値をもとに。データをセット
-        val memberList = databaseHelper.getMemberForUser(userID)
-        val selectedMemberIndex = memberList.indexOf(databaseHelper.getMemberNameById(memberId)) + 1
-        spMember.setSelection(selectedMemberIndex)
+        // メンバーリストを取得しSpinnerにセット
+        firestore.collection("members")
+            .whereEqualTo("user_id", userID)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                val members = arrayOf(getString(R.string.un_selected)) + querySnapshot.documents.map { it.getString("member_name") ?: "" }
+                val memberArrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, members)
+                memberArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                spMember.adapter = memberArrayAdapter
 
-        val payPurposeList = databaseHelper.getPaymentPurposesForUser(userID)
-        val selectedPayPurposeIndex = payPurposeList.indexOf(databaseHelper.getPayPurposeNameById(payPurposeId)) + 1
-        spPayPurposeList.setSelection(selectedPayPurposeIndex)
+                // 前画面からもらった値をもとにデータをセット
+                firestore.collection("members")
+                    .document(memberId)
+                    .get()
+                    .addOnSuccessListener { document ->
+                        val memberName = document.getString("member_name") ?: ""
+                        // Spinnerのadapterが設定されてから選択肢を設定
+                        val position = (spMember.adapter as ArrayAdapter<String>).getPosition(memberName)
+                        spMember.setSelection(position)
+                    }
+            }
 
-        payDateEditText.setText(payDate ?: "")
+        payDateEditText.setText(payDate)
         payAmountEditText.setText(payAmount.toString())
         payDone.isChecked = isReceptChecked
-        noteEditText.setText(note ?: "")
+        noteEditText.setText(note)
 
-
-        spPayPurposeList.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parentView: AdapterView<*>, selectedView:View?, position: Int, id: Long) {
+        spPayPurposeList.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parentView: AdapterView<*>, selectedView: View?, position: Int, id: Long) {
                 // 選ばれた項目を取得
-                selectedPayPurposeName= parentView.getItemAtPosition(position).toString()
+                selectedPayPurposeName = parentView.getItemAtPosition(position).toString()
             }
-            override fun onNothingSelected(parentView: AdapterView<*>){}
+            override fun onNothingSelected(parentView: AdapterView<*>) {}
         }
 
         spMember.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parentView: AdapterView<*>, selectedView:View?, position: Int, id: Long) {
+            override fun onItemSelected(parentView: AdapterView<*>, selectedView: View?, position: Int, id: Long) {
                 // 選ばれた項目を取得
                 selectedMemberName = parentView.getItemAtPosition(position).toString()
             }
-            override fun onNothingSelected(parentView: AdapterView<*>){}
+            override fun onNothingSelected(parentView: AdapterView<*>) {}
         }
 
         payAmountEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
@@ -136,25 +159,15 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
 
         buttonPayRecordUpdate.setOnClickListener {
             clearBordFocus()
-            val (resultPayAmount, payAmountMessage) = validateHelper.payAmountCheck(
-                payAmountEditText
-            )
-            if(!resultPayAmount){
-                payAmountError.error = payAmountMessage
-            }
+            val (resultPayAmount, payAmountMessage) = validateHelper.payAmountCheck(payAmountEditText)
             val (resultPayDate, payDateMessage) = validateHelper.payDateCheck(payDateEditText)
-            if (!resultPayDate) {
+            val (resultPayPurpose, payPurposeMessage) = validateHelper.selectedCheck(selectedPayPurposeName)
+            val (resultMember, memberMessage) = validateHelper.selectedCheck(selectedMemberName)
+            if (!(resultPayAmount && resultPayDate && resultPayPurpose && resultMember)) {
+                payAmountError.error = payAmountMessage
                 payDateError.error = payDateMessage
-            }
-            val (resultPayPurpose,payPurposeMessage) = validateHelper.selectedCheck(selectedPayPurposeName)
-            if(!resultPayPurpose){
                 payPurposeListError.text = payPurposeMessage
-            }
-            val (resultMember,memberMessage) = validateHelper.selectedCheck(selectedMemberName)
-            if(!resultMember){
                 memberListError.text = memberMessage
-            }
-            if(!(resultPayAmount && resultPayDate && resultPayPurpose && resultMember)){
                 return@setOnClickListener
             }
             clearErrorMessage()
@@ -170,7 +183,7 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
         inputMethodManager.hideSoftInputFromWindow(spPayPurposeList.windowToken, 0)
         inputMethodManager.hideSoftInputFromWindow(spMember.windowToken, 0)
         inputMethodManager.hideSoftInputFromWindow(payDone.windowToken, 0)
-        //フォーカスを外す処理
+        // フォーカスを外す処理
         payAmountEditText.clearFocus()
         spMember.clearFocus()
         spPayPurposeList.clearFocus()
@@ -201,43 +214,51 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
 
             }, year, month, day)
 
-        // ダイアログのキャンセルボタンが押されたときの処理
         datePickerDialog.setOnCancelListener {
             // 必要な処理があればここに記述
         }
         datePickerDialog.show()
     }
 
-    override fun onDestroy() {
-        databaseHelper.close()
-        super.onDestroy()
+    private fun updatePayRecord() {
+        // メンバーIDを取得
+        getMemberId { memberId ->
+            // 支払い目的IDを取得
+            getPayPurposeId { payPurposeId ->
+                updateData(memberId,payPurposeId)
+            }
+        }
     }
 
-    private fun updatePayRecord() {
-        val memberId = databaseHelper.getMemberId(userID,selectedMemberName)
-        val payPurposeId = databaseHelper.getPaymentPurposeId(userID,selectedPayPurposeName)
-        val db = DatabaseHelper(this).writableDatabase
-        val values = ContentValues().apply {
-            put("member_id",memberId)
-            put("user_id",userID)
-            put("purpose_id",payPurposeId)
-            put("payment_date",payDateEditText.text.toString())
-            put("amount",payAmountEditText.text.toString().toInt())
-            put("is_recept_checked",payDone.isChecked)
-            put("note",noteEditText.text.toString())
+    private fun updateData(memberId:String,payPurposeId:String){
+        try {
+            val updatedRecord = hashMapOf(
+                "member_id" to memberId,
+                "pay_purpose_id" to payPurposeId,
+                "payment_date" to payDateEditText.text.toString(),
+                "amount" to payAmountEditText.text.toString().toInt(),
+                "is_recept_checked" to payDone.isChecked,
+                "note" to noteEditText.text.toString()
+            )
+
+            // Firestore ドキュメントを更新
+            firestore.collection("payment_history")
+                .document(payRecordId)
+                .update(updatedRecord as Map<String, Any>)
+                .addOnSuccessListener {
+                    showToast("支払い記録が更新されました")
+                }
+                .addOnFailureListener { e ->
+                    showToast("更新に失敗しました: ${e.message}")
+                }
+
+        } catch (e: Exception) {
+            showToast("エラーが発生しました: ${e.message}")
         }
-        val rowsAffected = db.update(
-            "payment_history",
-            values,
-            "_id = ?",
-            arrayOf(payRecordId.toString())
-        )
-        if (rowsAffected > 0) {
-            Toast.makeText(this, "更新されました", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(this, "更新できませんでした", Toast.LENGTH_SHORT).show()
-        }
-        db.close()
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
     private fun clearErrorMessage() {
@@ -247,4 +268,41 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
         memberListError.text = null
     }
 
+    // メンバーIDを取得するメソッド
+    private fun getMemberId(onSuccess: (String) -> Unit) {
+        firestore.collection("members")
+            .whereEqualTo("user_id", userID)
+            .whereEqualTo("member_name", selectedMemberName)
+            .get()
+            .addOnSuccessListener { memberQuerySnapshot ->
+                if (memberQuerySnapshot.isEmpty) {
+                    showToast("メンバーが見つかりません")
+                    return@addOnSuccessListener
+                }
+                val memberId = memberQuerySnapshot.documents.first().id
+                onSuccess(memberId)
+            }
+            .addOnFailureListener { exception ->
+                showToast("メンバーデータの取得に失敗しました: ${exception.message}")
+            }
+    }
+
+    // 支払い目的IDを取得するメソッド
+    private fun getPayPurposeId(onSuccess: (String) -> Unit) {
+        firestore.collection("payPurposes")
+            .whereEqualTo("user_id", userID)
+            .whereEqualTo("pay_purpose_name", selectedPayPurposeName)
+            .get()
+            .addOnSuccessListener { payPurposeQuerySnapshot ->
+                if (payPurposeQuerySnapshot.isEmpty) {
+                    showToast("支払い目的が見つかりません")
+                    return@addOnSuccessListener
+                }
+                val payPurposeId = payPurposeQuerySnapshot.documents.first().id
+                onSuccess(payPurposeId)
+            }
+            .addOnFailureListener { exception ->
+                showToast("支払い目的データの取得に失敗しました: ${exception.message}")
+            }
+    }
 }
