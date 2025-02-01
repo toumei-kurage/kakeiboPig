@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.InputMethodManager
@@ -11,11 +12,13 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Spinner
+import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity.INPUT_METHOD_SERVICE
 import androidx.fragment.app.DialogFragment
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 import java.util.Calendar
@@ -24,13 +27,12 @@ import android.view.ViewGroup as ViewGroup1
 class PayRecordListRefinementFragment : DialogFragment() {
     //画面部品の用意
     private lateinit var spinnerMember: Spinner
+    private lateinit var memberListError: TextView
     private lateinit var startDateEditText: EditText
     private lateinit var finishDateEditText: EditText
     private lateinit var buttonOK: Button
     //ヘルパークラス
-    private lateinit var databaseHelper: DatabaseHelper
     private lateinit var validateHelper:ValidateHelper
-
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
@@ -48,14 +50,10 @@ class PayRecordListRefinementFragment : DialogFragment() {
         finishDateEditText = view.findViewById(R.id.finishDateEditText)
         buttonOK = view.findViewById(R.id.buttonOK)
 
-        databaseHelper = DatabaseHelper(requireContext())
         validateHelper = ValidateHelper(requireContext())
 
         //Memberデータを取得しSpinnerにセット
-        val member = arrayOf(getString(R.string.un_selected)) + databaseHelper.getMemberForUser(userID)
-        val memberArrayAdapter = ArrayAdapter(requireContext(),android.R.layout.simple_spinner_item, member)
-        memberArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerMember.adapter = memberArrayAdapter
+        loadMembersFromFirestore()
 
         startDateEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
@@ -77,10 +75,16 @@ class PayRecordListRefinementFragment : DialogFragment() {
             val selectedMemberName = spinnerMember.selectedItem?.toString()
 
             // メンバーIDが選択されたか確認
-            val memberId = if (selectedMemberName != getString(R.string.un_selected)) {
-                databaseHelper.getMemberId(userID, selectedMemberName!!)
-            } else {
-                null
+            var memberId: String? = null
+            if(selectedMemberName != requireContext().getString(R.string.un_selected)){
+                getMemberDocumentId(userID, selectedMemberName!!) { memberDocId ->
+                    if (memberDocId != null) {
+                        memberId = memberDocId
+                    } else {
+                        // メンバーが見つからないか、エラーが発生した場合
+                        Toast.makeText(requireContext(), "該当するメンバーが見つかりません", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
 
             // 日付の範囲の入力値を取得
@@ -96,7 +100,7 @@ class PayRecordListRefinementFragment : DialogFragment() {
 
             // 入力された絞り込み内容をアクティビティに渡す
             (activity as? PayRecordListActivity)?.applyRefinement(
-                memberId?.toInt(),
+                memberId.toString(),
                 startDate,
                 finishDate
             )
@@ -107,6 +111,7 @@ class PayRecordListRefinementFragment : DialogFragment() {
         return view
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         // ダイアログのサイズを設定
@@ -158,4 +163,64 @@ class PayRecordListRefinementFragment : DialogFragment() {
         finishDateEditText.clearFocus()
         spinnerMember.clearFocus()
     }
+
+    // Firestoreからメンバーを取得してSpinnerにセットするメソッド
+    private fun loadMembersFromFirestore() {
+        val firestore = FirebaseFirestore.getInstance()
+        val userID = FirebaseAuth.getInstance().currentUser?.uid.toString()
+        firestore.collection("members")
+            .whereEqualTo("user_id", userID)  // user_idに紐づくメンバーを取得
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                // 成功した場合
+                val memberList = mutableListOf<String>()
+                // メンバー名をリストに追加（最初に「選択してください」の項目を追加）
+                memberList.add(getString(R.string.un_selected))
+
+                for (document in querySnapshot.documents) {
+                    val memberName = document.getString("member_name") ?: ""
+                    memberList.add(memberName) // member_nameをリストに追加
+                }
+
+                // Spinnerにセットする
+                val memberArrayAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, memberList)
+                memberArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                spinnerMember.adapter = memberArrayAdapter
+
+                // リストが空の場合の処理
+                if (memberList.size == 1) {
+                    memberListError.text = "メンバーが登録されていません。"
+                }
+            }
+            .addOnFailureListener { exception ->
+                // エラーハンドリング
+                Toast.makeText(requireContext(), "データ取得に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun getMemberDocumentId(userID: String, memberName: String, callback: (String?) -> Unit) {
+        val firestore = FirebaseFirestore.getInstance()
+
+        firestore.collection("members")
+            .whereEqualTo("user_id", userID)  // user_idで絞り込み
+            .whereEqualTo("member_name", memberName)  // member_nameで絞り込み
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                if (querySnapshot.isEmpty) {
+                    // 結果がない場合
+                    callback(null)  // 該当するメンバーが見つからなかった場合、nullを返す
+                } else {
+                    // 結果が1つのみであることが確実なので、最初のドキュメントを取得
+                    val memberDocId = querySnapshot.documents.first().id  // ドキュメントのIDを取得
+                    callback(memberDocId)  // 取得したIDを返す
+                }
+            }
+            .addOnFailureListener { exception ->
+                // クエリ失敗時の処理
+                Toast.makeText(requireContext(), "メンバーの検索に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
+                callback(null)  // 失敗時はnullを返す
+            }
+    }
+
+
 }

@@ -2,7 +2,6 @@ package com.websarva.wings.android.kakeibo
 
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
-import android.content.ContentValues
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -18,7 +17,6 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
-import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 import java.util.Calendar
 
@@ -42,7 +40,6 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
 
     //ヘルパークラス
     private val validateHelper = ValidateHelper(this)
-    private val databaseHelper = DatabaseHelper(this)
     private val firestore = FirebaseFirestore.getInstance()
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -105,25 +102,15 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
 
         buttonPayRecordAdd.setOnClickListener {
             clearBordFocus()
-            val (resultPayAmount, payAmountMessage) = validateHelper.payAmountCheck(
-                payAmountEditText
-            )
-            if(!resultPayAmount){
-                payAmountError.error = payAmountMessage
-            }
+            val (resultPayAmount, payAmountMessage) = validateHelper.payAmountCheck(payAmountEditText)
             val (resultPayDate, payDateMessage) = validateHelper.payDateCheck(payDateEditText)
-            if (!resultPayDate) {
-                payDateError.error = payDateMessage
-            }
             val (resultPayPurpose,payPurposeMessage) = validateHelper.selectedCheck(selectedPayPurposeName)
-            if(!resultPayPurpose){
-                payPurposeListError.text = payPurposeMessage
-            }
             val (resultMember,memberMessage) = validateHelper.selectedCheck(selectedMemberName)
-            if(!resultMember){
-                memberListError.text = memberMessage
-            }
             if(!(resultPayAmount && resultPayDate && resultPayPurpose && resultMember)){
+                payAmountError.error = payAmountMessage
+                payDateError.error = payDateMessage
+                payPurposeListError.text = payPurposeMessage
+                memberListError.text = memberMessage
                 return@setOnClickListener
             }
             clearErrorMessage()
@@ -178,47 +165,88 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
     }
 
     @SuppressLint("SimpleDateFormat")
-    private fun onSaveButtonClick(){
-        val memberId = databaseHelper.getMemberId(userID,selectedMemberName)
-        val payPurposeId = databaseHelper.getPaymentPurposeId(userID,selectedPayPurposeName)
-        val db = databaseHelper.writableDatabase
-        val values = ContentValues().apply {
-            put("member_id",memberId)
-            put("user_id",userID)
-            put("purpose_id",payPurposeId)
-            put("payment_date",payDateEditText.text.toString())
-            put("amount",payAmountEditText.text.toString().toInt())
-            put("is_recept_checked",payDone.isChecked)
-            put("note",noteEditText.text.toString())
-        }
-
-        // 挿入処理
-        try {
-            val newRowId = db.insert("payment_history", null, values)
-            if (newRowId != -1L) {
-                Toast.makeText(this, "支払い履歴が追加されました", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "データベースに挿入できませんでした", Toast.LENGTH_SHORT).show()
+    private fun onSaveButtonClick() {
+        // メンバーIDを取得
+        getMemberId { memberId ->
+            // 支払い目的IDを取得
+            getPayPurposeId { payPurposeId ->
+                // 支払い履歴をFirestoreに追加
+                addPaymentHistory(memberId, payPurposeId)
             }
-        } catch (e: Exception) {
-            // エラーハンドリング
-            Toast.makeText(this, "エラーが発生しました: ${e.message}", Toast.LENGTH_SHORT).show()
-        } finally {
-            // 操作が終わった後でデータベースを閉じる
-            db.close()
         }
     }
+
+    // メンバーIDを取得するメソッド
+    private fun getMemberId(onSuccess: (String) -> Unit) {
+        firestore.collection("members")
+            .whereEqualTo("user_id", userID)
+            .whereEqualTo("member_name", selectedMemberName)
+            .get()
+            .addOnSuccessListener { memberQuerySnapshot ->
+                if (memberQuerySnapshot.isEmpty) {
+                    showError("メンバーが見つかりません")
+                    return@addOnSuccessListener
+                }
+                val memberId = memberQuerySnapshot.documents.first().id
+                onSuccess(memberId)
+            }
+            .addOnFailureListener { exception ->
+                showError("メンバーデータの取得に失敗しました: ${exception.message}")
+            }
+    }
+
+    // 支払い目的IDを取得するメソッド
+    private fun getPayPurposeId(onSuccess: (String) -> Unit) {
+        firestore.collection("payPurposes")
+            .whereEqualTo("user_id", userID)
+            .whereEqualTo("pay_purpose_name", selectedPayPurposeName)
+            .get()
+            .addOnSuccessListener { payPurposeQuerySnapshot ->
+                if (payPurposeQuerySnapshot.isEmpty) {
+                    showError("支払い目的が見つかりません")
+                    return@addOnSuccessListener
+                }
+                val payPurposeId = payPurposeQuerySnapshot.documents.first().id
+                onSuccess(payPurposeId)
+            }
+            .addOnFailureListener { exception ->
+                showError("支払い目的データの取得に失敗しました: ${exception.message}")
+            }
+    }
+
+    // 支払い履歴をFirestoreに追加するメソッド
+    private fun addPaymentHistory(memberId: String, payPurposeId: String) {
+        val paymentHistory = hashMapOf(
+            "member_id" to memberId,
+            "user_id" to userID,
+            "pay_purpose_id" to payPurposeId,
+            "payment_date" to payDateEditText.text.toString(),
+            "amount" to payAmountEditText.text.toString().toInt(),
+            "is_recept_checked" to payDone.isChecked,
+            "note" to noteEditText.text.toString()
+        )
+
+        firestore.collection("payment_history")
+            .add(paymentHistory)
+            .addOnSuccessListener {
+                Toast.makeText(this, "支払い履歴が追加されました", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { exception ->
+                showError("支払い履歴の追加に失敗しました: ${exception.message}")
+            }
+    }
+
+    // エラーメッセージを表示する共通メソッド
+    private fun showError(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
 
     private fun clearErrorMessage() {
         payAmountError.error = null
         payPurposeListError.text = null
         payDateError.error = null
         memberListError.text = null
-    }
-
-    override fun onDestroy() {
-        databaseHelper.close()
-        super.onDestroy()
     }
 
     // Firestoreからメンバーを取得してSpinnerにセットするメソッド

@@ -42,6 +42,7 @@ dependencies {
     implementation(libs.firebase.analytics)  // Firebase Analytics
     implementation(libs.firebase.auth.ktx)  // Firebase Authentication (Kotlin拡張)
     implementation(libs.firebase.firestore)  // Firebase Firestore
+    implementation(libs.play.services.auth.v2001)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
