@@ -2,21 +2,23 @@ package com.websarva.wings.android.kakeibo
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.database.Cursor
 import android.os.Bundle
 import android.widget.Toast
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
-class MemberListActivity : BaseActivity(R.layout.activity_member_list,R.string.title_member_list) {
+class MemberListActivity : BaseActivity(R.layout.activity_member_list, R.string.title_member_list) {
     //画面部品の用意
     private lateinit var recyclerView: RecyclerView
     private lateinit var buttonMemberAdd: FloatingActionButton
     private var memberList: List<Member> = mutableListOf()
     private lateinit var memberAdapter: MemberAdapter
+    private val firestore = FirebaseFirestore.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,7 +38,7 @@ class MemberListActivity : BaseActivity(R.layout.activity_member_list,R.string.t
         memberAdapter = MemberAdapter(this, memberList)
         recyclerView.adapter = memberAdapter
 
-        // データベースから member のデータを取得して RecyclerView に表示
+        // Firestoreからmemberのデータを取得してRecyclerViewに表示
         loadMemberList()
 
         buttonMemberAdd.setOnClickListener {
@@ -46,33 +48,41 @@ class MemberListActivity : BaseActivity(R.layout.activity_member_list,R.string.t
         }
     }
 
-    @SuppressLint("Range", "NotifyDataSetChanged")
+    @SuppressLint("NotifyDataSetChanged")
     private fun loadMemberList() {
-        val db = DatabaseHelper(this).readableDatabase
-        val cursor: Cursor = db.rawQuery("SELECT * FROM member WHERE user_id = ?", arrayOf(userID))
-        val newMemberList = mutableListOf<Member>()
-        if (cursor.moveToFirst()) {
-            do {
-                val id = cursor.getLong(cursor.getColumnIndex("_id"))
-                val userId = cursor.getString(cursor.getColumnIndex("user_id"))
-                val memberName = cursor.getString(cursor.getColumnIndex("member_name"))
-                newMemberList.add(Member(id, userId, memberName))
+        // Firestoreの「members」コレクションからデータを取得
+        firestore.collection("members")
+            .whereEqualTo("user_id", userID)  // user_idが一致するドキュメントのみ取得
+            .orderBy("member_name", Query.Direction.ASCENDING)  // member_nameでソート（任意）
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                // クエリ結果をリストに変換
+                val newMemberList = mutableListOf<Member>()
+                for (document in querySnapshot.documents) {
+                    val memberName = document.getString("member_name") ?: ""
+                    val memberId = document.id  // FirestoreのドキュメントIDを使う（または任意のフィールド）
+                    val userId = document.getString("user_id") ?: ""
 
-            } while (cursor.moveToNext())
-        } else {
-            Toast.makeText(this, "メンバーが登録されていません。", Toast.LENGTH_SHORT).show()
-        }
+                    newMemberList.add(Member(memberId, userId, memberName))
+                }
 
-        cursor.close()
-        db.close()
+                // データが取得できたらRecyclerViewを更新
+                if (newMemberList.isEmpty()) {
+                    Toast.makeText(this, "メンバーが登録されていません。", Toast.LENGTH_SHORT).show()
+                }
 
-        // データセットを更新
-        memberList = newMemberList
-        memberAdapter.updateData(memberList)
-        memberAdapter.notifyDataSetChanged()
+                // memberListを更新し、アダプターに通知
+                memberList = newMemberList
+                memberAdapter.updateData(memberList)
+                memberAdapter.notifyDataSetChanged()
+            }
+            .addOnFailureListener { exception ->
+                Toast.makeText(this, "データ取得に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
     // onActivityResultをオーバーライドして削除結果を受け取る
+    @Deprecated("This method has been deprecated in favor of using the Activity Result API\n      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt\n      contracts for common intents available in\n      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for\n      testing, and allow receiving results in separate, testable classes independent from your\n      activity. Use\n      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}\n      with the appropriate {@link ActivityResultContract} and handling the result in the\n      {@link ActivityResultCallback#onActivityResult(Object) callback}.")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 

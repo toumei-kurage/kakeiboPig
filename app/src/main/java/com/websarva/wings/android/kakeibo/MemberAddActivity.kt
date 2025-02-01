@@ -9,6 +9,8 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import com.google.android.material.textfield.TextInputLayout
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
 import com.websarva.wings.android.kakeibo.helper.DialogHelper
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
@@ -80,24 +82,54 @@ class MemberAddActivity : BaseActivity(R.layout.activity_member_add, R.string.ti
         super.onDestroy()
     }
 
-    private fun onSaveButtonClick(){
-        val db = databaseHelper.writableDatabase
-        try{
-            val values = ContentValues().apply {
-                put("user_id",userID)
-                put("member_name",memberNameEditText.text.toString())
-            }
-            val newRowId = db.insertOrThrow("member",null,values)
-            // 成功したらトーストメッセージを表示
-            if (newRowId != -1L) {
-                Toast.makeText(this, "メンバーが追加されました", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "データベースに挿入できませんでした", Toast.LENGTH_SHORT).show()
-            }
-        }catch (e: SQLiteConstraintException){
-           dialogHelper.dialogOkOnly("","メンバー名が重複しています。")
-        }finally {
-            db.close()
+    private fun onSaveButtonClick() {
+        val firestore = FirebaseFirestore.getInstance()
+
+        // 現在ログインしているユーザーのIDを取得 (Firebase Authenticationを使用している場合)
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser == null) {
+            Toast.makeText(this, "ユーザーがログインしていません", Toast.LENGTH_SHORT).show()
+            return
         }
+
+        // メンバー名とユーザーIDを取得
+        val memberName = memberNameEditText.text.toString()
+        val userId = currentUser.uid
+
+        // 「members」コレクションから、user_idとmember_nameの組み合わせで既に存在するかチェック
+        val query = firestore.collection("members")
+            .whereEqualTo("user_id", userId)
+            .whereEqualTo("member_name", memberName)
+
+        query.get()
+            .addOnSuccessListener { querySnapshot ->
+                // クエリ結果が空ならば新しいメンバーを追加
+                if (querySnapshot.isEmpty) {
+                    // Firestoreに追加するデータ
+                    val memberData = hashMapOf(
+                        "user_id" to userId,
+                        "member_name" to memberName
+                    )
+
+                    // Firestoreの「members」コレクションにデータを追加
+                    firestore.collection("members")
+                        .add(memberData)
+                        .addOnSuccessListener { documentReference ->
+                            // 成功した場合の処理
+                            Toast.makeText(this, "メンバーが追加されました", Toast.LENGTH_SHORT).show()
+                        }
+                        .addOnFailureListener { e ->
+                            // エラーが発生した場合の処理
+                            Toast.makeText(this, "エラーが発生しました: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                } else {
+                    // 既に同じ組み合わせのデータが存在する場合
+                    Toast.makeText(this, "このメンバーは既に存在します", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener { e ->
+                // クエリ実行時のエラー処理
+                Toast.makeText(this, "データベースの読み込みに失敗しました: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 }
