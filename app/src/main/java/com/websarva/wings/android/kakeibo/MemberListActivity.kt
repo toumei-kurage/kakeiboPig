@@ -9,7 +9,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class MemberListActivity : BaseActivity(R.layout.activity_member_list, R.string.title_member_list) {
@@ -18,6 +17,7 @@ class MemberListActivity : BaseActivity(R.layout.activity_member_list, R.string.
     private lateinit var buttonMemberAdd: FloatingActionButton
     private var memberList: List<Member> = mutableListOf()
     private lateinit var memberAdapter: MemberAdapter
+
     private val firestore = FirebaseFirestore.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {

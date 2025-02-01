@@ -2,14 +2,14 @@ package com.websarva.wings.android.kakeibo
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.database.Cursor
 import android.os.Bundle
 import android.widget.Toast
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 
 class PayPurposeListActivity : BaseActivity(R.layout.activity_pay_purpose_list, R.string.title_pay_purpose_list) {
     //画面部品の用意
@@ -17,6 +17,8 @@ class PayPurposeListActivity : BaseActivity(R.layout.activity_pay_purpose_list, 
     private lateinit var buttonPayPurposeAdd: FloatingActionButton
     private var payPurposeList: List<PayPurpose> = mutableListOf()
     private lateinit var payPurposeAdapter: PayPurposeAdapter
+
+    private val firestore = FirebaseFirestore.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,28 +50,35 @@ class PayPurposeListActivity : BaseActivity(R.layout.activity_pay_purpose_list, 
 
     @SuppressLint("Range", "NotifyDataSetChanged")
     private fun loadPayPurposeList() {
-        val db = DatabaseHelper(this).readableDatabase
-        val cursor: Cursor = db.rawQuery("SELECT * FROM payment_purpose WHERE user_id = ?", arrayOf(userID))
-        val newPayPurposeList = mutableListOf<PayPurpose>()
-        if (cursor.moveToFirst()) {
-            do {
-                val id = cursor.getLong(cursor.getColumnIndex("_id"))
-                val userId = cursor.getString(cursor.getColumnIndex("user_id"))
-                val payPurposeName = cursor.getString(cursor.getColumnIndex("pay_purpose_name"))
-                newPayPurposeList.add(PayPurpose(id, userId, payPurposeName))
+        // Firestoreの「members」コレクションからデータを取得
+        firestore.collection("payPurposes")
+            .whereEqualTo("user_id", userID)  // user_idが一致するドキュメントのみ取得
+            .orderBy("pay_purpose_name", Query.Direction.ASCENDING)  // member_nameでソート（任意）
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                // クエリ結果をリストに変換
+                val newPayPurposeList = mutableListOf<PayPurpose>()
+                for (document in querySnapshot.documents) {
+                    val payPurposeName = document.getString("pay_purpose_name") ?: ""
+                    val payPurposeId = document.id  // FirestoreのドキュメントIDを使う（または任意のフィールド）
+                    val userId = document.getString("user_id") ?: ""
 
-            } while (cursor.moveToNext())
-        } else {
-            Toast.makeText(this, "支払い目的が登録されていません。", Toast.LENGTH_SHORT).show()
-        }
+                    newPayPurposeList.add(PayPurpose(payPurposeId, userId, payPurposeName))
+                }
 
-        cursor.close()
-        db.close()
+                // データが取得できたらRecyclerViewを更新
+                if (newPayPurposeList.isEmpty()) {
+                    Toast.makeText(this, "支払い目的が登録されていません。", Toast.LENGTH_SHORT).show()
+                }
 
-        // データセットを更新
-        payPurposeList = newPayPurposeList
-        payPurposeAdapter.updateData(payPurposeList)
-        payPurposeAdapter.notifyDataSetChanged()
+                // memberListを更新し、アダプターに通知
+                payPurposeList = newPayPurposeList
+                payPurposeAdapter.updateData(payPurposeList)
+                payPurposeAdapter.notifyDataSetChanged()
+            }
+            .addOnFailureListener { exception ->
+                Toast.makeText(this, "データ取得に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
     // onActivityResultをオーバーライドして削除結果を受け取る

@@ -1,9 +1,7 @@
 package com.websarva.wings.android.kakeibo
 
 import android.app.AlertDialog
-import android.content.ContentValues
 import android.content.Intent
-import android.database.sqlite.SQLiteConstraintException
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -13,8 +11,8 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import com.google.android.material.textfield.TextInputLayout
-import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
-import com.websarva.wings.android.kakeibo.helper.DialogHelper
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 
 class PayPurposeUpdateActivity :BaseActivity(R.layout.activity_pay_purpose_update, R.string.title_pay_purpose_update)  {
@@ -23,12 +21,14 @@ class PayPurposeUpdateActivity :BaseActivity(R.layout.activity_pay_purpose_updat
     private lateinit var payPurposeNameEditText: EditText
     private lateinit var buttonPayPurposeUpdate: Button
 
-    // ヘルパークラス
-    private val databaseHelper = DatabaseHelper(this)
-    private val validateHelper = ValidateHelper(this)
-    private val dialogHelper = DialogHelper(this)
+    // Firestoreインスタンス
+    private val firestore = FirebaseFirestore.getInstance()
 
-    private var payPurposeId: Long = -1
+    // メンバーID
+    private var payPurposeId: String = ""
+
+    //ヘルパークラス
+    private val validateHelper = ValidateHelper(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,7 +42,7 @@ class PayPurposeUpdateActivity :BaseActivity(R.layout.activity_pay_purpose_updat
         buttonPayPurposeUpdate = findViewById(R.id.buttonPayPurposeUpdate)
 
         // 渡されたデータを受け取る
-        payPurposeId = intent.getLongExtra("PAY_PURPOSE_ID", -1)
+        payPurposeId = intent.getStringExtra("PAY_PURPOSE_ID") ?: ""
         val payPurposeName = intent.getStringExtra("PAY_PURPOSE_NAME")
         
         payPurposeNameEditText.setText(payPurposeName)
@@ -56,7 +56,7 @@ class PayPurposeUpdateActivity :BaseActivity(R.layout.activity_pay_purpose_updat
                     payPurposeNameError.error = errorMsg
                     return@OnFocusChangeListener
                 }
-                payPurposeNameError.error = ""
+                payPurposeNameError.error = null
             }
         }
 
@@ -71,7 +71,7 @@ class PayPurposeUpdateActivity :BaseActivity(R.layout.activity_pay_purpose_updat
             }
 
             clearErrorMessage()
-            updatePayPurpose()
+            checkForDuplicateAndUpdate()
         }
     }
 
@@ -103,38 +103,45 @@ class PayPurposeUpdateActivity :BaseActivity(R.layout.activity_pay_purpose_updat
         payPurposeNameError.error = null
     }
 
-    override fun onDestroy() {
-        databaseHelper.close()
-        super.onDestroy()
-    }
-
-    private fun updatePayPurpose() {
-        // 入力された値を取得
+    // 重複チェックと更新処理
+    private fun checkForDuplicateAndUpdate() {
         val newPayPurposeName = payPurposeNameEditText.text.toString()
 
-        // データベースの更新処理
-        val db = DatabaseHelper(this).writableDatabase
-        try{
-            val values = ContentValues().apply {
-                put("user_id", userID)
-                put("pay_purpose_name", newPayPurposeName)
+        // 重複をチェックするクエリを作成
+        val query: Query = firestore.collection("payPurposes")
+            .whereEqualTo("user_id", userID)  // user_idを基に検索
+            .whereEqualTo("pay_purpose_name", newPayPurposeName)  // pay_purpose_nameが一致するものを検索
+
+        query.get()
+            .addOnSuccessListener { querySnapshot ->
+                if (querySnapshot.isEmpty) {
+                    // 重複がない場合、更新処理を実行
+                    updatePayPurpose(newPayPurposeName)
+                } else {
+                    // 重複がある場合
+                    Toast.makeText(this, "この支払い目的はすでに存在します", Toast.LENGTH_SHORT).show()
+                }
             }
-            val rowsAffected = db.update(
-                "payment_purpose",
-                values,
-                "_id = ?",
-                arrayOf(payPurposeId.toString())
-            )
-            if (rowsAffected > 0) {
+            .addOnFailureListener { exception ->
+                Toast.makeText(this, "重複チェックに失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun updatePayPurpose(newPayPurposeName: String) {
+        val payPurposeRef = firestore.collection("payPurposes").document(payPurposeId)
+
+        val updatedData = hashMapOf(
+            "pay_purpose_name" to newPayPurposeName,
+            "user_id" to userID
+        )
+
+        payPurposeRef.set(updatedData)
+            .addOnSuccessListener {
                 Toast.makeText(this, "更新されました", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "更新できませんでした", Toast.LENGTH_SHORT).show()
             }
-        }catch (e: SQLiteConstraintException){
-            dialogHelper.dialogOkOnly("","支払い目的名が重複しています。")
-        }finally {
-            db.close()
-        }
+            .addOnFailureListener { exception ->
+                Toast.makeText(this, "更新できませんでした: ${exception.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
     // 削除確認ダイアログを表示
@@ -142,12 +149,8 @@ class PayPurposeUpdateActivity :BaseActivity(R.layout.activity_pay_purpose_updat
         val builder = AlertDialog.Builder(this)
         builder.setMessage("本当に削除しますか？")
             .setCancelable(false)
-            .setPositiveButton("YES") { _, _ ->
-                deletePayPurpose()
-            }
-            .setNegativeButton("NO") { dialog, _ ->
-                dialog.dismiss()
-            }
+            .setPositiveButton("YES") { _, _ -> deletePayPurpose() }
+            .setNegativeButton("NO") { dialog, _ -> dialog.dismiss() }
 
         val alert = builder.create()
         alert.show()
@@ -155,29 +158,19 @@ class PayPurposeUpdateActivity :BaseActivity(R.layout.activity_pay_purpose_updat
 
     // 支払い目的を削除する処理
     private fun deletePayPurpose() {
-        val db = DatabaseHelper(this).writableDatabase
+        val payPurposeRef = firestore.collection("payPurposes").document(payPurposeId)
 
-        try{
-            val rowsDeleted = db.delete(
-                "payment_purpose",
-                "_id = ?",
-                arrayOf(payPurposeId.toString())
-            )
-
-            if (rowsDeleted > 0) {
+        payPurposeRef.delete()
+            .addOnSuccessListener {
                 Toast.makeText(this, "削除されました", Toast.LENGTH_SHORT).show()
                 // 削除成功した場合、親Activityに通知する
                 val resultIntent = Intent()
                 resultIntent.putExtra("PAY_PURPOSE_DELETED", true)  // 削除フラグを渡す
                 setResult(RESULT_OK, resultIntent)  // 削除成功の結果を返す
                 finish()  // アクティビティを終了し、前の画面に戻る
-            } else {
-                Toast.makeText(this, "削除できませんでした", Toast.LENGTH_SHORT).show()
             }
-        }catch (e:SQLiteConstraintException) {
-            dialogHelper.dialogOkOnly("","支払い履歴に登録済みの支払い目的は削除できません")
-        }finally {
-            db.close()
-        }
+            .addOnFailureListener { exception ->
+                Toast.makeText(this, "削除できませんでした: ${exception.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 }

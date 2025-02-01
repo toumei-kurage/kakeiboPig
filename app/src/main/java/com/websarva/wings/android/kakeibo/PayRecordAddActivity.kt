@@ -66,10 +66,7 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
         buttonPayRecordAdd = findViewById(R.id.buttonPayRecordAdd)
 
         // PayPurposeデータを取得しSpinnerにセット
-        val paymentPurposes = arrayOf(getString(R.string.un_selected)) + databaseHelper.getPaymentPurposesForUser(userID)
-        val payPurposeArrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, paymentPurposes)
-        payPurposeArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spPayPurposeList.adapter = payPurposeArrayAdapter
+        loadPayPurposesFromFirestore()
 
         //Memberデータを取得しSpinnerにセット
         loadMembersFromFirestore()
@@ -226,10 +223,8 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
 
     // Firestoreからメンバーを取得してSpinnerにセットするメソッド
     private fun loadMembersFromFirestore() {
-        val userId = userID // 現在ログインしているユーザーIDを取得
-
         firestore.collection("members")
-            .whereEqualTo("user_id", userId)  // user_idに紐づくメンバーを取得
+            .whereEqualTo("user_id", userID)  // user_idに紐づくメンバーを取得
             .get()
             .addOnSuccessListener { querySnapshot ->
                 // 成功した場合
@@ -250,6 +245,38 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
                 // リストが空の場合の処理
                 if (memberList.size == 1) {
                     memberListError.text = "メンバーが登録されていません。"
+                }
+            }
+            .addOnFailureListener { exception ->
+                // エラーハンドリング
+                Toast.makeText(this, "データ取得に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    // Firestoreから支払い目的を取得してSpinnerにセットするメソッド
+    private fun loadPayPurposesFromFirestore() {
+        firestore.collection("payPurposes")
+            .whereEqualTo("user_id", userID)  // user_idに紐づくメンバーを取得
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                // 成功した場合
+                val payPurposeList = mutableListOf<String>()
+                // 支払い目的をリストに追加（最初に「選択してください」の項目を追加）
+                payPurposeList.add(getString(R.string.un_selected))
+
+                for (document in querySnapshot.documents) {
+                    val payPurposeName = document.getString("pay_purpose_name") ?: ""
+                    payPurposeList.add(payPurposeName) // pay_purpose_nameをリストに追加
+                }
+
+                // Spinnerにセットする
+                val payPurposeArrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, payPurposeList)
+                payPurposeArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                spPayPurposeList.adapter = payPurposeArrayAdapter
+
+                // リストが空の場合の処理
+                if (payPurposeList.size == 1) {
+                    payPurposeListError.text = "支払い目的が登録されていません。"
                 }
             }
             .addOnFailureListener { exception ->
