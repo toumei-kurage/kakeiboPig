@@ -158,19 +158,36 @@ class PayPurposeUpdateActivity :BaseActivity(R.layout.activity_pay_purpose_updat
 
     // 支払い目的を削除する処理
     private fun deletePayPurpose() {
-        val payPurposeRef = firestore.collection("payPurposes").document(payPurposeId)
+        // payPurposeIdを使ってpayment_historyコレクションを検索
+        firestore.collection("payment_history")
+            .whereEqualTo("user_id", userID)
+            .whereEqualTo("pay_purpose_id", payPurposeId)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                // もしpayment_historyコレクション内にmember_idが参照されているドキュメントがある場合
+                if (!querySnapshot.isEmpty) {
+                    // 支払い目的が支払い履歴に参照されているので削除不可
+                    Toast.makeText(this, "この支払い目的は支払い履歴に参照されています。削除できません。", Toast.LENGTH_SHORT).show()
+                } else {
+                    // payment_historyコレクションに参照されていない場合、メンバーを削除
+                    val payPurposeRef = firestore.collection("payPurposes").document(payPurposeId)
 
-        payPurposeRef.delete()
-            .addOnSuccessListener {
-                Toast.makeText(this, "削除されました", Toast.LENGTH_SHORT).show()
-                // 削除成功した場合、親Activityに通知する
-                val resultIntent = Intent()
-                resultIntent.putExtra("PAY_PURPOSE_DELETED", true)  // 削除フラグを渡す
-                setResult(RESULT_OK, resultIntent)  // 削除成功の結果を返す
-                finish()  // アクティビティを終了し、前の画面に戻る
+                    payPurposeRef.delete()
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "削除されました", Toast.LENGTH_SHORT).show()
+                            // 削除成功した場合、親Activityに通知する
+                            val resultIntent = Intent()
+                            resultIntent.putExtra("PAY_PURPOSE_DELETED", true)  // 削除フラグを渡す
+                            setResult(RESULT_OK, resultIntent)  // 削除成功の結果を返す
+                            finish()  // アクティビティを終了し、前の画面に戻る
+                        }
+                        .addOnFailureListener { exception ->
+                            Toast.makeText(this, "削除できませんでした: ${exception.message}", Toast.LENGTH_SHORT).show()
+                        }
+                }
             }
             .addOnFailureListener { exception ->
-                Toast.makeText(this, "削除できませんでした: ${exception.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "エラーが発生しました: ${exception.message}", Toast.LENGTH_SHORT).show()
             }
     }
 }
