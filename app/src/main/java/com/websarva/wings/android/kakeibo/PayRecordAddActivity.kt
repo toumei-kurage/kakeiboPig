@@ -17,6 +17,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.google.android.material.textfield.TextInputLayout
+import com.google.firebase.firestore.FirebaseFirestore
 import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 import java.util.Calendar
@@ -42,6 +43,7 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
     //ヘルパークラス
     private val validateHelper = ValidateHelper(this)
     private val databaseHelper = DatabaseHelper(this)
+    private val firestore = FirebaseFirestore.getInstance()
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -70,10 +72,7 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
         spPayPurposeList.adapter = payPurposeArrayAdapter
 
         //Memberデータを取得しSpinnerにセット
-        val member = arrayOf(getString(R.string.un_selected)) + databaseHelper.getMemberForUser(userID)
-        val memberArrayAdapter = ArrayAdapter(this,android.R.layout.simple_spinner_item, member)
-        memberArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spMember.adapter = memberArrayAdapter
+        loadMembersFromFirestore()
 
         spPayPurposeList.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parentView: AdapterView<*>, selectedView:View?, position: Int, id: Long) {
@@ -223,5 +222,39 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
     override fun onDestroy() {
         databaseHelper.close()
         super.onDestroy()
+    }
+
+    // Firestoreからメンバーを取得してSpinnerにセットするメソッド
+    private fun loadMembersFromFirestore() {
+        val userId = userID // 現在ログインしているユーザーIDを取得
+
+        firestore.collection("members")
+            .whereEqualTo("user_id", userId)  // user_idに紐づくメンバーを取得
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                // 成功した場合
+                val memberList = mutableListOf<String>()
+                // メンバー名をリストに追加（最初に「選択してください」の項目を追加）
+                memberList.add(getString(R.string.un_selected))
+
+                for (document in querySnapshot.documents) {
+                    val memberName = document.getString("member_name") ?: ""
+                    memberList.add(memberName) // member_nameをリストに追加
+                }
+
+                // Spinnerにセットする
+                val memberArrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, memberList)
+                memberArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                spMember.adapter = memberArrayAdapter
+
+                // リストが空の場合の処理
+                if (memberList.size == 1) {
+                    memberListError.text = "メンバーが登録されていません。"
+                }
+            }
+            .addOnFailureListener { exception ->
+                // エラーハンドリング
+                Toast.makeText(this, "データ取得に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 }
