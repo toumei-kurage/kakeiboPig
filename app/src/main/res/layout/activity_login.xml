@@ -27,8 +27,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/hint_email"
-            android:inputType="text"
-            android:text="yoshikawa60065@gmail.com" />
+            android:inputType="text" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -48,8 +47,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/hint_password"
-            android:inputType="textPassword"
-            android:text="rekadon1" />
+            android:inputType="textPassword" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
