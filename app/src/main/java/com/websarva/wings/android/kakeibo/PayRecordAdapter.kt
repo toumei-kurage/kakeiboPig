@@ -9,7 +9,6 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.FirebaseFirestore
-import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
 
 // PayRecord のデータクラス
 data class PayRecord(val id: String, val userId: String,var memberId: String,var payPurposeId: String, var payDate: String,var payAmount: Int,var isReceptChecked: Boolean,var note: String)

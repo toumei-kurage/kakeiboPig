@@ -15,9 +15,10 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
     // 画面部品の用意
     private lateinit var recyclerView: RecyclerView
     private lateinit var buttonPayRecordAdd: FloatingActionButton
-    private var payRecordList: List<PayRecord> = mutableListOf()
     private lateinit var buttonRefinement: Button
     private lateinit var payRecordAdapter: PayRecordAdapter
+
+    private var payRecordList: List<PayRecord> = mutableListOf()
 
     private val firestore = FirebaseFirestore.getInstance()
 

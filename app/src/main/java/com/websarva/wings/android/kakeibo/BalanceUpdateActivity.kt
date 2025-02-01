@@ -2,7 +2,6 @@ package com.websarva.wings.android.kakeibo
 
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
-import android.content.ContentValues
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -12,7 +11,7 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.google.android.material.textfield.TextInputLayout
-import com.websarva.wings.android.kakeibo.helper.DatabaseHelper
+import com.google.firebase.firestore.FirebaseFirestore
 import com.websarva.wings.android.kakeibo.helper.ValidateHelper
 import java.util.Calendar
 
@@ -25,11 +24,11 @@ class BalanceUpdateActivity : BaseActivity(R.layout.activity_balance_update,R.st
     private lateinit var finishDateEditText: EditText
     private lateinit var buttonOK: Button
 
-    private val databaseHelper = DatabaseHelper(this)
     private val validateHelper = ValidateHelper(this)
+    private val firestore = FirebaseFirestore.getInstance()
 
     // 前画面からもらう値の用意
-    private var balanceId = -1
+    private var balanceId = ""
     private var budgetSet: String = "0"
     private var startDate: String = ""
     private var finishDate: String = ""
@@ -42,7 +41,7 @@ class BalanceUpdateActivity : BaseActivity(R.layout.activity_balance_update,R.st
         setupDrawerAndToolbar()
 
         // 取得したデータをフィールドにセット
-        balanceId = intent.getLongExtra("BALANCE_ID",-1).toInt()
+        balanceId = intent.getStringExtra("BALANCE_ID")?:""
         budgetSet = intent.getStringExtra("BUDGET").toString()
         startDate = intent.getStringExtra("START_DATE").toString()
         finishDate = intent.getStringExtra("FINISH_DATE").toString()
@@ -135,51 +134,30 @@ class BalanceUpdateActivity : BaseActivity(R.layout.activity_balance_update,R.st
     }
 
     private fun updateBalance() {
-        val db = DatabaseHelper(this).writableDatabase
-
-        // まずは user_id, start_date, finish_date の組み合わせが存在するか確認
-        val query = """
-        SELECT COUNT(*) FROM balance_history 
-        WHERE user_id = ? AND start_date = ? AND finish_date = ?
-    """
-        val cursor = db.rawQuery(query, arrayOf(userID, startDate, finishDate))
-        cursor.moveToFirst()
-        val recordCount = cursor.getInt(0)
-        cursor.close()
-
-        // レコードが見つかった場合に更新
-        if (recordCount > 0) {
-            val values = ContentValues().apply {
-                put("user_id", userID)
-                put("start_date", startDateEditText.text.toString())
-                put("finish_date", finishDateEditText.text.toString())
-                put("budget", budgetEditText.text.toString()) // 予算を整数として保存
-            }
-
-            // 更新処理
-            val rowsAffected = db.update(
-                "balance_history", // テーブル名
-                values,             // 更新するカラム
-                "user_id = ? AND start_date = ? AND finish_date = ?", // 更新対象の条件
-                arrayOf(userID, startDate, finishDate) // 条件に使用する値
+        try {
+            val updatedRecord = hashMapOf(
+                "start_date" to startDateEditText.text.toString(),
+                "finish_date" to finishDateEditText.text.toString(),
+                "budget" to budgetEditText.text.toString().toInt(),
             )
 
-            // 更新成功/失敗メッセージ
-            if (rowsAffected > 0) {
-                Toast.makeText(this, "更新されました", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "更新できませんでした", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            // レコードが見つからない場合
-            Toast.makeText(this, "指定されたレコードは存在しません", Toast.LENGTH_SHORT).show()
-        }
+            // Firestore ドキュメントを更新
+            firestore.collection("balance_history")
+                .document(balanceId)
+                .update(updatedRecord as Map<String, Any>)
+                .addOnSuccessListener {
+                    showToast("家計簿記録が更新されました")
+                }
+                .addOnFailureListener { e ->
+                    showToast("更新に失敗しました: ${e.message}")
+                }
 
-        db.close()
+        } catch (e: Exception) {
+            showToast("エラーが発生しました: ${e.message}")
+        }
     }
 
-    override fun onDestroy() {
-        databaseHelper.close()
-        super.onDestroy()
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 }
