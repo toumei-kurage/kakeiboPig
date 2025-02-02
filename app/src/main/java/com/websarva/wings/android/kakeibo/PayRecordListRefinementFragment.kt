@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -13,6 +14,7 @@ import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity.INPUT_METHOD_SERVICE
 import androidx.fragment.app.DialogFragment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -51,7 +53,19 @@ class PayRecordListRefinementFragment : DialogFragment() {
         // Memberデータを取得しSpinnerにセット
         loadMembersFromFirestore()
 
-        setupDatePickers()
+        startDateEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                clearBordFocus()
+                showDatePickerDialog(startDateEditText)
+            }
+        }
+
+        finishDateEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                clearBordFocus()
+                showDatePickerDialog(finishDateEditText)
+            }
+        }
 
         buttonOK.setOnClickListener {
             handleOkButtonClick(userID)
@@ -66,15 +80,12 @@ class PayRecordListRefinementFragment : DialogFragment() {
         dialog?.window?.setLayout(ViewGroup1.LayoutParams.MATCH_PARENT, ViewGroup1.LayoutParams.WRAP_CONTENT)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun setupDatePickers() {
-        startDateEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
-            if (hasFocus) showDatePickerDialog(startDateEditText)
-        }
-
-        finishDateEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
-            if (hasFocus) showDatePickerDialog(finishDateEditText)
-        }
+    private fun clearBordFocus() {
+        val inputMethodManager = requireContext().getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        inputMethodManager.hideSoftInputFromWindow(startDateEditText.windowToken, 0)
+        inputMethodManager.hideSoftInputFromWindow(finishDateEditText.windowToken, 0)
+        startDateEditText.clearFocus()
+        finishDateEditText.clearFocus()
     }
 
     @SuppressLint("DefaultLocale")
