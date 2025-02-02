@@ -10,6 +10,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.string.title_pay_record_list) {
     // 画面部品の用意
@@ -202,6 +205,9 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
 
         val payRecords = mutableListOf<PayRecord>()
         query.get().addOnSuccessListener { querySnapshot ->
+            // 日付を格納するために、日付型に変換するためのフォーマットを指定
+            val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
+
             for (document in querySnapshot) {
                 val payRecord = PayRecord(
                     document.id,
@@ -215,6 +221,18 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
                 )
                 payRecords.add(payRecord)
             }
+
+            // payment_date を Date 型に変換してからソート
+            payRecords.sortByDescending {
+                val dateString = it.payDate
+                try {
+                    dateFormat.parse(dateString) ?: Date(0) // 変換できない場合は 1970-01-01 を返す
+                } catch (e: Exception) {
+                    Date(0) // 変換エラー時には 1970-01-01 を返す
+                }
+            }
+
+            // 更新したリストをアダプターに渡す
             payRecordList = payRecords
             payRecordAdapter.updateData(payRecordList)
             payRecordAdapter.notifyDataSetChanged()
