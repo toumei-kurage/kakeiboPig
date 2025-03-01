@@ -11,8 +11,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 
-abstract class BaseActivity(private val layoutResId: Int, private val title: Int) :
-    AppCompatActivity() {
+abstract class BaseActivity(private val layoutResId: Int, private val title: Int) : AppCompatActivity() {
 
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var toggle: ActionBarDrawerToggle
@@ -97,6 +96,12 @@ abstract class BaseActivity(private val layoutResId: Int, private val title: Int
             }
             R.id.nav_pay_purpose_list ->{
                 val intent = Intent(this,PayPurposeListActivity::class.java)
+                startActivity(intent)
+                finish()
+            }
+            R.id.nav_license ->{
+                val intent = Intent(this, com.google.android.gms.oss.licenses.OssLicensesMenuActivity::class.java)
+                intent.putExtra("title", "ライセンス一覧")
                 startActivity(intent)
                 finish()
             }

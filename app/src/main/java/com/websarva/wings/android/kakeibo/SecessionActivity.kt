@@ -38,67 +38,58 @@ class SecessionActivity : BaseActivity(R.layout.activity_secession, R.string.tit
         }
     }
 
-    private fun deleteUserData(userId: String) {
-        // Firestoreのコレクション参照を設定
-        val paymentHistoryRef = firestore.collection("payment_history")
-        val paymentPurposeRef = firestore.collection("payPurposes")
-        val balanceHistoryRef = firestore.collection("balance_history")
-        val memberRef = firestore.collection("members")
+    private fun deleteUserData(userId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+        val db = FirebaseFirestore.getInstance()
+        val batch = db.batch()
 
-        // トランザクションで複数の削除を行う
-        firestore.runTransaction { transaction ->
-            // 非同期タスクを同期的に扱うためにTasks.await()を使用
-            val paymentHistoryQuery = Tasks.await(paymentHistoryRef.whereEqualTo("user_id", userId).get())
-            paymentHistoryQuery.documents.forEach { document ->
-                transaction.delete(document.reference)
-            }
+        // 削除対象のコレクション
+        val collections = listOf("members", "payment_history", "payPurposes", "balance_history")
 
-            val paymentPurposeQuery = Tasks.await(paymentPurposeRef.whereEqualTo("user_id", userId).get())
-            paymentPurposeQuery.documents.forEach { document ->
-                transaction.delete(document.reference)
-            }
-
-            val balanceHistoryQuery = Tasks.await(balanceHistoryRef.whereEqualTo("user_id", userId).get())
-            balanceHistoryQuery.documents.forEach { document ->
-                transaction.delete(document.reference)
-            }
-
-            val memberQuery = Tasks.await(memberRef.whereEqualTo("user_id", userId).get())
-            memberQuery.documents.forEach { document ->
-                transaction.delete(document.reference)
-            }
-        }.addOnSuccessListener {
-            Toast.makeText(this, "ユーザー情報と関連データが削除されました", Toast.LENGTH_SHORT).show()
-        }.addOnFailureListener { exception ->
-           throw exception
+        val tasks = collections.map { collectionName ->
+            db.collection(collectionName).whereEqualTo("user_id", userId).get()
+                .addOnSuccessListener { documents ->
+                    for (document in documents) {
+                        batch.delete(document.reference)
+                    }
+                }
         }
+
+        // すべてのデータ取得が完了したら削除を実行
+        Tasks.whenAllSuccess<Any>(tasks).addOnSuccessListener {
+            batch.commit().addOnSuccessListener {
+                onSuccess() // すべてのデータ削除が成功したらユーザー削除へ
+            }.addOnFailureListener(onFailure)
+        }.addOnFailureListener(onFailure)
     }
+
 
     private fun deleteUser() {
         val user = auth.currentUser
         user?.let {
-            // ユーザーの ID を取得
             val userId = it.uid
 
-            try{
-                // Firestore のデータ削除処理を実行
-                deleteUserData(userId)
-
-                // ユーザーを削除
-                it.delete().addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        // 削除成功後、LoginActivity に遷移
-                        val intent = Intent(this, LoginActivity::class.java)
-                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        startActivity(intent)
-                        finish() // 現在のアクティビティを終了
-                    } else {
-                        dialogHelper.dialogOkOnly("", "ユーザーの削除に失敗しました")
+            // Firestoreのデータ削除を実行
+            deleteUserData(userId,
+                onSuccess = {
+                    // Firestoreのデータ削除が完了したらユーザーアカウント削除を実行
+                    it.delete().addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            Toast.makeText(this,"ユーザーの削除に成功しました",Toast.LENGTH_SHORT).show()
+                            val intent = Intent(this, LoginActivity::class.java)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            startActivity(intent)
+                            finish()
+                        } else {
+                            dialogHelper.dialogOkOnly("", "ユーザーの削除に失敗しました")
+                        }
                     }
+                },
+                onFailure = { e ->
+                    Toast.makeText(this, "データ削除に失敗しました: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
-            }catch (e:Exception){
-                Toast.makeText(this, "データ削除に失敗しました: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+            )
         }
     }
+
+
 }
