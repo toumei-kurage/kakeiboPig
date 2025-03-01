@@ -15,7 +15,6 @@ class SecessionActivity : BaseActivity(R.layout.activity_secession, R.string.tit
 
     private val dialogHelper = DialogHelper(this)
     private lateinit var auth: FirebaseAuth
-    private val firestore = FirebaseFirestore.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
