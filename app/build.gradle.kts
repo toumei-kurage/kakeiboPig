@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.websarva.wings.android.kakeibo"
+    namespace = "com.websarva.wings.android.kakeibo0422"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.websarva.wings.android.kakeibo"
+        applicationId = "com.websarva.wings.android.kakeibo0422"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
