@@ -27,6 +27,7 @@ class PayRecordListRefinementFragment : DialogFragment() {
     private lateinit var memberListError: TextView
     private lateinit var startDateEditText: EditText
     private lateinit var finishDateEditText: EditText
+    private lateinit var spinnerPayDone: Spinner
     private lateinit var buttonOK: Button
     private lateinit var validateHelper: ValidateHelper
     private val firestore = FirebaseFirestore.getInstance()
@@ -45,6 +46,7 @@ class PayRecordListRefinementFragment : DialogFragment() {
         spinnerMember = view.findViewById(R.id.spinnerMember)
         startDateEditText = view.findViewById(R.id.startDateEditText)
         finishDateEditText = view.findViewById(R.id.finishDateEditText)
+        spinnerPayDone = view.findViewById(R.id.spinnerPayDone)
         buttonOK = view.findViewById(R.id.buttonOK)
         memberListError = view.findViewById(R.id.memberListError)
 
@@ -52,6 +54,15 @@ class PayRecordListRefinementFragment : DialogFragment() {
 
         // Memberデータを取得しSpinnerにセット
         loadMembersFromFirestore()
+
+        val payDoneList = mutableListOf<String>().apply {
+            add("領収状態を" + getString(R.string.un_selected))
+            add("領収済み")
+            add("未受領")
+        }
+        val payDoneArrayAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, payDoneList)
+        payDoneArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerPayDone.adapter = payDoneArrayAdapter
 
         startDateEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
@@ -102,7 +113,7 @@ class PayRecordListRefinementFragment : DialogFragment() {
                 val formattedDate = String.format("%04d/%02d/%02d", selectedYear, selectedMonth + 1, selectedDay)
                 editText.setText(formattedDate)
 
-                val (result, errorMessage) = validateHelper.payDateCheck(editText)
+                val (result, errorMessage) = validateHelper.dateCheck(editText)
                 editText.error = if (result) null else errorMessage
             },
             year,
@@ -116,30 +127,66 @@ class PayRecordListRefinementFragment : DialogFragment() {
         val selectedMemberName = spinnerMember.selectedItem?.toString()
         val startDate = startDateEditText.text.toString().takeIf { it.isNotEmpty() }
         val finishDate = finishDateEditText.text.toString().takeIf { it.isNotEmpty() }
+        val selectedPayDone = spinnerPayDone.selectedItem.toString()
 
-        if ((startDate != null && finishDate == null) || (startDate == null && finishDate != null)) {
+        if(startDate == null && finishDate == null){
+            if (!selectedMemberName!!.contains(requireContext().getString(R.string.un_selected))) {
+                getMemberDocumentId(userID, selectedMemberName) { memberDocId ->
+                    if (memberDocId != null) {
+                        memberId = memberDocId
+                        if(!selectedPayDone.contains(requireContext().getString(R.string.un_selected))){
+                            //ok null null ok
+                            applyRefinementAndDismiss(null, null, selectedPayDone)
+                        }else{
+                            //ok null null null
+                            applyRefinementAndDismiss(null, null, null)
+                        }
+                    } else {
+                        Toast.makeText(requireContext(), "該当するメンバーが見つかりません", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }else{
+                if(!selectedPayDone.contains(requireContext().getString(R.string.un_selected))){
+                    //null null null ok
+                    applyRefinementAndDismiss(null, null, selectedPayDone)
+                }else{
+                    //null null null null
+                    applyRefinementAndDismiss(null,null,null)
+                }
+            }
+        }else if(startDate != null && finishDate != null){
+            if (!selectedMemberName!!.contains(requireContext().getString(R.string.un_selected))) {
+                getMemberDocumentId(userID, selectedMemberName) { memberDocId ->
+                    if (memberDocId != null) {
+                        memberId = memberDocId
+                        if(!selectedPayDone.contains(requireContext().getString(R.string.un_selected))){
+                            //ok ok ok ok
+                            applyRefinementAndDismiss(startDate, finishDate, selectedPayDone)
+                        }else{
+                            //ok ok ok null
+                            applyRefinementAndDismiss(startDate, finishDate, null)
+                        }
+                    } else {
+                        Toast.makeText(requireContext(), "該当するメンバーが見つかりません", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }else{
+                if(!selectedPayDone.contains(requireContext().getString(R.string.un_selected))){
+                    //null ok ok ok
+                    applyRefinementAndDismiss(startDate, finishDate, selectedPayDone)
+                }else{
+                    //null ok ok null
+                    applyRefinementAndDismiss(startDate, finishDate, null)
+                }
+            }
+        }else{
             Toast.makeText(context, "開始日と終了日は両方入力してください。", Toast.LENGTH_SHORT).show()
             return
         }
-
-        if (!selectedMemberName!!.contains(requireContext().getString(R.string.un_selected))) {
-            getMemberDocumentId(userID, selectedMemberName) { memberDocId ->
-                if (memberDocId != null) {
-                    memberId = memberDocId
-                    // 取得が完了した後にapplyRefinementを呼び出す
-                    applyRefinementAndDismiss(startDate, finishDate)
-                } else {
-                    Toast.makeText(requireContext(), "該当するメンバーが見つかりません", Toast.LENGTH_SHORT).show()
-                }
-            }
-        } else {
-            // メンバーが選択されていない場合
-            applyRefinementAndDismiss(startDate, finishDate)
-        }
     }
 
-    private fun applyRefinementAndDismiss(startDate: String?, finishDate: String?) {
-        (activity as? PayRecordListActivity)?.applyRefinement(memberId, startDate, finishDate)
+    private fun applyRefinementAndDismiss(startDate: String?, finishDate: String?, payDone: String?) {
+        (activity as? PayRecordListActivity)?.applyRefinement(memberId, startDate, finishDate, payDone)
         dismiss()  // フラグメントを閉じる
     }
 
@@ -151,7 +198,7 @@ class PayRecordListRefinementFragment : DialogFragment() {
             .get()
             .addOnSuccessListener { querySnapshot ->
                 val memberList = mutableListOf<String>().apply {
-                    add(getString(R.string.un_selected))
+                    add("メンバーを" + getString(R.string.un_selected))
                     querySnapshot.documents.forEach { document ->
                         val memberName = document.getString("member_name") ?: ""
                         add(memberName)

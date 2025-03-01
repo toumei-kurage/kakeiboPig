@@ -63,7 +63,7 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
         payAmountError = findViewById(R.id.payAmount)
         payDateEditText = findViewById(R.id.payDateEditText)
         payDateError = findViewById(R.id.payDate)
-        payDone = findViewById(R.id.PayDone)
+        payDone = findViewById(R.id.payDone)
         noteEditText = findViewById(R.id.payNoteEditText)
         buttonPayRecordUpdate = findViewById(R.id.buttonPayRecordUpdate)
 
