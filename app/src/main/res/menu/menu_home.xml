@@ -34,4 +34,7 @@
         android:id="@+id/nav_secession"
         android:title="@string/title_secession"/>
 
+    <item
+        android:id="@+id/nav_license"
+        android:title="@string/title_license"/>
 </menu>

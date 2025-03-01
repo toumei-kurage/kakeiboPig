@@ -16,8 +16,6 @@
         android:theme="@style/Theme.Kakeibo"
         tools:targetApi="31">
 
-        <activity android:name=".BaseActivity"
-            android:exported="false"/>
         <activity
             android:name=".BalanceUpdateActivity"
             android:exported="false" />
@@ -58,9 +56,6 @@
             android:name=".PayRecordAddActivity"
             android:exported="false" />
         <activity
-            android:name=".BaseActivity"
-            android:exported="false" />
-        <activity
             android:name=".MemberListActivity"
             android:exported="false" />
         <activity
@@ -81,6 +76,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
     </application>
 
 </manifest>

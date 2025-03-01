@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     id("com.google.gms.google-services")
     alias(libs.plugins.ksp.gradle.plugin)
+    id("com.google.android.gms.oss-licenses-plugin")
 }
 
 android {
@@ -17,6 +18,15 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("C:\\Users\\yoshi\\Documents.jks")
+            storePassword = "rekadon1"
+            keyAlias = "kakeiboAppKey"
+            keyPassword = "rekadon1"
+        }
     }
 
     buildTypes {
@@ -59,4 +69,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 
+    implementation(libs.play.services.oss.licenses) //ライセンス表示
 }
+
