@@ -31,6 +31,12 @@
         android:hint="Finish Date"
         android:inputType="date" />
 
+    <Spinner
+        android:id="@+id/spinnerPayDone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp" />
+
     <Button
         android:id="@+id/buttonOK"
         android:layout_width="wrap_content"

@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -45,7 +46,7 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
         recyclerView.adapter = payRecordAdapter
 
         // 初期の絞り込みを適用
-        applyRefinement(null, null, null)
+        applyRefinement(null, null, null,null)
 
         buttonPayRecordAdd.setOnClickListener {
             val intent = Intent(this, PayRecordAddActivity::class.java)
@@ -69,33 +70,16 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
             // 削除された場合の処理
             if (data?.getBooleanExtra("PAY_RECORD_DELETE", false) == true) {
                 // 削除後にデータを再読み込みしてRecyclerViewを更新
-                applyRefinement(null, null, null)
+                applyRefinement(null, null, null,null)
             }
         }
     }
 
     // 絞り込み内容を受け取るメソッド
     @SuppressLint("NotifyDataSetChanged")
-    fun applyRefinement(memberId: String?, startDate: String?, endDate: String?) {
+    fun applyRefinement(memberId: String?, startDate: String?, finishDate: String?,payDone:String?) {
         // 絞り込み条件のチェックとデータ取得
-        val refinedData = when {
-            memberId != null && startDate != null && endDate != null -> {
-                // memberId, startDate, endDate が全て指定された場合
-                getFilteredData(memberId, startDate, endDate)
-            }
-            memberId != null -> {
-                // memberId のみ指定された場合
-                getFilteredDataByMember(memberId)
-            }
-            startDate != null && endDate != null -> {
-                // 日付の範囲のみ指定された場合
-                getFilteredDataByDateRange(startDate, endDate)
-            }
-            else -> {
-                // 両方指定されていない場合は全データを返す
-                loadAllData()
-            }
-        }
+        val refinedData = getFilterData(memberId,startDate,finishDate,payDone)
 
         // 絞り込んだデータをRecyclerViewなどにセット
         payRecordList = refinedData
@@ -103,141 +87,69 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
         payRecordAdapter.notifyDataSetChanged()
     }
 
-    // Firestoreから絞り込んだデータを取得
+
     @SuppressLint("NotifyDataSetChanged")
-    private fun getFilteredData(memberId: String, startDate: String, endDate: String): List<PayRecord> {
-        val query = firestore.collection("payment_history")
-            .whereEqualTo("user_id", userID)
-            .whereEqualTo("member_id", memberId)
-            .whereGreaterThanOrEqualTo("payment_date", startDate)
-            .whereLessThanOrEqualTo("payment_date", endDate)
-
+    private fun getFilterData(memberId: String?, startDate: String?, finishDate: String?, payDoneString: String?): List<PayRecord>{
+        val query = createQuery(memberId,startDate,finishDate,payDoneString)
         val payRecords = mutableListOf<PayRecord>()
-        query.get().addOnSuccessListener { querySnapshot ->
-            for (document in querySnapshot) {
-                val payRecord = PayRecord(
-                    document.id,
-                    document.getString("user_id") ?: "",
-                    document.getString("member_id") ?: "",
-                    document.getString("pay_purpose_id") ?: "",
-                    document.getString("payment_date") ?: "",
-                    document.getLong("amount")?.toInt() ?: 0,
-                    document.getBoolean("is_recept_checked") == true,
-                    document.getString("note") ?: ""
-                )
-                payRecords.add(payRecord)
-            }
-            payRecordList = payRecords
-            payRecordAdapter.updateData(payRecordList)
-            payRecordAdapter.notifyDataSetChanged()
-        }.addOnFailureListener { exception ->
-            Toast.makeText(this, "メンバーの検索に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
-        }
-        return payRecords
-    }
+        query.get()
+            .addOnSuccessListener { querySnapshot ->
+                // 日付を格納するために、日付型に変換するためのフォーマットを指定
+                val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
 
-    // メンバーのみで絞り込む
-    @SuppressLint("NotifyDataSetChanged")
-    private fun getFilteredDataByMember(memberId: String): List<PayRecord> {
-        val query = firestore.collection("payment_history")
-            .whereEqualTo("user_id", userID)
-            .whereEqualTo("member_id", memberId)
-
-        val payRecords = mutableListOf<PayRecord>()
-        query.get().addOnSuccessListener { querySnapshot ->
-            for (document in querySnapshot) {
-                val payRecord = PayRecord(
-                    document.id,
-                    document.getString("user_id") ?: "",
-                    document.getString("member_id") ?: "",
-                    document.getString("pay_purpose_id") ?: "",
-                    document.getString("payment_date") ?: "",
-                    document.getLong("amount")?.toInt() ?: 0,
-                    document.getBoolean("is_recept_checked") == true,
-                    document.getString("note") ?: ""
-                )
-                payRecords.add(payRecord)
-            }
-            payRecordList = payRecords
-            payRecordAdapter.updateData(payRecordList)
-            payRecordAdapter.notifyDataSetChanged()
-        }
-        return payRecords
-    }
-
-    // 日付範囲で絞り込む
-    @SuppressLint("NotifyDataSetChanged")
-    private fun getFilteredDataByDateRange(startDate: String, endDate: String): List<PayRecord> {
-        val query = firestore.collection("payment_history")
-            .whereEqualTo("user_id", userID)
-            .whereGreaterThanOrEqualTo("payment_date", startDate)
-            .whereLessThanOrEqualTo("payment_date", endDate)
-
-        val payRecords = mutableListOf<PayRecord>()
-        query.get().addOnSuccessListener { querySnapshot ->
-            for (document in querySnapshot) {
-                val payRecord = PayRecord(
-                    document.id,
-                    document.getString("user_id") ?: "",
-                    document.getString("member_id") ?: "",
-                    document.getString("pay_purpose_id") ?: "",
-                    document.getString("payment_date") ?: "",
-                    document.getLong("amount")?.toInt() ?: 0,
-                    document.getBoolean("is_recept_checked") == true,
-                    document.getString("note") ?: ""
-                )
-                payRecords.add(payRecord)
-            }
-            payRecordList = payRecords
-            payRecordAdapter.updateData(payRecordList)
-            payRecordAdapter.notifyDataSetChanged()
-        }.addOnFailureListener { exception ->
-                Toast.makeText(this, "メンバーの検索に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
-        }
-        return payRecords
-    }
-
-    // Firestoreからすべてのデータを取得
-    @SuppressLint("NotifyDataSetChanged")
-    private fun loadAllData(): List<PayRecord> {
-        val query = firestore.collection("payment_history")
-            .whereEqualTo("user_id", userID)
-
-        val payRecords = mutableListOf<PayRecord>()
-        query.get().addOnSuccessListener { querySnapshot ->
-            // 日付を格納するために、日付型に変換するためのフォーマットを指定
-            val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
-
-            for (document in querySnapshot) {
-                val payRecord = PayRecord(
-                    document.id,
-                    document.getString("user_id") ?: "",
-                    document.getString("member_id") ?: "",
-                    document.getString("pay_purpose_id") ?: "",
-                    document.getString("payment_date") ?: "",
-                    document.getLong("amount")?.toInt() ?: 0,
-                    document.getBoolean("is_recept_checked") == true,
-                    document.getString("note") ?: ""
-                )
-                payRecords.add(payRecord)
-            }
-
-            // payment_date を Date 型に変換してからソート
-            payRecords.sortByDescending {
-                val dateString = it.payDate
-                try {
-                    dateFormat.parse(dateString) ?: Date(0) // 変換できない場合は 1970-01-01 を返す
-                } catch (e: Exception) {
-                    Date(0) // 変換エラー時には 1970-01-01 を返す
+                for (document in querySnapshot) {
+                    val payRecord = PayRecord(
+                        document.id,
+                        document.getString("user_id") ?: "",
+                        document.getString("member_id") ?: "",
+                        document.getString("pay_purpose_id") ?: "",
+                        document.getString("payment_date") ?: "",
+                        document.getLong("amount")?.toInt() ?: 0,
+                        document.getBoolean("is_recept_checked") == true,
+                        document.getString("note") ?: ""
+                    )
+                    payRecords.add(payRecord)
                 }
+
+                // payment_date を Date 型に変換してからソート
+                payRecords.sortByDescending {
+                    val dateString = it.payDate
+                    try {
+                        dateFormat.parse(dateString) ?: Date(0) // 変換できない場合は 1970-01-01 を返す
+                    } catch (e: Exception) {
+                       Date(0) // 変換エラー時には 1970-01-01 を返す
+                    }
+                }
+
+                // 更新したリストをアダプターに渡す
+                payRecordList = payRecords
+                payRecordAdapter.updateData(payRecordList)
+                payRecordAdapter.notifyDataSetChanged()
+            }
+            .addOnFailureListener { exception ->
+                Toast.makeText(this, "データ取得に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
             }
 
-            // 更新したリストをアダプターに渡す
-            payRecordList = payRecords
-            payRecordAdapter.updateData(payRecordList)
-            payRecordAdapter.notifyDataSetChanged()
+        return payRecords
+    }
+
+    private fun createQuery(memberId: String?, startDate: String?, finishDate: String?, payDoneString: String?): Query {
+        val payDone = if (payDoneString != null) (payDoneString == "領収済み") else null
+        var query: Query = firestore.collection("payment_history")
+            .whereEqualTo("user_id", userID)
+
+        if (memberId != null) {
+            query = query.whereEqualTo("member_id", memberId)
+        }
+        if (startDate != null && finishDate != null) {
+            query = query
+                .whereGreaterThanOrEqualTo("payment_date", startDate)
+                .whereLessThanOrEqualTo("payment_date", finishDate)
+        }
+        if (payDone != null) {
+            query = query.whereEqualTo("is_recept_checked", payDone)
         }
 
-        return payRecords
+        return query
     }
 }
