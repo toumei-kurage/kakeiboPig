@@ -70,7 +70,7 @@ class SecessionActivity : BaseActivity(R.layout.activity_secession, R.string.tit
         }.addOnSuccessListener {
             Toast.makeText(this, "ユーザー情報と関連データが削除されました", Toast.LENGTH_SHORT).show()
         }.addOnFailureListener { exception ->
-            Toast.makeText(this, "データ削除に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
+           throw exception
         }
     }
 
@@ -80,20 +80,24 @@ class SecessionActivity : BaseActivity(R.layout.activity_secession, R.string.tit
             // ユーザーの ID を取得
             val userId = it.uid
 
-            // Firestore のデータ削除処理を実行
-            deleteUserData(userId)
+            try{
+                // Firestore のデータ削除処理を実行
+                deleteUserData(userId)
 
-            // ユーザーを削除
-            it.delete().addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    // 削除成功後、LoginActivity に遷移
-                    val intent = Intent(this, LoginActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    startActivity(intent)
-                    finish() // 現在のアクティビティを終了
-                } else {
-                    dialogHelper.dialogOkOnly("", "ユーザーの削除に失敗しました")
+                // ユーザーを削除
+                it.delete().addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        // 削除成功後、LoginActivity に遷移
+                        val intent = Intent(this, LoginActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+                        finish() // 現在のアクティビティを終了
+                    } else {
+                        dialogHelper.dialogOkOnly("", "ユーザーの削除に失敗しました")
+                    }
                 }
+            }catch (e:Exception){
+                Toast.makeText(this, "データ削除に失敗しました: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
