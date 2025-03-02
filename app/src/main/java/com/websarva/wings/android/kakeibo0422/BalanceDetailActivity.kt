@@ -3,6 +3,7 @@ package com.websarva.wings.android.kakeibo0422
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -11,7 +12,10 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import com.google.firebase.firestore.FirebaseFirestore
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class BalanceDetailActivity : BaseActivity(R.layout.activity_balance_detail,R.string.title_balance_detail) {
     // 画面部品の用意
@@ -30,6 +34,7 @@ class BalanceDetailActivity : BaseActivity(R.layout.activity_balance_detail,R.st
     private var startDate: String = ""
     private var finishDate: String = ""
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,13 +87,38 @@ class BalanceDetailActivity : BaseActivity(R.layout.activity_balance_detail,R.st
     }
 
     // 支払い目的リストの取得
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun loadPaymentPurposes() {
         firestore.collection("payPurposes")
             .whereEqualTo("user_id", userID)
             .get()
             .addOnSuccessListener { querySnapshot ->
-                val payPurposeList = querySnapshot.documents.map { it.getString("pay_purpose_name") ?: "" }
-                addLayoutsForRecords(payPurposeList)
+                val payPurposeNameList = mutableListOf<String>()
+                val newPayPurposeList = mutableListOf<PayPurpose>()
+
+                for (document in querySnapshot.documents) {
+                    val payPurposeName = document.getString("pay_purpose_name") ?: ""
+                    val resistDate = document.getString("resist_date") ?: ""
+                    val payPurposeId = document.id
+                    val userId = document.getString("user_id") ?: ""
+
+                    newPayPurposeList.add(PayPurpose(payPurposeId, userId, payPurposeName, resistDate))
+                }
+
+                val dateFormat = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
+                newPayPurposeList.sortBy {
+                    val dateString = it.resistDate
+                    try {
+                        LocalDateTime.parse(dateString, dateFormat) // LocalDateTime に変換
+                    } catch (e: Exception) {
+                        LocalDateTime.of(1970, 1, 1, 0, 0, 0, 0) // 変換エラー時には 1970-01-01 を返す
+                    }
+                }
+
+                for(payPurpose in newPayPurposeList){
+                    payPurposeNameList.add(payPurpose.payPurposeName)
+                }
+                addLayoutsForRecords(payPurposeNameList)
             }
             .addOnFailureListener { exception ->
                 Toast.makeText(this, "支払い目的の取得に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()

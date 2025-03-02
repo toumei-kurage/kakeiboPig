@@ -8,6 +8,9 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class BalanceListActivity : BaseActivity(R.layout.activity_balance_list, R.string.title_balance_list) {
     // 画面部品の用意
@@ -69,6 +72,17 @@ class BalanceListActivity : BaseActivity(R.layout.activity_balance_list, R.strin
                     )
                     newBalanceList.add(balance)
                 }
+
+            // payment_date を Date 型に変換してからソート
+            val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
+            newBalanceList.sortByDescending {
+                val dateString = it.startDate
+                try {
+                    dateFormat.parse(dateString) ?: Date(0) // 変換できない場合は 1970-01-01 を返す
+                } catch (e: Exception) {
+                    Date(0) // 変換エラー時には 1970-01-01 を返す
+                }
+            }
 
             // データが取得できたらRecyclerViewを更新
             if (newBalanceList.isEmpty()) {
