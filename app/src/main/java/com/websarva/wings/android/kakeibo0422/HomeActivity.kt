@@ -98,6 +98,7 @@ class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
     private fun loadPaymentPurposes() {
         firestore.collection("payPurposes")
             .whereEqualTo("user_id", userID)
+            .orderBy("resist_date", com.google.firebase.firestore.Query.Direction.ASCENDING)
             .get()
             .addOnSuccessListener { querySnapshot ->
                 val payPurposeList = querySnapshot.documents.map { it.getString("pay_purpose_name") ?: "" }

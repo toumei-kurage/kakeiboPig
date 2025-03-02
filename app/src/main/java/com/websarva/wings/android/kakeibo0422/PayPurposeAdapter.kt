@@ -10,7 +10,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 // PayPurpose のデータクラス
-data class PayPurpose(val id: String, val userID: String,val payPurposeName: String)
+data class PayPurpose(val id: String, val userID: String,val payPurposeName: String, val resistDate: String)
 
 class PayPurposeAdapter(private val context: Context, private var payPurposeList: List<PayPurpose>) :
     RecyclerView.Adapter<PayPurposeAdapter.PayPurposeViewHolder>() {
@@ -40,6 +40,7 @@ class PayPurposeAdapter(private val context: Context, private var payPurposeList
             // 編集するデータを渡す
             intent.putExtra("PAY_PURPOSE_ID", payPurpose.id)
             intent.putExtra("PAY_PURPOSE_NAME", payPurpose.payPurposeName)
+            intent.putExtra("RESIST_DATE", payPurpose.resistDate)
             // Activityに戻り値を受け取るためにstartActivityForResultを使う
             (context as? PayPurposeListActivity)?.startActivityForResult(
                 intent,

@@ -53,17 +53,18 @@ class PayPurposeListActivity : BaseActivity(R.layout.activity_pay_purpose_list, 
         // Firestoreの「members」コレクションからデータを取得
         firestore.collection("payPurposes")
             .whereEqualTo("user_id", userID)  // user_idが一致するドキュメントのみ取得
-            .orderBy("pay_purpose_name", Query.Direction.ASCENDING)  // member_nameでソート（任意）
+            .orderBy("resist_date", Query.Direction.ASCENDING)  // resist_dateでソート（任意）
             .get()
             .addOnSuccessListener { querySnapshot ->
                 // クエリ結果をリストに変換
                 val newPayPurposeList = mutableListOf<PayPurpose>()
                 for (document in querySnapshot.documents) {
                     val payPurposeName = document.getString("pay_purpose_name") ?: ""
+                    val resistDate = document.getString("resist_date") ?: ""
                     val payPurposeId = document.id  // FirestoreのドキュメントIDを使う（または任意のフィールド）
                     val userId = document.getString("user_id") ?: ""
 
-                    newPayPurposeList.add(PayPurpose(payPurposeId, userId, payPurposeName))
+                    newPayPurposeList.add(PayPurpose(payPurposeId, userId, payPurposeName, resistDate))
                 }
 
                 // データが取得できたらRecyclerViewを更新
