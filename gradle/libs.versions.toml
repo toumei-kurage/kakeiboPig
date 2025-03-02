@@ -19,6 +19,7 @@ ossLicensesPlugin = "0.10.6"
 playServicesAuthVersion = "20.0.1"
 playServicesOssLicenses = "17.0.1"
 lifecycle-runtime-ktx = "2.6.2"
+playServicesOssLicensesVersion = "17.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -41,6 +42,7 @@ lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtim
 oss-licenses-plugin = { module = "com.google.android.gms:oss-licenses-plugin", version.ref = "ossLicensesPlugin" }
 play-services-auth-v2001 = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuthVersion" }
 play-services-oss-licenses = { module = "com.google.android.gms:play-services-oss-licenses", version.ref = "playServicesOssLicenses" }
+play-services-oss-licenses-v1700 = { module = "com.google.android.gms:play-services-oss-licenses", version.ref = "playServicesOssLicensesVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

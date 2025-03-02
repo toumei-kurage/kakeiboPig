@@ -8,6 +8,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.drawerlayout.widget.DrawerLayout
+import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 
@@ -100,10 +101,8 @@ abstract class BaseActivity(private val layoutResId: Int, private val title: Int
                 finish()
             }
             R.id.nav_license ->{
-                val intent = Intent(this, com.google.android.gms.oss.licenses.OssLicensesMenuActivity::class.java)
-                intent.putExtra("title", "ライセンス一覧")
-                startActivity(intent)
-                finish()
+                OssLicensesMenuActivity.setActivityTitle("ライセンス");
+                startActivity(Intent(this, OssLicensesMenuActivity::class.java))
             }
             // 他のメニューアイテムを追加する場合はここに追加
         }

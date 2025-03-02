@@ -69,6 +69,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 
-    implementation(libs.play.services.oss.licenses) //ライセンス表示
+    implementation(libs.play.services.oss.licenses.v1700)
 }
 
