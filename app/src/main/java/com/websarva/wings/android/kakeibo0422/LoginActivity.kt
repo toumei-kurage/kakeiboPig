@@ -99,7 +99,6 @@ class LoginActivity : AppCompatActivity() {
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
                     // ログイン成功
-                    val user = auth.currentUser
                     Toast.makeText(this, "ログイン成功", Toast.LENGTH_SHORT).show()
                     // 次の画面に遷移する処理
                     val intent = Intent(this, HomeActivity::class.java)

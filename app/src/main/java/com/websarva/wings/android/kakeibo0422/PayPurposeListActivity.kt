@@ -11,12 +11,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
-import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Date
-import java.util.Locale
 
 class PayPurposeListActivity : BaseActivity(R.layout.activity_pay_purpose_list, R.string.title_pay_purpose_list) {
     //画面部品の用意
@@ -27,6 +23,7 @@ class PayPurposeListActivity : BaseActivity(R.layout.activity_pay_purpose_list, 
 
     private val firestore = FirebaseFirestore.getInstance()
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pay_purpose_list)
@@ -100,6 +97,7 @@ class PayPurposeListActivity : BaseActivity(R.layout.activity_pay_purpose_list, 
     }
 
     // onActivityResultをオーバーライドして削除結果を受け取る
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 

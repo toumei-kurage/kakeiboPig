@@ -80,7 +80,7 @@ class PayRecordAdapter(private val context: Context, private var payRecordList: 
         notifyDataSetChanged()
     }
 
-    fun getPayPurposeName(payPurposeId: String, callback: (String?) -> Unit) {
+    private fun getPayPurposeName(payPurposeId: String, callback: (String?) -> Unit) {
         firestore.collection("payPurposes")
             .document(payPurposeId)  // payPurposeIdに一致するドキュメントを指定
             .get()

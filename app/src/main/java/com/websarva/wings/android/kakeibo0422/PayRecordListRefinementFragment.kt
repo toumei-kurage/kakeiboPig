@@ -210,7 +210,7 @@ class PayRecordListRefinementFragment : DialogFragment() {
                 spinnerMember.adapter = memberArrayAdapter
 
                 if (memberList.size == 1) {
-                    memberListError.text = "メンバーが登録されていません。"
+                    memberListError.text = getString(R.string.error_un_member_resisted)
                 }
             }
             .addOnFailureListener { exception ->

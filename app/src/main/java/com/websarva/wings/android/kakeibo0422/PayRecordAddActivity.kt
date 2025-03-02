@@ -18,12 +18,9 @@ import androidx.annotation.RequiresApi
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
 import com.websarva.wings.android.kakeibo0422.helper.ValidateHelper
-import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 
 class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.string.title_add_pay_record) {
     //画面部品の用意
@@ -298,7 +295,7 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
 
                 // リストが空の場合の処理
                 if (memberNameList.size == 1) {
-                    memberListError.text = "メンバーが登録されていません。"
+                    memberListError.text = getString(R.string.error_un_member_resisted)
                 }
             }
             .addOnFailureListener { exception ->
@@ -350,7 +347,7 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
 
                 // リストが空の場合の処理
                 if (payPurposeNameList.size == 1) {
-                    payPurposeListError.text = "支払い目的が登録されていません。"
+                    payPurposeListError.text = getString(R.string.error_un_pay_purpose_resisted)
                 }
             }
             .addOnFailureListener { exception ->
