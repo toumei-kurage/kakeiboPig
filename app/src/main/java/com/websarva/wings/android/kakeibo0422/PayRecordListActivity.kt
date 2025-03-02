@@ -91,7 +91,7 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
     @SuppressLint("NotifyDataSetChanged")
     private fun getFilterData(memberId: String?, startDate: String?, finishDate: String?, payDoneString: String?): List<PayRecord>{
         val query = createQuery(memberId,startDate,finishDate,payDoneString)
-        val payRecords = mutableListOf<PayRecord>()
+        val newPayRecordList = mutableListOf<PayRecord>()
         query.get()
             .addOnSuccessListener { querySnapshot ->
                 // 日付を格納するために、日付型に変換するためのフォーマットを指定
@@ -108,11 +108,11 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
                         document.getBoolean("is_recept_checked") == true,
                         document.getString("note") ?: ""
                     )
-                    payRecords.add(payRecord)
+                    newPayRecordList.add(payRecord)
                 }
 
                 // payment_date を Date 型に変換してからソート
-                payRecords.sortByDescending {
+                newPayRecordList.sortByDescending {
                     val dateString = it.payDate
                     try {
                         dateFormat.parse(dateString) ?: Date(0) // 変換できない場合は 1970-01-01 を返す
@@ -121,8 +121,13 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
                     }
                 }
 
+                // データが取得できたらRecyclerViewを更新
+                if (newPayRecordList.isEmpty()) {
+                    Toast.makeText(this, "支払い履歴が登録されていません。", Toast.LENGTH_SHORT).show()
+                }
+
                 // 更新したリストをアダプターに渡す
-                payRecordList = payRecords
+                payRecordList = newPayRecordList
                 payRecordAdapter.updateData(payRecordList)
                 payRecordAdapter.notifyDataSetChanged()
             }
@@ -130,7 +135,7 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
                 Toast.makeText(this, "データ取得に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
             }
 
-        return payRecords
+        return newPayRecordList
     }
 
     private fun createQuery(memberId: String?, startDate: String?, finishDate: String?, payDoneString: String?): Query {

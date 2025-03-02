@@ -3,6 +3,7 @@ package com.websarva.wings.android.kakeibo0422
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -68,10 +69,16 @@ class BalanceListActivity : BaseActivity(R.layout.activity_balance_list, R.strin
                     )
                     newBalanceList.add(balance)
                 }
-                // データセットを更新
-                balanceList = newBalanceList
-                balanceAdapter.updateData(balanceList)
-                balanceAdapter.notifyDataSetChanged()
+
+            // データが取得できたらRecyclerViewを更新
+            if (newBalanceList.isEmpty()) {
+                Toast.makeText(this, "家計簿履歴が登録されていません。", Toast.LENGTH_SHORT).show()
+            }
+
+            // データセットを更新
+            balanceList = newBalanceList
+            balanceAdapter.updateData(balanceList)
+            balanceAdapter.notifyDataSetChanged()
         }
 
         return newBalanceList
