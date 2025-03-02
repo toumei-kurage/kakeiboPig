@@ -10,11 +10,8 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.google.firebase.firestore.FirebaseFirestore
-import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Date
-import java.util.Locale
 
 class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
     // 画面部品の用意
@@ -33,6 +30,7 @@ class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
 
     private val firestore = FirebaseFirestore.getInstance()
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
@@ -67,6 +65,7 @@ class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
     }
 
     // Fragmentから情報を受け取る
+    @RequiresApi(Build.VERSION_CODES.O)
     fun setInfo(budget: Int, startDate: String, finishDate: String) {
         budgetSet = budget.toString()
         this.startDateString = startDate
@@ -77,6 +76,7 @@ class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
     }
 
     // UIを更新するメソッド
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("SetTextI18n")
     private fun updateUI() {
         dateRangeTextView.text = if (startDateString != "" && finishDateString != "") {
@@ -213,6 +213,7 @@ class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
     }
 
     // Firestore から最新の家計簿情報を取得
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun loadLatestBalanceHistory() {
         firestore.collection("balance_history")
             .whereEqualTo("user_id", userID)

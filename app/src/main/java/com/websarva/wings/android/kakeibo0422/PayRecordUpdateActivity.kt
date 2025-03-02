@@ -18,12 +18,9 @@ import androidx.annotation.RequiresApi
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
 import com.websarva.wings.android.kakeibo0422.helper.ValidateHelper
-import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 
 class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update, R.string.title_update_pay_record) {
     //画面部品の用意

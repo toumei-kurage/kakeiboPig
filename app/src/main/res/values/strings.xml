@@ -59,6 +59,8 @@
     <string name="error_range_pay_amount">1~1,000,000の間で入力してください</string>
     <string name="error_range_pay_date">1900年1月1日から本日までの間で選択してください</string>
     <string name="error_range_date">1900年1月1日以降の日付を選択してください</string>
+    <string name="error_un_pay_purpose_resisted">支払い目的が登録されていません</string>
+    <string name="error_un_member_resisted">メンバーが登録されていません</string>
 
     <!--    メニューバー-->
     <string name="open">開く</string>
