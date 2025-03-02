@@ -47,8 +47,9 @@
     <string name="hint_pay_purpose_name">支払い目的</string>
     <string name="hint_budget">予算</string>
 
-    <!--    初期選択肢-->
+    <!--    初期-->
     <string name="un_selected">選択してください</string>
+    <string name="formatted_number">%1$,d円</string>
 
     <!--    エラーメッセージ-->
     <string name="error_empty">入力必須です</string>

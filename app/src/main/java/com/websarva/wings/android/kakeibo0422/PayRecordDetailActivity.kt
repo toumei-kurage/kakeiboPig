@@ -60,7 +60,7 @@ class PayRecordDetailActivity : BaseActivity(R.layout.activity_pay_record_detail
             payPurposeTextView.text = payPurposeName
         }
 
-        payAmountTextView.text = "${payAmount}円"
+        payAmountTextView.text = getString(R.string.formatted_number,payAmount)
         payDoneCheckTextView.text = if (isReceptChecked) "領収済み" else "未受領"
         payNoteTextView.text = note
 

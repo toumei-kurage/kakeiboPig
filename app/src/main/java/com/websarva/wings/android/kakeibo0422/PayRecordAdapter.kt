@@ -39,7 +39,7 @@ class PayRecordAdapter(private val context: Context, private var payRecordList: 
     override fun onBindViewHolder(holder: PayRecordViewHolder, position: Int) {
         val payRecord = payRecordList[position]
         holder.payDateTextView.text = payRecord.payDate
-        holder.payAmountTextView.text = "${payRecord.payAmount}円"
+        holder.payAmountTextView.text = context.getString(R.string.formatted_number,payRecord.payAmount)
         getPayPurposeName(payRecord.payPurposeId) { payPurposeName ->
             if (payPurposeName != null) {
                 // pay_purpose_nameが正常に取得できた場合
