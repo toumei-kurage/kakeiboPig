@@ -17,9 +17,11 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.websarva.wings.android.kakeibo0422.helper.ValidateHelper
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.string.title_add_pay_record) {
     //画面部品の用意
@@ -256,23 +258,44 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
             .whereEqualTo("user_id", userID)  // user_idに紐づくメンバーを取得
             .get()
             .addOnSuccessListener { querySnapshot ->
-                // 成功した場合
-                val memberList = mutableListOf<String>()
-                // メンバー名をリストに追加（最初に「選択してください」の項目を追加）
-                memberList.add("メンバーを" + getString(R.string.un_selected))
 
+                val memberNameList = mutableListOf<String>()
+                // メンバー名をリストに追加（最初に「選択してください」の項目を追加）
+                memberNameList.add("メンバーを" + getString(R.string.un_selected))
+
+                // クエリ結果をリストに変換
+                val newMemberList = mutableListOf<Member>()
                 for (document in querySnapshot.documents) {
                     val memberName = document.getString("member_name") ?: ""
-                    memberList.add(memberName) // member_nameをリストに追加
+                    val resistDate = document.getString("resist_date") ?: ""
+                    val memberId = document.id  // FirestoreのドキュメントIDを使う（または任意のフィールド）
+                    val userId = document.getString("user_id") ?: ""
+
+                    newMemberList.add(Member(memberId, userId, memberName, resistDate))
+                }
+
+                //Date 型に変換してからソート
+                val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
+                newMemberList.sortByDescending {
+                    val dateString = it.resistDate
+                    try {
+                        dateFormat.parse(dateString) ?: Date(0) // 変換できない場合は 1970-01-01 を返す
+                    } catch (e: Exception) {
+                        Date(0) // 変換エラー時には 1970-01-01 を返す
+                    }
+                }
+
+                for(member in newMemberList){
+                    memberNameList.add(member.memberName)
                 }
 
                 // Spinnerにセットする
-                val memberArrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, memberList)
+                val memberArrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, memberNameList)
                 memberArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 spMember.adapter = memberArrayAdapter
 
                 // リストが空の場合の処理
-                if (memberList.size == 1) {
+                if (memberNameList.size == 1) {
                     memberListError.text = "メンバーが登録されていません。"
                 }
             }
@@ -286,26 +309,45 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
     private fun loadPayPurposesFromFirestore() {
         firestore.collection("payPurposes")
             .whereEqualTo("user_id", userID)  // user_idに紐づくメンバーを取得
-            .orderBy("resist_date", Query.Direction.ASCENDING)  // resist_dateでソート（任意）
             .get()
             .addOnSuccessListener { querySnapshot ->
-                // 成功した場合
-                val payPurposeList = mutableListOf<String>()
+                val payPurposeNameList = mutableListOf<String>()
+                val newPayPurposeList = mutableListOf<PayPurpose>()
+
                 // 支払い目的をリストに追加（最初に「選択してください」の項目を追加）
-                payPurposeList.add("支払い目的を" + getString(R.string.un_selected))
+                payPurposeNameList.add("支払い目的を" + getString(R.string.un_selected))
 
                 for (document in querySnapshot.documents) {
                     val payPurposeName = document.getString("pay_purpose_name") ?: ""
-                    payPurposeList.add(payPurposeName) // pay_purpose_nameをリストに追加
+                    val resistDate = document.getString("resist_date") ?: ""
+                    val payPurposeId = document.id
+                    val userId = document.getString("user_id") ?: ""
+
+                    newPayPurposeList.add(PayPurpose(payPurposeId, userId, payPurposeName, resistDate))
+                }
+
+                //Date 型に変換してからソート
+                val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
+                newPayPurposeList.sortByDescending {
+                    val dateString = it.resistDate
+                    try {
+                        dateFormat.parse(dateString) ?: Date(0) // 変換できない場合は 1970-01-01 を返す
+                    } catch (e: Exception) {
+                        Date(0) // 変換エラー時には 1970-01-01 を返す
+                    }
+                }
+
+                for(payPurpose in newPayPurposeList){
+                    payPurposeNameList.add(payPurpose.payPurposeName)
                 }
 
                 // Spinnerにセットする
-                val payPurposeArrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, payPurposeList)
+                val payPurposeArrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, payPurposeNameList)
                 payPurposeArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 spPayPurposeList.adapter = payPurposeArrayAdapter
 
                 // リストが空の場合の処理
-                if (payPurposeList.size == 1) {
+                if (payPurposeNameList.size == 1) {
                     payPurposeListError.text = "支払い目的が登録されていません。"
                 }
             }

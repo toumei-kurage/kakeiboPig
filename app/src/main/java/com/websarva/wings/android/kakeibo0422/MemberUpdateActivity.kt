@@ -11,6 +11,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import com.google.android.material.textfield.TextInputLayout
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.websarva.wings.android.kakeibo0422.helper.ValidateHelper
@@ -24,8 +25,8 @@ class MemberUpdateActivity : BaseActivity(R.layout.activity_member_update, R.str
     // Firestoreインスタンス
     private val firestore = FirebaseFirestore.getInstance()
 
-    // メンバーID
     private var memberId: String = ""
+    private var resistDate: String = ""
 
     //ヘルパークラス
     private val validateHelper = ValidateHelper(this)
@@ -43,6 +44,7 @@ class MemberUpdateActivity : BaseActivity(R.layout.activity_member_update, R.str
 
         // 渡されたデータを受け取る
         memberId = intent.getStringExtra("MEMBER_ID") ?: ""
+        resistDate = intent.getStringExtra("RESIST_DATE") ?: ""
         val memberName = intent.getStringExtra("MEMBER_NAME")
 
         memberNameEditText.setText(memberName)
@@ -133,7 +135,8 @@ class MemberUpdateActivity : BaseActivity(R.layout.activity_member_update, R.str
 
         val updatedData = hashMapOf(
             "member_name" to newMemberName,
-            "user_id" to userID
+            "user_id" to userID,
+            "resit_date" to resistDate
         )
 
         memberRef.set(updatedData)

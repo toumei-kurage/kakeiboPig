@@ -17,9 +17,11 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.websarva.wings.android.kakeibo0422.helper.ValidateHelper
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update, R.string.title_update_pay_record) {
     //画面部品の用意
@@ -80,11 +82,36 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
         // 支払い目的データを取得しSpinnerにセット
         firestore.collection("payPurposes")
             .whereEqualTo("user_id", userID)
-            .orderBy("resist_date", Query.Direction.ASCENDING)  // resist_dateでソート（任意）
             .get()
             .addOnSuccessListener { querySnapshot ->
-                val paymentPurposes = arrayOf("支払い目的を" + getString(R.string.un_selected)) + querySnapshot.documents.map { it.getString("pay_purpose_name") ?: "" }
-                val payPurposeArrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, paymentPurposes)
+                val payPurposeNameList = mutableListOf<String>()
+                payPurposeNameList.add("支払い目的を" + getString(R.string.un_selected))
+                val newPayPurposeList = mutableListOf<PayPurpose>()
+                for (document in querySnapshot.documents) {
+                    val payPurposeName = document.getString("pay_purpose_name") ?: ""
+                    val resistDate = document.getString("resist_date") ?: ""
+                    val payPurposeId = document.id
+                    val userId = document.getString("user_id") ?: ""
+
+                    newPayPurposeList.add(PayPurpose(payPurposeId, userId, payPurposeName, resistDate))
+                }
+
+                //Date 型に変換してからソート
+                val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
+                newPayPurposeList.sortByDescending {
+                    val dateString = it.resistDate
+                    try {
+                        dateFormat.parse(dateString) ?: Date(0) // 変換できない場合は 1970-01-01 を返す
+                    } catch (e: Exception) {
+                        Date(0) // 変換エラー時には 1970-01-01 を返す
+                    }
+                }
+
+                for(payPurpose in newPayPurposeList){
+                    payPurposeNameList.add(payPurpose.payPurposeName)
+                }
+
+                val payPurposeArrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, payPurposeNameList)
                 payPurposeArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 spPayPurposeList.adapter = payPurposeArrayAdapter
 
@@ -105,8 +132,36 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
             .whereEqualTo("user_id", userID)
             .get()
             .addOnSuccessListener { querySnapshot ->
-                val members = arrayOf("メンバーを" + getString(R.string.un_selected)) + querySnapshot.documents.map { it.getString("member_name") ?: "" }
-                val memberArrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, members)
+                val memberNameList = mutableListOf<String>()
+                memberNameList.add("メンバーを" + getString(R.string.un_selected))
+
+                // クエリ結果をリストに変換
+                val newMemberList = mutableListOf<Member>()
+                for (document in querySnapshot.documents) {
+                    val memberName = document.getString("member_name") ?: ""
+                    val resistDate = document.getString("resist_date") ?: ""
+                    val memberId = document.id  // FirestoreのドキュメントIDを使う（または任意のフィールド）
+                    val userId = document.getString("user_id") ?: ""
+
+                    newMemberList.add(Member(memberId, userId, memberName, resistDate))
+                }
+
+                //Date 型に変換してからソート
+                val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
+                newMemberList.sortByDescending {
+                    val dateString = it.resistDate
+                    try {
+                        dateFormat.parse(dateString) ?: Date(0) // 変換できない場合は 1970-01-01 を返す
+                    } catch (e: Exception) {
+                        Date(0) // 変換エラー時には 1970-01-01 を返す
+                    }
+                }
+
+                for(member in newMemberList){
+                    memberNameList.add(member.memberName)
+                }
+
+                val memberArrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, memberNameList)
                 memberArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 spMember.adapter = memberArrayAdapter
 

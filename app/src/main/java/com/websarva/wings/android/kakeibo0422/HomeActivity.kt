@@ -8,6 +8,9 @@ import android.widget.TextView
 import android.widget.Button
 import android.widget.Toast
 import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
     // 画面部品の用意
@@ -98,11 +101,35 @@ class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
     private fun loadPaymentPurposes() {
         firestore.collection("payPurposes")
             .whereEqualTo("user_id", userID)
-            .orderBy("resist_date", com.google.firebase.firestore.Query.Direction.ASCENDING)
             .get()
             .addOnSuccessListener { querySnapshot ->
-                val payPurposeList = querySnapshot.documents.map { it.getString("pay_purpose_name") ?: "" }
-                addLayoutsForRecords(payPurposeList)
+                val payPurposeNameList = mutableListOf<String>()
+                val newPayPurposeList = mutableListOf<PayPurpose>()
+
+                for (document in querySnapshot.documents) {
+                    val payPurposeName = document.getString("pay_purpose_name") ?: ""
+                    val resistDate = document.getString("resist_date") ?: ""
+                    val payPurposeId = document.id
+                    val userId = document.getString("user_id") ?: ""
+
+                    newPayPurposeList.add(PayPurpose(payPurposeId, userId, payPurposeName, resistDate))
+                }
+
+                //Date 型に変換してからソート
+                val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
+                newPayPurposeList.sortByDescending {
+                    val dateString = it.resistDate
+                    try {
+                        dateFormat.parse(dateString) ?: Date(0) // 変換できない場合は 1970-01-01 を返す
+                    } catch (e: Exception) {
+                        Date(0) // 変換エラー時には 1970-01-01 を返す
+                    }
+                }
+
+                for(payPurpose in newPayPurposeList){
+                    payPurposeNameList.add(payPurpose.payPurposeName)
+                }
+                addLayoutsForRecords(payPurposeNameList)
             }
             .addOnFailureListener { exception ->
                 Toast.makeText(this, "支払い目的の取得に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
