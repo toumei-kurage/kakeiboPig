@@ -101,7 +101,7 @@ abstract class BaseActivity(private val layoutResId: Int, private val title: Int
                 finish()
             }
             R.id.nav_license ->{
-                OssLicensesMenuActivity.setActivityTitle("ライセンス");
+                OssLicensesMenuActivity.setActivityTitle("ライセンス")
                 startActivity(Intent(this, OssLicensesMenuActivity::class.java))
             }
             // 他のメニューアイテムを追加する場合はここに追加
