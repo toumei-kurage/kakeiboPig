@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,6 +22,7 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
     private lateinit var buttonPayRecordAdd: FloatingActionButton
     private lateinit var buttonRefinement: Button
     private lateinit var payRecordAdapter: PayRecordAdapter
+    private lateinit var textViewTotalAmount: TextView
 
     private var payRecordList: List<PayRecord> = mutableListOf()
 
@@ -37,6 +39,7 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
         recyclerView.layoutManager = LinearLayoutManager(this)
         buttonPayRecordAdd = findViewById(R.id.buttonPayRecordAdd)
         buttonRefinement = findViewById(R.id.buttonRefinement)
+        textViewTotalAmount = findViewById(R.id.textViewTotalAmount)
 
         // リストビューに区切り線を入れる
         val itemDecoration = DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
@@ -88,7 +91,7 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
     }
 
 
-    @SuppressLint("NotifyDataSetChanged")
+    @SuppressLint("NotifyDataSetChanged", "SetTextI18n")
     private fun getFilterData(memberId: String?, startDate: String?, finishDate: String?, payDoneString: String?): List<PayRecord>{
         val query = createQuery(memberId,startDate,finishDate,payDoneString)
         val newPayRecordList = mutableListOf<PayRecord>()
@@ -118,6 +121,9 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
                        Date(0) // 変換エラー時には 1970-01-01 を返す
                     }
                 }
+
+                // すべてのamountの合計を取得
+                textViewTotalAmount.text = "合計金額："+ getString(R.string.formatted_number,newPayRecordList.sumOf { it.payAmount })
 
                 // データが取得できたらRecyclerViewを更新
                 if (newPayRecordList.isEmpty()) {
