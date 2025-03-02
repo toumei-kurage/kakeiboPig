@@ -1,15 +1,19 @@
 package com.websarva.wings.android.kakeibo0422
 
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.websarva.wings.android.kakeibo0422.helper.ValidateHelper
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class MemberAddActivity : BaseActivity(R.layout.activity_member_add, R.string.title_member_add) {
     //画面部品の用意
@@ -20,6 +24,7 @@ class MemberAddActivity : BaseActivity(R.layout.activity_member_add, R.string.ti
     // ヘルパークラス
     private val validateHelper = ValidateHelper(this)
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_member_add)
@@ -69,6 +74,7 @@ class MemberAddActivity : BaseActivity(R.layout.activity_member_add, R.string.ti
         memberNameError.error = null
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun onSaveButtonClick() {
         val firestore = FirebaseFirestore.getInstance()
 
@@ -89,12 +95,16 @@ class MemberAddActivity : BaseActivity(R.layout.activity_member_add, R.string.ti
 
         query.get()
             .addOnSuccessListener { querySnapshot ->
+                val formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")  // フォーマット指定
+                val resistDate = LocalDateTime.now().format(formatter)  // フォーマット適用
+
                 // クエリ結果が空ならば新しいメンバーを追加
                 if (querySnapshot.isEmpty) {
                     // Firestoreに追加するデータ
                     val memberData = hashMapOf(
                         "user_id" to userID,
-                        "member_name" to memberName
+                        "member_name" to memberName,
+                        "resist_date" to resistDate
                     )
 
                     // Firestoreの「members」コレクションにデータを追加

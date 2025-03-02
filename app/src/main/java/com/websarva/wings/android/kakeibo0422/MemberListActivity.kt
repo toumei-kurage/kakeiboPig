@@ -10,6 +10,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MemberListActivity : BaseActivity(R.layout.activity_member_list, R.string.title_member_list) {
     //画面部品の用意
@@ -53,17 +56,28 @@ class MemberListActivity : BaseActivity(R.layout.activity_member_list, R.string.
         // Firestoreの「members」コレクションからデータを取得
         firestore.collection("members")
             .whereEqualTo("user_id", userID)  // user_idが一致するドキュメントのみ取得
-            .orderBy("member_name", Query.Direction.ASCENDING)  // member_nameでソート（任意）
             .get()
             .addOnSuccessListener { querySnapshot ->
                 // クエリ結果をリストに変換
                 val newMemberList = mutableListOf<Member>()
                 for (document in querySnapshot.documents) {
                     val memberName = document.getString("member_name") ?: ""
+                    val resistDate = document.getString("resist_date") ?: ""
                     val memberId = document.id  // FirestoreのドキュメントIDを使う（または任意のフィールド）
                     val userId = document.getString("user_id") ?: ""
 
-                    newMemberList.add(Member(memberId, userId, memberName))
+                    newMemberList.add(Member(memberId, userId, memberName, resistDate))
+                }
+
+                //Date 型に変換してからソート
+                val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
+                newMemberList.sortByDescending {
+                    val dateString = it.resistDate
+                    try {
+                        dateFormat.parse(dateString) ?: Date(0) // 変換できない場合は 1970-01-01 を返す
+                    } catch (e: Exception) {
+                        Date(0) // 変換エラー時には 1970-01-01 を返す
+                    }
                 }
 
                 // データが取得できたらRecyclerViewを更新

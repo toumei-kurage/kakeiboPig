@@ -10,7 +10,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 // Member のデータクラス
-data class Member(val id: String, val userId: String, var memberName: String)
+data class Member(val id: String, val userId: String, var memberName: String, var resistDate: String)
 
 class MemberAdapter(private val context: Context, private var memberList: List<Member>) :
     RecyclerView.Adapter<MemberAdapter.MemberViewHolder>() {
@@ -40,6 +40,7 @@ class MemberAdapter(private val context: Context, private var memberList: List<M
             // 編集するデータを渡す
             intent.putExtra("MEMBER_ID", member.id)
             intent.putExtra("MEMBER_NAME", member.memberName)
+            intent.putExtra("RESIST_DATE", member.resistDate)
             // Activityに戻り値を受け取るためにstartActivityForResultを使う
             (context as? MemberListActivity)?.startActivityForResult(
                 intent,

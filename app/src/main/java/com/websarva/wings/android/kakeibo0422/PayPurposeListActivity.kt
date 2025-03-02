@@ -10,6 +10,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class PayPurposeListActivity : BaseActivity(R.layout.activity_pay_purpose_list, R.string.title_pay_purpose_list) {
     //画面部品の用意
@@ -53,7 +56,6 @@ class PayPurposeListActivity : BaseActivity(R.layout.activity_pay_purpose_list, 
         // Firestoreの「members」コレクションからデータを取得
         firestore.collection("payPurposes")
             .whereEqualTo("user_id", userID)  // user_idが一致するドキュメントのみ取得
-            .orderBy("resist_date", Query.Direction.ASCENDING)  // resist_dateでソート（任意）
             .get()
             .addOnSuccessListener { querySnapshot ->
                 // クエリ結果をリストに変換
@@ -65,6 +67,17 @@ class PayPurposeListActivity : BaseActivity(R.layout.activity_pay_purpose_list, 
                     val userId = document.getString("user_id") ?: ""
 
                     newPayPurposeList.add(PayPurpose(payPurposeId, userId, payPurposeName, resistDate))
+                }
+
+                //Date 型に変換してからソート
+                val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
+                newPayPurposeList.sortByDescending {
+                    val dateString = it.resistDate
+                    try {
+                        dateFormat.parse(dateString) ?: Date(0) // 変換できない場合は 1970-01-01 を返す
+                    } catch (e: Exception) {
+                        Date(0) // 変換エラー時には 1970-01-01 を返す
+                    }
                 }
 
                 // データが取得できたらRecyclerViewを更新

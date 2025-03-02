@@ -94,9 +94,6 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
         val newPayRecordList = mutableListOf<PayRecord>()
         query.get()
             .addOnSuccessListener { querySnapshot ->
-                // 日付を格納するために、日付型に変換するためのフォーマットを指定
-                val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
-
                 for (document in querySnapshot) {
                     val payRecord = PayRecord(
                         document.id,
@@ -112,6 +109,7 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
                 }
 
                 // payment_date を Date 型に変換してからソート
+                val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
                 newPayRecordList.sortByDescending {
                     val dateString = it.payDate
                     try {
