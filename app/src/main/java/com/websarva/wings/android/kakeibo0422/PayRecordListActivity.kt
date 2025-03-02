@@ -49,7 +49,7 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
         recyclerView.adapter = payRecordAdapter
 
         // 初期の絞り込みを適用
-        applyRefinement(null, null, null,null)
+        applyRefinement(null, null, null,null,null)
 
         buttonPayRecordAdd.setOnClickListener {
             val intent = Intent(this, PayRecordAddActivity::class.java)
@@ -73,16 +73,16 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
             // 削除された場合の処理
             if (data?.getBooleanExtra("PAY_RECORD_DELETE", false) == true) {
                 // 削除後にデータを再読み込みしてRecyclerViewを更新
-                applyRefinement(null, null, null,null)
+                applyRefinement(null, null, null,null,null)
             }
         }
     }
 
     // 絞り込み内容を受け取るメソッド
     @SuppressLint("NotifyDataSetChanged")
-    fun applyRefinement(memberId: String?, startDate: String?, finishDate: String?,payDone:String?) {
+    fun applyRefinement(memberId: String?, startDate: String?, finishDate: String?,payDone:String?, payPurposeId: String?) {
         // 絞り込み条件のチェックとデータ取得
-        val refinedData = getFilterData(memberId,startDate,finishDate,payDone)
+        val refinedData = getFilterData(memberId,startDate,finishDate,payDone,payPurposeId)
 
         // 絞り込んだデータをRecyclerViewなどにセット
         payRecordList = refinedData
@@ -92,8 +92,8 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
 
 
     @SuppressLint("NotifyDataSetChanged", "SetTextI18n")
-    private fun getFilterData(memberId: String?, startDate: String?, finishDate: String?, payDoneString: String?): List<PayRecord>{
-        val query = createQuery(memberId,startDate,finishDate,payDoneString)
+    private fun getFilterData(memberId: String?, startDate: String?, finishDate: String?, payDoneString: String?, payPurposeId: String?): List<PayRecord>{
+        val query = createQuery(memberId,startDate,finishDate,payDoneString,payPurposeId)
         val newPayRecordList = mutableListOf<PayRecord>()
         query.get()
             .addOnSuccessListener { querySnapshot ->
@@ -142,13 +142,16 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
         return newPayRecordList
     }
 
-    private fun createQuery(memberId: String?, startDate: String?, finishDate: String?, payDoneString: String?): Query {
+    private fun createQuery(memberId: String?, startDate: String?, finishDate: String?, payDoneString: String?, payPurposeId: String?): Query {
         val payDone = if (payDoneString != null) (payDoneString == "領収済み") else null
         var query: Query = firestore.collection("payment_history")
             .whereEqualTo("user_id", userID)
 
         if (memberId != null) {
             query = query.whereEqualTo("member_id", memberId)
+        }
+        if(payPurposeId != null) {
+            query = query.whereEqualTo("pay_purpose_id", payPurposeId)
         }
         if (startDate != null && finishDate != null) {
             query = query
