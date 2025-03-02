@@ -86,15 +86,15 @@ class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
         }
 
         budgetTextView.text = if (budgetSet != "0") {
-            "${budgetSet}円"
+            getString(R.string.formatted_number,budgetSet.toInt())
         } else {
             "未設定"
         }
 
         // Firestore から合計額を取得
         getTotalExpenditureInDateRange { sumExpenditure ->
-            sumExpenditureTextView.text = "${sumExpenditure}円"
-            leftoverTextView.text = "${budgetSet.toInt() - sumExpenditure}円"
+            sumExpenditureTextView.text = getString(R.string.formatted_number,sumExpenditure)
+            leftoverTextView.text = getString(R.string.formatted_number,budgetSet.toInt() - sumExpenditure)
         }
 
         // 支払い目的リストを取得して表示
@@ -171,7 +171,7 @@ class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
 
                 // 支払い目的と金額を表示
                 payPurposeNameTextView.text = getString(R.string.purpose_name, record)
-                payAmount.text = "${payAmountByPurposeList.getOrDefault(record, 0)}円"
+                payAmount.text = getString(R.string.formatted_number,payAmountByPurposeList.getOrDefault(record, 0))
 
                 linearLayoutContainer.addView(layout)
             }

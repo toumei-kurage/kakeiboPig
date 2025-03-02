@@ -60,15 +60,15 @@ class BalanceDetailActivity : BaseActivity(R.layout.activity_balance_detail,R.st
         dateRangeTextView.text = getString(R.string.date_range_set, startDate, finishDate)
 
         // 予算額のセット
-        budgetTextView.text = "${budgetSet}円"
+        budgetTextView.text = getString(R.string.formatted_number,budgetSet.toInt())
 
         // 合計額のセット
         getTotalExpenditureInDateRange { sumExpenditure ->
-            sumExpenditureTextView.text = "${sumExpenditure}円"
-            leftoverTextView.text = "${budgetSet.toInt() - sumExpenditure}円"
+            sumExpenditureTextView.text = getString(R.string.formatted_number,sumExpenditure)
+            leftoverTextView.text = getString(R.string.formatted_number,budgetSet.toInt() - sumExpenditure)
 
             // 繰越額のセット
-            leftoverTextView.text = "${budgetSet.toInt() - sumExpenditure}円"
+            leftoverTextView.text = getString(R.string.formatted_number,budgetSet.toInt() - sumExpenditure)
         }
 
         // 支払い目的リストを取得して表示
@@ -155,7 +155,7 @@ class BalanceDetailActivity : BaseActivity(R.layout.activity_balance_detail,R.st
 
                 // 支払い目的と金額を表示
                 payPurposeNameTextView.text = getString(R.string.purpose_name, record)
-                payAmount.text = "${payAmountByPurposeList.getOrDefault(record, 0)}円"
+                payAmount.text = getString(R.string.formatted_number,payAmountByPurposeList.getOrDefault(record, 0))
 
                 linearLayoutContainer.addView(layout)
             }
