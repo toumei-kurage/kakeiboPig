@@ -2,8 +2,10 @@ package com.websarva.wings.android.kakeibo0422
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -11,6 +13,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 
@@ -51,6 +55,7 @@ class MemberListActivity : BaseActivity(R.layout.activity_member_list, R.string.
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("NotifyDataSetChanged")
     private fun loadMemberList() {
         // Firestoreの「members」コレクションからデータを取得
@@ -69,14 +74,13 @@ class MemberListActivity : BaseActivity(R.layout.activity_member_list, R.string.
                     newMemberList.add(Member(memberId, userId, memberName, resistDate))
                 }
 
-                //Date 型に変換してからソート
-                val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
-                newMemberList.sortByDescending {
+                val dateFormat = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
+                newMemberList.sortBy {
                     val dateString = it.resistDate
                     try {
-                        dateFormat.parse(dateString) ?: Date(0) // 変換できない場合は 1970-01-01 を返す
+                        LocalDateTime.parse(dateString, dateFormat) // LocalDateTime に変換
                     } catch (e: Exception) {
-                        Date(0) // 変換エラー時には 1970-01-01 を返す
+                        LocalDateTime.of(1970, 1, 1, 0, 0, 0, 0) // 変換エラー時には 1970-01-01 を返す
                     }
                 }
 
