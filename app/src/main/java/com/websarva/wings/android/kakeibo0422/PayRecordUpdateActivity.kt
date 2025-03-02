@@ -19,6 +19,8 @@ import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
 import com.websarva.wings.android.kakeibo0422.helper.ValidateHelper
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -96,14 +98,13 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
                     newPayPurposeList.add(PayPurpose(payPurposeId, userId, payPurposeName, resistDate))
                 }
 
-                //Date 型に変換してからソート
-                val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
-                newPayPurposeList.sortByDescending {
+                val dateFormat = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
+                newPayPurposeList.sortBy {
                     val dateString = it.resistDate
                     try {
-                        dateFormat.parse(dateString) ?: Date(0) // 変換できない場合は 1970-01-01 を返す
+                        LocalDateTime.parse(dateString, dateFormat) // LocalDateTime に変換
                     } catch (e: Exception) {
-                        Date(0) // 変換エラー時には 1970-01-01 を返す
+                        LocalDateTime.of(1970, 1, 1, 0, 0, 0, 0) // 変換エラー時には 1970-01-01 を返す
                     }
                 }
 
@@ -146,14 +147,13 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
                     newMemberList.add(Member(memberId, userId, memberName, resistDate))
                 }
 
-                //Date 型に変換してからソート
-                val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
-                newMemberList.sortByDescending {
+                val dateFormat = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
+                newMemberList.sortBy {
                     val dateString = it.resistDate
                     try {
-                        dateFormat.parse(dateString) ?: Date(0) // 変換できない場合は 1970-01-01 を返す
+                        LocalDateTime.parse(dateString, dateFormat) // LocalDateTime に変換
                     } catch (e: Exception) {
-                        Date(0) // 変換エラー時には 1970-01-01 を返す
+                        LocalDateTime.of(1970, 1, 1, 0, 0, 0, 0) // 変換エラー時には 1970-01-01 を返す
                     }
                 }
 

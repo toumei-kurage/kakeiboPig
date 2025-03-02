@@ -27,14 +27,14 @@
         android:title="@string/title_user_update"/>
 
     <item
+        android:id="@+id/nav_license"
+        android:title="@string/title_license"/>
+
+    <item
         android:id="@+id/nav_logout"
         android:title="@string/title_logout"/>
 
     <item
         android:id="@+id/nav_secession"
         android:title="@string/title_secession"/>
-
-    <item
-        android:id="@+id/nav_license"
-        android:title="@string/title_license"/>
 </menu>

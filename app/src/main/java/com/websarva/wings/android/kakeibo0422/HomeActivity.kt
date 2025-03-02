@@ -1,14 +1,18 @@
 package com.websarva.wings.android.kakeibo0422
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Button
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 
@@ -98,6 +102,7 @@ class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
     }
 
     // 支払い目的リストの取得
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun loadPaymentPurposes() {
         firestore.collection("payPurposes")
             .whereEqualTo("user_id", userID)
@@ -115,14 +120,13 @@ class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
                     newPayPurposeList.add(PayPurpose(payPurposeId, userId, payPurposeName, resistDate))
                 }
 
-                //Date 型に変換してからソート
-                val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
-                newPayPurposeList.sortByDescending {
+                val dateFormat = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
+                newPayPurposeList.sortBy {
                     val dateString = it.resistDate
                     try {
-                        dateFormat.parse(dateString) ?: Date(0) // 変換できない場合は 1970-01-01 を返す
+                        LocalDateTime.parse(dateString, dateFormat) // LocalDateTime に変換
                     } catch (e: Exception) {
-                        Date(0) // 変換エラー時には 1970-01-01 を返す
+                        LocalDateTime.of(1970, 1, 1, 0, 0, 0, 0) // 変換エラー時には 1970-01-01 を返す
                     }
                 }
 
