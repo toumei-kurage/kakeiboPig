@@ -17,6 +17,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.websarva.wings.android.kakeibo0422.helper.ValidateHelper
 import java.util.Calendar
 
@@ -285,6 +286,7 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
     private fun loadPayPurposesFromFirestore() {
         firestore.collection("payPurposes")
             .whereEqualTo("user_id", userID)  // user_idに紐づくメンバーを取得
+            .orderBy("resist_date", Query.Direction.ASCENDING)  // resist_dateでソート（任意）
             .get()
             .addOnSuccessListener { querySnapshot ->
                 // 成功した場合

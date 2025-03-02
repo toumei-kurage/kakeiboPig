@@ -17,6 +17,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.websarva.wings.android.kakeibo0422.helper.ValidateHelper
 import java.util.Calendar
 
@@ -79,6 +80,7 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
         // 支払い目的データを取得しSpinnerにセット
         firestore.collection("payPurposes")
             .whereEqualTo("user_id", userID)
+            .orderBy("resist_date", Query.Direction.ASCENDING)  // resist_dateでソート（任意）
             .get()
             .addOnSuccessListener { querySnapshot ->
                 val paymentPurposes = arrayOf("支払い目的を" + getString(R.string.un_selected)) + querySnapshot.documents.map { it.getString("pay_purpose_name") ?: "" }

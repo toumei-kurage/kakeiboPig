@@ -24,8 +24,8 @@ class PayPurposeUpdateActivity :BaseActivity(R.layout.activity_pay_purpose_updat
     // Firestoreインスタンス
     private val firestore = FirebaseFirestore.getInstance()
 
-    // メンバーID
     private var payPurposeId: String = ""
+    private var resistDate: String = ""
 
     //ヘルパークラス
     private val validateHelper = ValidateHelper(this)
@@ -44,6 +44,7 @@ class PayPurposeUpdateActivity :BaseActivity(R.layout.activity_pay_purpose_updat
         // 渡されたデータを受け取る
         payPurposeId = intent.getStringExtra("PAY_PURPOSE_ID") ?: ""
         val payPurposeName = intent.getStringExtra("PAY_PURPOSE_NAME")
+        resistDate = intent.getStringExtra("RESIST_DATE") ?: ""
         
         payPurposeNameEditText.setText(payPurposeName)
 
@@ -132,7 +133,8 @@ class PayPurposeUpdateActivity :BaseActivity(R.layout.activity_pay_purpose_updat
 
         val updatedData = hashMapOf(
             "pay_purpose_name" to newPayPurposeName,
-            "user_id" to userID
+            "user_id" to userID,
+            "resist_date" to resistDate
         )
 
         payPurposeRef.set(updatedData)
@@ -169,7 +171,7 @@ class PayPurposeUpdateActivity :BaseActivity(R.layout.activity_pay_purpose_updat
                     // 支払い目的が支払い履歴に参照されているので削除不可
                     Toast.makeText(this, "この支払い目的は支払い履歴に参照されています。削除できません。", Toast.LENGTH_SHORT).show()
                 } else {
-                    // payment_historyコレクションに参照されていない場合、メンバーを削除
+                    // payment_historyコレクションに参照されていない場合、支払い目的を削除
                     val payPurposeRef = firestore.collection("payPurposes").document(payPurposeId)
 
                     payPurposeRef.delete()

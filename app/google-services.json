@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "692195919093",
-    "project_id": "kakeibo-version1",
-    "storage_bucket": "kakeibo-version1.appspot.com"
+    "project_number": "622670576004",
+    "project_id": "kakeibo-0422",
+    "storage_bucket": "kakeibo-0422.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:692195919093:android:90b6a943688b60a4e631bc",
+        "mobilesdk_app_id": "1:622670576004:android:0ef17dbcd9a11fe96cc5d1",
         "android_client_info": {
-          "package_name": "com.websarva.wings.android.kakeibo"
+          "package_name": "com.websarva.wings.android.kakeibo0422"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBe75Q8nJcC5wMKITiRLVLFar7Bp2mpaN8"
+          "current_key": "AIzaSyAHHZAVYcBxrbUvO6fgsUKg1z_h-zd9l6o"
         }
       ],
       "services": {
