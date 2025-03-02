@@ -10,8 +10,19 @@
         android:layout_height="40dp" />
 
     <TextView
-        android:id="@+id/memberListError"
+        android:id="@+id/payPurposeListError"
         android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="30dp"/>
+
+    <Spinner
+        android:id="@+id/spinnerPayPurpose"
+        android:layout_width="match_parent"
+        android:layout_height="40dp" />
+
+    <TextView
+        android:id="@+id/memberListError"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="30dp"/>
 
@@ -33,14 +44,14 @@
 
     <Spinner
         android:id="@+id/spinnerPayDone"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp" />
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginBottom="30dp" />
 
     <Button
         android:id="@+id/buttonOK"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="40dp"
         android:layout_gravity="right"
         tools:ignore="RtlHardcoded"
         android:text="OK"/>
