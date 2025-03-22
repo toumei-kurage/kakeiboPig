@@ -42,7 +42,7 @@
             android:id="@+id/startDateEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Start Date"
+            android:hint="@string/hint_start_date"
             android:inputType="text" />
 
     </com.google.android.material.textfield.TextInputLayout>
@@ -61,7 +61,7 @@
             android:id="@+id/finishDateEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Finish Date"
+            android:hint="@string/hint_finish_date"
             android:inputType="text" />
 
     </com.google.android.material.textfield.TextInputLayout>

@@ -46,6 +46,8 @@
     <string name="hint_pay_note">備考(支払い場所などをメモ)</string>
     <string name="hint_pay_purpose_name">支払い目的</string>
     <string name="hint_budget">予算</string>
+    <string name="hint_start_date">開始日</string>
+    <string name="hint_finish_date">終了日</string>
 
     <!--    初期-->
     <string name="un_selected">選択してください</string>

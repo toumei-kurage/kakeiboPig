@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/drawerLayout"
     android:layout_width="match_parent"
@@ -58,7 +59,7 @@
                     android:id="@+id/startDateEditText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Start Date"
+                    android:hint="@string/hint_start_date"
                     android:inputType="text" />
 
             </com.google.android.material.textfield.TextInputLayout>
@@ -77,7 +78,7 @@
                     android:id="@+id/finishDateEditText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Finish Date"
+                    android:hint="@string/hint_finish_date"
                     android:inputType="text" />
 
             </com.google.android.material.textfield.TextInputLayout>
