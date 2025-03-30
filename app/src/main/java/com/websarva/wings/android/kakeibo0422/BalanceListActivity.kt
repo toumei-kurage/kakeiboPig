@@ -68,7 +68,8 @@ class BalanceListActivity : BaseActivity(R.layout.activity_balance_list, R.strin
                         document.getString("user_id") ?: "",
                         document.getString("start_date") ?: "",
                         document.getString("finish_date") ?: "",
-                        document.getLong("budget")?.toInt() ?: 0
+                        document.getLong("budget")?.toInt() ?: 0,
+                        document.getLong("actual_balance")?.toInt() ?: 0
                     )
                     newBalanceList.add(balance)
                 }

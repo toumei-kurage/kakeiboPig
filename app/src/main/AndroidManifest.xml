@@ -15,16 +15,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Kakeibo"
         tools:targetApi="31">
-
+        <activity
+            android:name=".HomeDetailActivity"
+            android:exported="false" />
         <activity
             android:name="com.google.android.gms.oss.licenses.OssLicensesMenuActivity"
-            android:theme="@style/Theme.MaterialComponents.Light.DarkActionBar"
-            />
+            android:theme="@style/Theme.MaterialComponents.Light.DarkActionBar" />
         <activity
             android:name="com.google.android.gms.oss.licenses.OssLicensesActivity"
-            android:theme="@style/Theme.MaterialComponents.Light.DarkActionBar"
-            />
-
+            android:theme="@style/Theme.MaterialComponents.Light.DarkActionBar" />
         <activity
             android:name=".BalanceUpdateActivity"
             android:exported="false" />
@@ -85,7 +84,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
     </application>
 
 </manifest>

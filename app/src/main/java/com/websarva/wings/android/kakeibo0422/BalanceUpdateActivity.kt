@@ -22,7 +22,9 @@ class BalanceUpdateActivity : BaseActivity(R.layout.activity_balance_update,R.st
     private lateinit var startDateEditText: EditText
     private lateinit var finishDateError: TextInputLayout
     private lateinit var finishDateEditText: EditText
-    private lateinit var buttonOK: Button
+    private lateinit var actualBalanceError: TextInputLayout
+    private lateinit var actualBalanceEditText: EditText
+    private lateinit var buttonUpdate: Button
 
     private val validateHelper = ValidateHelper(this)
     private val firestore = FirebaseFirestore.getInstance()
@@ -32,7 +34,8 @@ class BalanceUpdateActivity : BaseActivity(R.layout.activity_balance_update,R.st
     private var budgetSet: String = "0"
     private var startDate: String = ""
     private var finishDate: String = ""
-    
+    private var actualBalance: String = "0"
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +48,7 @@ class BalanceUpdateActivity : BaseActivity(R.layout.activity_balance_update,R.st
         budgetSet = intent.getStringExtra("BUDGET").toString()
         startDate = intent.getStringExtra("START_DATE").toString()
         finishDate = intent.getStringExtra("FINISH_DATE").toString()
+        actualBalance = intent.getIntExtra("ACTUAL_BALANCE",0).toString()
 
         budgetError = findViewById(R.id.budget)
         budgetEditText = findViewById(R.id.budgetEditText)
@@ -52,11 +56,14 @@ class BalanceUpdateActivity : BaseActivity(R.layout.activity_balance_update,R.st
         startDateEditText = findViewById(R.id.startDateEditText)
         finishDateError = findViewById(R.id.finishDate)
         finishDateEditText = findViewById(R.id.finishDateEditText)
-        buttonOK = findViewById(R.id.buttonUpdate)
+        buttonUpdate = findViewById(R.id.buttonUpdate)
+        actualBalanceEditText = findViewById(R.id.actualBalanceEditText)
+        actualBalanceError = findViewById(R.id.actualBalanceError)
 
         budgetEditText.setText(budgetSet)
         startDateEditText.setText(startDate)
         finishDateEditText.setText(finishDate)
+        actualBalanceEditText.setText(actualBalance)
 
         budgetEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
@@ -82,16 +89,29 @@ class BalanceUpdateActivity : BaseActivity(R.layout.activity_balance_update,R.st
             }
         }
 
-        buttonOK.setOnClickListener {
+        actualBalanceEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                val (result, errorMessage) = validateHelper.actualBalanceCheck(actualBalanceEditText)
+                if (!result) {
+                    actualBalanceError.error = errorMessage
+                    return@OnFocusChangeListener
+                }
+            }
+        }
+
+        buttonUpdate.setOnClickListener {
+            clearBordFocus()
             val (resultBudget, budgetMsg) = validateHelper.payAmountCheck(budgetEditText)
             val (resultStartDate,startDateMsg) = validateHelper.dateCheck(startDateEditText)
             val (resultFinishDate,finishDateMsg) = validateHelper.dateCheck(finishDateEditText)
+            val (resultActualBalance, actualBalanceMsg) = validateHelper.actualBalanceCheck(actualBalanceEditText)
 
             budgetError.error = if(!resultBudget) budgetMsg else null
             startDateError.error = if(!resultStartDate) startDateMsg else null
             finishDateError.error = if(!resultFinishDate) finishDateMsg else null
+            actualBalanceError.error = if(!resultActualBalance) actualBalanceMsg else null
 
-            if(!(resultBudget && resultStartDate && resultFinishDate)){
+            if(!(resultBudget && resultStartDate && resultFinishDate && resultActualBalance)){
                 return@setOnClickListener
             }
             updateBalance()
@@ -128,9 +148,11 @@ class BalanceUpdateActivity : BaseActivity(R.layout.activity_balance_update,R.st
         inputMethodManager.hideSoftInputFromWindow(startDateEditText.windowToken, 0)
         inputMethodManager.hideSoftInputFromWindow(finishDateEditText.windowToken, 0)
         inputMethodManager.hideSoftInputFromWindow(budgetEditText.windowToken, 0)
+        inputMethodManager.hideSoftInputFromWindow(actualBalanceEditText.windowToken,0)
         startDateEditText.clearFocus()
         finishDateEditText.clearFocus()
         budgetEditText.clearFocus()
+        actualBalanceEditText.clearFocus()
     }
 
     private fun updateBalance() {
@@ -139,6 +161,8 @@ class BalanceUpdateActivity : BaseActivity(R.layout.activity_balance_update,R.st
                 "start_date" to startDateEditText.text.toString(),
                 "finish_date" to finishDateEditText.text.toString(),
                 "budget" to budgetEditText.text.toString().toInt(),
+                "actual_balance" to actualBalanceEditText.text.toString().toInt(),
+                "user_id" to userID
             )
 
             // Firestore ドキュメントを更新
@@ -146,18 +170,13 @@ class BalanceUpdateActivity : BaseActivity(R.layout.activity_balance_update,R.st
                 .document(balanceId)
                 .update(updatedRecord as Map<String, Any>)
                 .addOnSuccessListener {
-                    showToast("家計簿記録が更新されました")
+                    Toast.makeText(this,"家計簿記録が更新されました",Toast.LENGTH_SHORT).show()
                 }
                 .addOnFailureListener { e ->
-                    showToast("更新に失敗しました: ${e.message}")
+                    Toast.makeText(this,"更新に失敗しました: ${e.message}",Toast.LENGTH_SHORT).show()
                 }
-
         } catch (e: Exception) {
-            showToast("エラーが発生しました: ${e.message}")
+            Toast.makeText(this,"エラーが発生しました: ${e.message}",Toast.LENGTH_SHORT).show()
         }
-    }
-
-    private fun showToast(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 }

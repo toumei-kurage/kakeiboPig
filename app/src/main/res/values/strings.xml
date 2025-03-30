@@ -2,6 +2,7 @@
     <!--    アクションバーのタイトル-->
     <string name="app_name">家計簿アプリ</string>
     <string name="title_home">ホーム</string>
+    <string name="title_total_pay_purpose">内訳</string>
     <string name="title_register">アカウント作成</string>
     <string name="title_user_update">アカウント情報の変更</string>
     <string name="title_login">ログイン</string>
@@ -35,6 +36,10 @@
     <string name="button_secession_ok">はい</string>
     <string name="button_secession_ng">いいえ</string>
     <string name="button_refinement">絞り込み</string>
+    <string name="button_add_balance">家計簿の登録</string>
+    <string name="button_update_balance">家計簿の更新</string>
+    <string name="button_set_actual_balance">実際残高の設定</string>
+    <string name="button_balance_detail">支払い目的別合計</string>
 
     <!--    ヒント-->
     <string name="hint_password">パスワード</string>
@@ -48,6 +53,7 @@
     <string name="hint_budget">予算</string>
     <string name="hint_start_date">開始日</string>
     <string name="hint_finish_date">終了日</string>
+    <string name="hint_actual_balance">実際残高</string>
 
     <!--    初期-->
     <string name="un_selected">選択してください</string>
@@ -59,7 +65,7 @@
     <string name="error_digit_6">6桁以上で入力して下さい</string>
     <string name="error_email">正しいメールアドレス形式で入力してください</string>
     <string name="error_number_format">半角数字で入力して下さい</string>
-    <string name="error_range_pay_amount">1~1,000,000の間で入力してください</string>
+    <string name="error_range_pay_amount">%1$,d~%2$,dの間で入力してください</string>
     <string name="error_range_pay_date">1900年1月1日から本日までの間で選択してください</string>
     <string name="error_range_date">1900年1月1日以降の日付を選択してください</string>
     <string name="error_un_pay_purpose_resisted">支払い目的が登録されていません</string>
@@ -90,8 +96,14 @@
     <string name="date_range">期間：</string>
     <string name="budget">予算：</string>
     <string name="sum_expenditure">支出合計額：</string>
-    <string name="leftover">繰越：</string>
+    <string name="book_balance">帳簿残高：</string>
+    <string name="actual_balance">実際残高</string>
+    <string name="actual_balance_colon">実際残高：</string>
     <string name="purpose_name">%1s：</string>
     <string name="date_range_set">%1s ～ %2s</string>
     <string name="button_set_info">期間と予算の設定</string>
+    <string name="total_payment_by_purpose">【目的別支払合計】</string>
+    <string name="text_unit">円</string>
+    <string name="text_difference">帳簿残高より%1s。</string>
+    <string name="text_just">帳簿残高とぴったりです。</string>
 </resources>

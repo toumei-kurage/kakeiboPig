@@ -26,7 +26,7 @@
                 android:layout_marginTop="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="right"
+                android:layout_gravity="end"
                 android:text="@string/button_set_info"/>
 
             <LinearLayout
@@ -38,8 +38,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:paddingVertical="16dp">
+                    android:orientation="horizontal">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -54,12 +53,17 @@
                         android:text="@string/date_range_set"
                         android:textSize="18sp" />
                 </LinearLayout>
+                <TextView
+                    android:id="@+id/dateRangeError"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@android:color/holo_red_dark"
+                    android:layout_marginBottom="10dp"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:paddingVertical="16dp">
+                    android:orientation="horizontal">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -71,15 +75,21 @@
                         android:id="@+id/budgetTextView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text=""
                         android:textSize="18sp" />
                 </LinearLayout>
+
+                <TextView
+                    android:id="@+id/budgetError"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@android:color/holo_red_dark"
+                    android:layout_marginBottom="10dp"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:paddingVertical="16dp">
+                    android:layout_marginBottom="10dp">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -91,7 +101,6 @@
                         android:id="@+id/sumExpenditureTextView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text=""
                         android:textSize="18sp" />
                 </LinearLayout>
 
@@ -99,48 +108,80 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:paddingVertical="16dp">
+                    android:paddingVertical="16dp"
+                    android:layout_marginBottom="10dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/leftover"
+                        android:text="@string/book_balance"
                         android:textSize="18sp" />
 
                     <TextView
-                        android:id="@+id/leftoverTextView"
+                        android:id="@+id/bookBalanceTextView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text=""
                         android:textSize="18sp" />
                 </LinearLayout>
 
-                <Button
-                    android:id="@+id/buttonBalanceSheetAdd"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="家計簿の登録"/>
+                    android:orientation="horizontal">
+
+                    <!-- TextInputLayout (入力フォーム) -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/actualBalanceError"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.8"
+                        app:counterEnabled="true"
+                        app:errorEnabled="true">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/actualBalanceEditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/actual_balance"
+                            android:maxLength="7"
+                            android:inputType="number" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.2"
+                        android:text="@string/text_unit"
+                        android:layout_marginStart="10dp"/>
+                </LinearLayout>
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:id="@+id/differenceTextView"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="30dp"
-                    android:text="【目的別支払合計】"
+                    android:textColor="@android:color/holo_red_dark"
+                    android:layout_marginBottom="10dp"
                     android:textSize="18sp"/>
 
-                <ScrollView
+                <Button
+                    android:id="@+id/buttonBalanceSheetAdd"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                    android:layout_height="wrap_content"
+                    android:text="@string/button_add_balance"
+                    android:layout_marginBottom="10dp"/>
 
-                    <!-- ここに動的に追加されるLinearLayoutを挿入 -->
-                    <LinearLayout
-                        android:id="@+id/linearLayoutContainer"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical" />
+                <Button
+                    android:id="@+id/buttonSetActualBalance"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/button_set_actual_balance"
+                    android:layout_marginBottom="10dp"/>
 
-                </ScrollView>
+                <Button
+                    android:id="@+id/buttonBalanceDetail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/button_balance_detail"/>
 
             </LinearLayout>
 

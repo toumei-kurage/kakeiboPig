@@ -88,7 +88,24 @@ class ValidateHelper(private val context: Context) {
             return Pair(false, context.getString(R.string.error_number_format))
         }
         if (payAmount.toInt() !in 1..1000000) {
-            return Pair(false, context.getString(R.string.error_range_pay_amount))
+            return Pair(false, context.getString(R.string.error_range_pay_amount,1,1000000))
+        }
+        return Pair(true, "")
+    }
+
+    /**
+     * 実際残高のバリデーションチェック
+     */
+    fun actualBalanceCheck(payAmountEditText: EditText): Pair<Boolean, String> {
+        val payAmount = payAmountEditText.text.toString()
+        if (!emptyCheck(payAmount)) {
+            return Pair(false, context.getString(R.string.error_empty))
+        }
+        if (!numberFormatCheck(payAmount)) {
+            return Pair(false, context.getString(R.string.error_number_format))
+        }
+        if (payAmount.toInt() !in 0..1000000) {
+            return Pair(false, context.getString(R.string.error_range_pay_amount,0,1000000))
         }
         return Pair(true, "")
     }

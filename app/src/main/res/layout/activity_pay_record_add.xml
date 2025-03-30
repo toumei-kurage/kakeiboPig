@@ -83,12 +83,12 @@
                         app:counterEnabled="true"
                         app:errorEnabled="true">
 
-                        <EditText
+                        <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/payAmountEditText"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:hint="@string/hint_pay_amount"
-                            android:maxLength="6"
+                            android:maxLength="7"
                             android:inputType="number" />
                     </com.google.android.material.textfield.TextInputLayout>
 
@@ -102,7 +102,7 @@
                         app:counterEnabled="true"
                         app:errorEnabled="true">
 
-                        <EditText
+                        <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/payDateEditText"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -128,7 +128,7 @@
                         app:counterEnabled="true"
                         app:errorEnabled="true">
 
-                        <EditText
+                        <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/payNoteEditText"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
