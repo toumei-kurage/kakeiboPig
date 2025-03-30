@@ -18,10 +18,11 @@
         app:counterEnabled="true"
         app:errorEnabled="true">
 
-        <EditText
+        <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/budgetEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:maxLength="7"
             android:hint="@string/hint_budget"
             android:inputType="number" />
 
@@ -38,7 +39,7 @@
         app:counterEnabled="true"
         app:errorEnabled="true">
 
-        <EditText
+        <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/startDateEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -57,7 +58,7 @@
         app:counterEnabled="true"
         app:errorEnabled="true">
 
-        <EditText
+        <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/finishDateEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

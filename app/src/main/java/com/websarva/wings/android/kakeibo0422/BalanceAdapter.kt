@@ -10,7 +10,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 // Balance のデータクラス
-data class Balance(val id: String, val userId: String, var startDate: String, var finishDate: String, var budget:Int)
+data class Balance(val id: String, val userId: String, var startDate: String, var finishDate: String, var budget:Int, var actualBalance:Int)
 
 class BalanceAdapter(private val context: Context, private var balanceList: List<Balance>) :
     RecyclerView.Adapter<BalanceAdapter.BalanceViewHolder>() {
@@ -42,6 +42,7 @@ class BalanceAdapter(private val context: Context, private var balanceList: List
             intent.putExtra("START_DATE", balance.startDate)
             intent.putExtra("FINISH_DATE",balance.finishDate)
             intent.putExtra("BUDGET",balance.budget)
+            intent.putExtra("ACTUAL_BALANCE",balance.actualBalance)
             // Activityに戻り値を受け取るためにstartActivityForResultを使う
             (context as? BalanceListActivity)?.startActivityForResult(
                 intent,
