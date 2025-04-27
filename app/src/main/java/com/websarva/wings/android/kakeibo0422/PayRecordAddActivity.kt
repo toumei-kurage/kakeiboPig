@@ -17,6 +17,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
+import com.websarva.wings.android.kakeibo0422.helper.DialogHelper
 import com.websarva.wings.android.kakeibo0422.helper.ValidateHelper
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -43,6 +44,7 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
     //ヘルパークラス
     private val validateHelper = ValidateHelper(this)
     private val firestore = FirebaseFirestore.getInstance()
+    private val dialogHelper = DialogHelper(this)
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -231,7 +233,7 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
         firestore.collection("payment_history")
             .add(paymentHistory)
             .addOnSuccessListener {
-                Toast.makeText(this, "支払い履歴が追加されました", Toast.LENGTH_SHORT).show()
+                dialogHelper.dialogOkOnly("","支払い履歴が追加されました")
             }
             .addOnFailureListener { exception ->
                 showError("支払い履歴の追加に失敗しました: ${exception.message}")

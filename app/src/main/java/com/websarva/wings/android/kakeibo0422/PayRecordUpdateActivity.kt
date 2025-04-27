@@ -17,6 +17,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
+import com.websarva.wings.android.kakeibo0422.helper.DialogHelper
 import com.websarva.wings.android.kakeibo0422.helper.ValidateHelper
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -43,6 +44,7 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
     //ヘルパークラス
     private val validateHelper = ValidateHelper(this)
     private val firestore = FirebaseFirestore.getInstance()
+    private val dialogHelper = DialogHelper(this)
 
     private var payRecordId: String = ""
     private var memberId: String = ""
@@ -302,7 +304,7 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
                 .document(payRecordId)
                 .update(updatedRecord as Map<String, Any>)
                 .addOnSuccessListener {
-                    showToast("支払い記録が更新されました")
+                    dialogHelper.dialogOkOnly("","支払い記録が更新されました")
                 }
                 .addOnFailureListener { e ->
                     showToast("更新に失敗しました: ${e.message}")

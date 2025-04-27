@@ -14,6 +14,7 @@ class DialogHelper(private val context:Context) {
         }
 
         val dialog = builder.create()
+        dialog.setCanceledOnTouchOutside(false)
         dialog.show()
     }
 }
