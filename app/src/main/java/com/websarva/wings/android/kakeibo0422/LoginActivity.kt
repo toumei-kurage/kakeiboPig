@@ -1,12 +1,15 @@
 package com.websarva.wings.android.kakeibo0422
 
+import android.annotation.SuppressLint
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -25,6 +28,7 @@ class LoginActivity : AppCompatActivity() {
     private val validateHelper = ValidateHelper(this)
     private val dialogHelper = DialogHelper(this)
 
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
@@ -41,6 +45,9 @@ class LoginActivity : AppCompatActivity() {
         val passwordEditText: EditText = findViewById(R.id.passwordEditText)
         val loginButton: Button = findViewById(R.id.loginButton)
         val signUpButton: Button = findViewById(R.id.SignUpButton)
+        val versionNameTextView = findViewById<TextView>(R.id.versionName)
+
+        versionNameTextView.text = "ver:${this.packageManager.getPackageInfo(this.packageName, PackageManager.GET_META_DATA).versionName}"
 
         // FirebaseAuthのインスタンスを取得
         auth = FirebaseAuth.getInstance()

@@ -64,4 +64,13 @@
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
         android:text="@string/button_signup" />
+
+    <TextView
+        android:id="@+id/versionName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right"
+        android:textColor="@color/common_google_signin_btn_text_light"
+        android:layout_margin="10dp"
+        android:text="versionName"/>
 </LinearLayout>
