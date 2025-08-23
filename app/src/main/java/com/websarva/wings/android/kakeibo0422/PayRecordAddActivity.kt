@@ -130,11 +130,13 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
         inputMethodManager.hideSoftInputFromWindow(spPayPurposeList.windowToken, 0)
         inputMethodManager.hideSoftInputFromWindow(spMember.windowToken, 0)
         inputMethodManager.hideSoftInputFromWindow(payDone.windowToken, 0)
+        inputMethodManager.hideSoftInputFromWindow(noteEditText.windowToken, 0)
         //フォーカスを外す処理
         payAmountEditText.clearFocus()
         spMember.clearFocus()
         spPayPurposeList.clearFocus()
         payDone.clearFocus()
+        noteEditText.clearFocus()
     }
 
     @SuppressLint("DefaultLocale")
