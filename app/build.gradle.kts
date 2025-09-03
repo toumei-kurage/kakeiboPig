@@ -8,14 +8,14 @@ plugins {
 
 android {
     namespace = "com.websarva.wings.android.kakeibo0422"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.websarva.wings.android.kakeibo0422"
         minSdk = 24
-        targetSdk = 34
-        versionCode = 5
-        versionName = "1.0.1"
+        targetSdk = 35
+        versionCode = 6
+        versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
