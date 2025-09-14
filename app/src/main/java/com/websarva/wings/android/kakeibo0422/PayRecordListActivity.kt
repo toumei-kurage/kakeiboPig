@@ -2,10 +2,13 @@ package com.websarva.wings.android.kakeibo0422
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -27,6 +30,21 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
     private var payRecordList: List<PayRecord> = mutableListOf()
 
     private val firestore = FirebaseFirestore.getInstance()
+
+    // ✅ Activity Result API を使ってコールバックを登録
+    @RequiresApi(Build.VERSION_CODES.O)
+    private val editPayRecordLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val data = result.data
+            // 削除された場合の処理
+            if (data?.getBooleanExtra("PAY_RECORD_DELETE", false) == true) {
+                // 削除後にデータを再読み込みしてRecyclerViewを更新
+                applyRefinement(null, null, null,null,null)
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,19 +81,10 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
             fragment.show(supportFragmentManager, "PayRecordListRefinementFragment")
         }
     }
-
-    // onActivityResultをオーバーライドして削除結果を受け取る
-    @Deprecated("This method has been deprecated in favor of using the Activity Result API\n      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt\n      contracts for common intents available in\n      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for\n      testing, and allow receiving results in separate, testable classes independent from your\n      activity. Use\n      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}\n      with the appropriate {@link ActivityResultContract} and handling the result in the\n      {@link ActivityResultCallback#onActivityResult(Object) callback}.")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (resultCode == RESULT_OK) {
-            // 削除された場合の処理
-            if (data?.getBooleanExtra("PAY_RECORD_DELETE", false) == true) {
-                // 削除後にデータを再読み込みしてRecyclerViewを更新
-                applyRefinement(null, null, null,null,null)
-            }
-        }
+    // ✅ 他クラスから Activity を起動するためのヘルパー
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun launchEditPayRecord(intent: Intent) {
+        editPayRecordLauncher.launch(intent)
     }
 
     // 絞り込み内容を受け取るメソッド

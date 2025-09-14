@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -19,6 +20,20 @@ class BalanceListActivity : BaseActivity(R.layout.activity_balance_list, R.strin
     private lateinit var balanceAdapter: BalanceAdapter
 
     private val firestore = FirebaseFirestore.getInstance()
+
+    // ✅ Activity Result API を使ってコールバックを登録
+    private val editBalanceLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val data = result.data
+            // 削除された場合の処理
+            if (data?.getBooleanExtra("BALANCE_DELETE", false) == true) {
+                // 削除後にデータを再読み込みしてRecyclerViewを更新
+                loadBalanceList()
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,20 +53,6 @@ class BalanceListActivity : BaseActivity(R.layout.activity_balance_list, R.strin
         recyclerView.adapter = balanceAdapter
 
         loadBalanceList()
-    }
-
-    // onActivityResultをオーバーライドして削除結果を受け取る
-    @Deprecated("This method has been deprecated in favor of using the Activity Result API\n      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt\n      contracts for common intents available in\n      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for\n      testing, and allow receiving results in separate, testable classes independent from your\n      activity. Use\n      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}\n      with the appropriate {@link ActivityResultContract} and handling the result in the\n      {@link ActivityResultCallback#onActivityResult(Object) callback}.")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (resultCode == RESULT_OK) {
-            // 削除された場合の処理
-            if (data?.getBooleanExtra("BALANCE_DELETE", false) == true) {
-                // 削除後にデータを再読み込みしてRecyclerViewを更新
-                loadBalanceList()
-            }
-        }
     }
 
     // Firestore から家計簿リストを読み込む
@@ -97,5 +98,10 @@ class BalanceListActivity : BaseActivity(R.layout.activity_balance_list, R.strin
         }
 
         return newBalanceList
+    }
+
+    // ✅ 他クラスから Activity を起動するためのヘルパー
+    fun launchEditBalance(intent: Intent) {
+        editBalanceLauncher.launch(intent)
     }
 }

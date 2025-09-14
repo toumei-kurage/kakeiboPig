@@ -3,10 +3,12 @@ package com.websarva.wings.android.kakeibo0422
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.RecyclerView
 
 // PayPurpose のデータクラス
@@ -20,15 +22,12 @@ class PayPurposeAdapter(private val context: Context, private var payPurposeList
         val payPurposeNameTextView: TextView = itemView.findViewById(R.id.payPurposeNameTextView)
     }
 
-    companion object {
-        private const val REQUEST_CODE_EDIT_PAY_PURPOSE = 100
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PayPurposeViewHolder {
         val itemView = LayoutInflater.from(context).inflate(R.layout.item_pay_purpose, parent, false)
         return PayPurposeViewHolder(itemView)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("StringFormatMatches")
     override fun onBindViewHolder(holder: PayPurposeViewHolder, position: Int) {
         val payPurpose = payPurposeList[position]
@@ -41,11 +40,8 @@ class PayPurposeAdapter(private val context: Context, private var payPurposeList
             intent.putExtra("PAY_PURPOSE_ID", payPurpose.id)
             intent.putExtra("PAY_PURPOSE_NAME", payPurpose.payPurposeName)
             intent.putExtra("RESIST_DATE", payPurpose.resistDate)
-            // Activityに戻り値を受け取るためにstartActivityForResultを使う
-            (context as? PayPurposeListActivity)?.startActivityForResult(
-                intent,
-                REQUEST_CODE_EDIT_PAY_PURPOSE
-            )
+            // Activityに戻り値を受け取るために registerForActivityResult を使う
+            (context as? PayPurposeListActivity)?.launchEditPayPurpose(intent)
         }
     }
 

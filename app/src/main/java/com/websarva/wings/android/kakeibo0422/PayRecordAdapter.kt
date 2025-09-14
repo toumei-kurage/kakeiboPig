@@ -3,10 +3,12 @@ package com.websarva.wings.android.kakeibo0422
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -26,15 +28,12 @@ class PayRecordAdapter(private val context: Context, private var payRecordList: 
         val payAmountTextView:TextView = itemView.findViewById(R.id.payAmountTextView)
     }
 
-    companion object {
-        private const val REQUEST_CODE_EDIT_PAY_RECORD = 100
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PayRecordViewHolder {
         val itemView = LayoutInflater.from(context).inflate(R.layout.item_pay_record, parent, false)
         return PayRecordViewHolder(itemView)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("StringFormatMatches", "SetTextI18n")
     override fun onBindViewHolder(holder: PayRecordViewHolder, position: Int) {
         val payRecord = payRecordList[position]
@@ -61,11 +60,8 @@ class PayRecordAdapter(private val context: Context, private var payRecordList: 
             intent.putExtra("PAY_AMOUNT",payRecord.payAmount)
             intent.putExtra("IS_RECEPT_CHECKED",payRecord.isReceptChecked)
             intent.putExtra("NOTE",payRecord.note)
-            // Activityに戻り値を受け取るためにstartActivityForResultを使う
-            (context as? PayRecordListActivity)?.startActivityForResult(
-                intent,
-                REQUEST_CODE_EDIT_PAY_RECORD
-            )
+            // Activityに戻り値を受け取るために registerForActivityResult を使う
+            (context as? PayRecordListActivity)?.launchEditPayRecord(intent)
         }
     }
 

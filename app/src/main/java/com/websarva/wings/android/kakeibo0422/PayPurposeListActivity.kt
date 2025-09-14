@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -22,6 +23,21 @@ class PayPurposeListActivity : BaseActivity(R.layout.activity_pay_purpose_list, 
     private lateinit var payPurposeAdapter: PayPurposeAdapter
 
     private val firestore = FirebaseFirestore.getInstance()
+
+    // ✅ Activity Result API を使ってコールバックを登録
+    @RequiresApi(Build.VERSION_CODES.O)
+    private val editPayPurposeLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val data = result.data
+            // 削除された場合の処理
+            if (data?.getBooleanExtra("PAY_PURPOSE_DELETED", false) == true) {
+                // 削除後にデータを再読み込みしてRecyclerViewを更新
+                loadPayPurposeList()
+            }
+        }
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -96,17 +112,9 @@ class PayPurposeListActivity : BaseActivity(R.layout.activity_pay_purpose_list, 
             }
     }
 
-    // onActivityResultをオーバーライドして削除結果を受け取る
+    // ✅ 他クラスから Activity を起動するためのヘルパー
     @RequiresApi(Build.VERSION_CODES.O)
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (resultCode == RESULT_OK) {
-            // 削除された場合の処理
-            if (data?.getBooleanExtra("PAY_PURPOSE_DELETED", false) == true) {
-                // 削除後にデータを再読み込みしてRecyclerViewを更新
-                loadPayPurposeList()
-            }
-        }
+    fun launchEditPayPurpose(intent: Intent) {
+        editPayPurposeLauncher.launch(intent)
     }
 }
