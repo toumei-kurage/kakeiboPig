@@ -25,10 +25,9 @@ class ValidateHelper(private val context: Context) {
     /**
      * 桁数チェック
      * @param[text] 桁数チェックをしたい文字列
-     * @param[digit] 対象文字列の文字数の下限値
      */
-    private fun lengthCheck(text: String, digit: Int): Boolean {
-        return text.length >= digit
+    private fun lengthCheck(text: String): Boolean {
+        return text.length >= 6
     }
 
     //半角数字チェック
@@ -59,7 +58,7 @@ class ValidateHelper(private val context: Context) {
         if (!emptyCheck(password)) {
             return Pair(false, context.getString(R.string.error_empty))
         }
-        if (!lengthCheck(password, 6)) {
+        if (!lengthCheck(password)) {
             return Pair(false, context.getString(R.string.error_digit_6))
         }
         return Pair(true, "")
