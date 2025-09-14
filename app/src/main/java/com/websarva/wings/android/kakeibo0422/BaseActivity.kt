@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Bundle
+import androidx.activity.addCallback
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -22,6 +23,11 @@ abstract class BaseActivity(private val layoutResId: Int, private val title: Int
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(layoutResId) // 各ActivityでsetContentViewを上書きするため、この行は必要に応じて変更
+
+        // 戻るボタンを無効化
+        onBackPressedDispatcher.addCallback(this) {
+            // ここに何も書かない or 任意の処理を書く
+        }
 
         // DrawerLayoutとNavigationViewのセットアップ
         setupDrawerAndToolbar()
