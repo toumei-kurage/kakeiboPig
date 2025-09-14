@@ -122,7 +122,7 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
                     .addOnSuccessListener { document ->
                         val payPurposeName = document.getString("pay_purpose_name") ?: ""
                         // Spinnerのadapterが設定されてから選択肢を設定
-                        val position = (spPayPurposeList.adapter as ArrayAdapter<String>).getPosition(payPurposeName)
+                        val position = payPurposeArrayAdapter.getPosition(payPurposeName)
                         spPayPurposeList.setSelection(position)
                     }
             }
@@ -170,8 +170,7 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
                     .get()
                     .addOnSuccessListener { document ->
                         val memberName = document.getString("member_name") ?: ""
-                        // Spinnerのadapterが設定されてから選択肢を設定
-                        val position = (spMember.adapter as ArrayAdapter<String>).getPosition(memberName)
+                        val position = memberArrayAdapter.getPosition(memberName)
                         spMember.setSelection(position)
                     }
             }

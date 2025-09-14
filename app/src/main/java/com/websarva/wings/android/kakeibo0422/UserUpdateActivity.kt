@@ -105,6 +105,7 @@ class UserUpdateActivity : BaseActivity(R.layout.activity_user_update, R.string.
                 if (reAuthTask.isSuccessful) {
                     // メールアドレスの更新
                     if (email != user.email) {  // メールが変更されている場合のみ更新
+                        @Suppress("DEPRECATION")
                         user.updateEmail(email)
                             .addOnCompleteListener { task ->
                                 if (!task.isSuccessful)

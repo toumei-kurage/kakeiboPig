@@ -15,7 +15,7 @@ import androidx.fragment.app.DialogFragment
 import com.google.android.material.textfield.TextInputLayout
 import com.websarva.wings.android.kakeibo0422.helper.ValidateHelper
 import java.util.Calendar
-import android.view.ViewGroup as ViewGroup1
+import android.view.ViewGroup
 
 class BalanceSheetSetInfoFragment : DialogFragment() {
     private lateinit var budgetError:TextInputLayout
@@ -30,7 +30,7 @@ class BalanceSheetSetInfoFragment : DialogFragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup1?,
+        inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_balance_sheet_set_info, container, false)
@@ -94,10 +94,12 @@ class BalanceSheetSetInfoFragment : DialogFragment() {
         return view
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        dialog?.window?.setLayout(ViewGroup1.LayoutParams.MATCH_PARENT, ViewGroup1.LayoutParams.WRAP_CONTENT)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        dialog?.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
     }
 
     @SuppressLint("DefaultLocale")

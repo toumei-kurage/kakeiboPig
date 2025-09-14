@@ -20,10 +20,6 @@ class BalanceAdapter(private val context: Context, private var balanceList: List
         val dateTextView: TextView = itemView.findViewById(R.id.dateTextView)
     }
 
-    companion object {
-        private const val REQUEST_CODE_EDIT_BALANCE = 100
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BalanceViewHolder {
         val itemView = LayoutInflater.from(context).inflate(R.layout.item_balance, parent, false)
         return BalanceViewHolder(itemView)
@@ -43,11 +39,8 @@ class BalanceAdapter(private val context: Context, private var balanceList: List
             intent.putExtra("FINISH_DATE",balance.finishDate)
             intent.putExtra("BUDGET",balance.budget)
             intent.putExtra("ACTUAL_BALANCE",balance.actualBalance)
-            // Activityに戻り値を受け取るためにstartActivityForResultを使う
-            (context as? BalanceListActivity)?.startActivityForResult(
-                intent,
-                REQUEST_CODE_EDIT_BALANCE
-            )
+            // Activityに戻り値を受け取るために registerForActivityResult を使う
+            (context as? BalanceListActivity)?.launchEditBalance(intent)
         }
     }
 
