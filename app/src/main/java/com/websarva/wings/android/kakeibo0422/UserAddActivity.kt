@@ -9,6 +9,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import com.google.android.material.textfield.TextInputLayout
@@ -31,6 +32,11 @@ class UserAddActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_add)
+
+        // 戻るボタンを無効化
+        onBackPressedDispatcher.addCallback(this) {
+            // ここに何も書かない or 任意の処理を書く
+        }
 
         // ToolbarをActionBarとして設定
         val toolbar: Toolbar = findViewById(R.id.toolbar)
