@@ -12,6 +12,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
+import androidx.core.content.edit
 
 abstract class BaseActivity(private val layoutResId: Int, private val title: Int) : AppCompatActivity() {
 
@@ -125,9 +126,9 @@ abstract class BaseActivity(private val layoutResId: Int, private val title: Int
     private fun logout() {
         // SharedPreferencesを使用してセッションをクリアする
         val sharedPreferences: SharedPreferences = getSharedPreferences("userSession", MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        editor.clear() // セッション情報をクリア
-        editor.apply()
+        sharedPreferences.edit {
+            clear() // セッション情報をクリア
+        }
 
         // LoginActivityへ遷移
         val intent = Intent(this, LoginActivity::class.java)
