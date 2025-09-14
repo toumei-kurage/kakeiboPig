@@ -19,12 +19,14 @@
             android:orientation="vertical">
 
             <!-- Toolbar (アクションバー) -->
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:background="?attr/colorPrimary"
-                android:elevation="10dp" />
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        app:buttonGravity="center_vertical"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="?attr/colorPrimary"
+        android:elevation="10dp" />
+
 
             <!-- スクロールビュー -->
             <ScrollView
