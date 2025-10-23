@@ -1,6 +1,5 @@
 package com.websarva.wings.android.kakeibo0422
 
-import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Build
@@ -37,7 +36,6 @@ class BalanceDetailActivity : BaseActivity(R.layout.activity_balance_detail,R.st
     private var actualBalance: Int = 0
 
     @RequiresApi(Build.VERSION_CODES.O)
-    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_balance_detail)
@@ -150,7 +148,6 @@ class BalanceDetailActivity : BaseActivity(R.layout.activity_balance_detail,R.st
     }
 
     // レコードに基づいて動的にLinearLayoutを追加する処理
-    @SuppressLint("SetTextI18n", "InflateParams")
     private fun addLayoutsForRecords(records: List<String>) {
         // Firestore から支払い目的ごとの金額を取得
         getAmountByPurposeForUserInDateRange(userID, startDate, finishDate) { payAmountByPurposeList ->

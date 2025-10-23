@@ -1,6 +1,5 @@
 package com.websarva.wings.android.kakeibo0422
 
-import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.os.Build
 import android.os.Bundle
@@ -139,7 +138,6 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
         noteEditText.clearFocus()
     }
 
-    @SuppressLint("DefaultLocale")
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showDatePickerDialog() {
         val calendar = Calendar.getInstance()
@@ -170,7 +168,6 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
         datePickerDialog.show()
     }
 
-    @SuppressLint("SimpleDateFormat")
     private fun onSaveButtonClick() {
         // メンバーIDを取得
         getMemberId { memberId ->

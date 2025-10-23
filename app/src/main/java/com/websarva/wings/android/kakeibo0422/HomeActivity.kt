@@ -1,6 +1,5 @@
 package com.websarva.wings.android.kakeibo0422
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -132,7 +131,6 @@ class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
 
     // UIを更新するメソッド
     @RequiresApi(Build.VERSION_CODES.O)
-    @SuppressLint("SetTextI18n")
     private fun updateUI() {
         dateRangeTextView.text = if (startDateString != "" && finishDateString != "") {
             getString(R.string.date_range_set, startDateString, finishDateString)
@@ -208,7 +206,6 @@ class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
     }
 
     // Firestore から最新の家計簿情報を取得
-    @SuppressLint("SetTextI18n")
     @RequiresApi(Build.VERSION_CODES.O)
     private fun loadLatestBalanceHistory() {
         firestore.collection("balance_history")

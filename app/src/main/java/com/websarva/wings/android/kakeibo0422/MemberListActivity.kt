@@ -1,6 +1,5 @@
 package com.websarva.wings.android.kakeibo0422
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -69,7 +68,6 @@ class MemberListActivity : BaseActivity(R.layout.activity_member_list, R.string.
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    @SuppressLint("NotifyDataSetChanged")
     private fun loadMemberList() {
         // Firestoreの「members」コレクションからデータを取得
         firestore.collection("members")

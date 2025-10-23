@@ -1,6 +1,5 @@
 package com.websarva.wings.android.kakeibo0422
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -28,7 +27,6 @@ class PayPurposeAdapter(private val context: Context, private var payPurposeList
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    @SuppressLint("StringFormatMatches")
     override fun onBindViewHolder(holder: PayPurposeViewHolder, position: Int) {
         val payPurpose = payPurposeList[position]
         holder.payPurposeNameTextView.text = payPurpose.payPurposeName
@@ -50,7 +48,6 @@ class PayPurposeAdapter(private val context: Context, private var payPurposeList
     }
 
     // 新しいデータでAdapterを更新
-    @SuppressLint("NotifyDataSetChanged")
     fun updateData(newPayPurposeList: List<PayPurpose>) {
         payPurposeList = newPayPurposeList
         notifyDataSetChanged()

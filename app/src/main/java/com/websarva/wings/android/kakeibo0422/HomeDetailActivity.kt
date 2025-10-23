@@ -1,6 +1,5 @@
 package com.websarva.wings.android.kakeibo0422
 
-import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -71,7 +70,6 @@ class HomeDetailActivity : BaseActivity(R.layout.activity_home_detail, R.string.
     }
 
     // レコードに基づいて動的にLinearLayoutを追加する処理
-    @SuppressLint("SetTextI18n", "InflateParams")
     private fun addLayoutsForRecords(records: List<String>) {
         // Firestore から支払い目的ごとの金額を取得
         getAmountByPurposeForUserInDateRange(userID) { payAmountByPurposeList ->

@@ -1,6 +1,5 @@
 package com.websarva.wings.android.kakeibo0422
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.view.LayoutInflater
@@ -25,7 +24,6 @@ class BalanceAdapter(private val context: Context, private var balanceList: List
         return BalanceViewHolder(itemView)
     }
 
-    @SuppressLint("StringFormatMatches", "SetTextI18n")
     override fun onBindViewHolder(holder: BalanceViewHolder, position: Int) {
         val balance = balanceList[position]
         holder.dateTextView.text = context.getString(R.string.date_range_set,balance.startDate,balance.finishDate)
@@ -49,7 +47,6 @@ class BalanceAdapter(private val context: Context, private var balanceList: List
     }
 
     // 新しいデータでAdapterを更新
-    @SuppressLint("NotifyDataSetChanged")
     fun updateData(newBalanceList: List<Balance>) {
         balanceList = newBalanceList
         notifyDataSetChanged()

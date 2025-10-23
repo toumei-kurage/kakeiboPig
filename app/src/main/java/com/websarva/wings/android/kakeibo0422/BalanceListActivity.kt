@@ -1,6 +1,5 @@
 package com.websarva.wings.android.kakeibo0422
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -56,7 +55,6 @@ class BalanceListActivity : BaseActivity(R.layout.activity_balance_list, R.strin
     }
 
     // Firestore から家計簿リストを読み込む
-    @SuppressLint("NotifyDataSetChanged")
     private fun loadBalanceList() :List<Balance>{
         val query = firestore.collection("balance_history")
             .whereEqualTo("user_id", userID)
