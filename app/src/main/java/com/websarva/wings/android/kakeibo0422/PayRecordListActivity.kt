@@ -1,6 +1,5 @@
 package com.websarva.wings.android.kakeibo0422
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -88,7 +87,6 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
     }
 
     // 絞り込み内容を受け取るメソッド
-    @SuppressLint("NotifyDataSetChanged")
     fun applyRefinement(memberId: String?, startDate: String?, finishDate: String?,payDone:String?, payPurposeId: String?) {
         // 絞り込み条件のチェックとデータ取得
         val refinedData = getFilterData(memberId,startDate,finishDate,payDone,payPurposeId)
@@ -100,7 +98,6 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
     }
 
 
-    @SuppressLint("NotifyDataSetChanged", "SetTextI18n")
     private fun getFilterData(memberId: String?, startDate: String?, finishDate: String?, payDoneString: String?, payPurposeId: String?): List<PayRecord>{
         val query = createQuery(memberId,startDate,finishDate,payDoneString,payPurposeId)
         val newPayRecordList = mutableListOf<PayRecord>()

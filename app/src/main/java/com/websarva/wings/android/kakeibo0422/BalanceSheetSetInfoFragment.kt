@@ -1,6 +1,5 @@
 package com.websarva.wings.android.kakeibo0422
 
-import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.os.Build
 import android.os.Bundle
@@ -102,7 +101,6 @@ class BalanceSheetSetInfoFragment : DialogFragment() {
         )
     }
 
-    @SuppressLint("DefaultLocale")
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showDatePickerDialog(editText: EditText) {
         val calendar = Calendar.getInstance()

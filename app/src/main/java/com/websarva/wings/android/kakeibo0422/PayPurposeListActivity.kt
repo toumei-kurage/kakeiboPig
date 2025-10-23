@@ -1,6 +1,5 @@
 package com.websarva.wings.android.kakeibo0422
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -69,7 +68,6 @@ class PayPurposeListActivity : BaseActivity(R.layout.activity_pay_purpose_list, 
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    @SuppressLint("Range", "NotifyDataSetChanged")
     private fun loadPayPurposeList() {
         // Firestoreの「members」コレクションからデータを取得
         firestore.collection("payPurposes")

@@ -1,6 +1,5 @@
 package com.websarva.wings.android.kakeibo0422
 
-import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
@@ -25,7 +24,6 @@ class PayRecordDetailActivity : BaseActivity(R.layout.activity_pay_record_detail
     private var payRecordId = ""
     private val firestore = FirebaseFirestore.getInstance()
 
-    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pay_record_detail)

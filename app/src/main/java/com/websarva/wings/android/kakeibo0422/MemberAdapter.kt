@@ -1,6 +1,5 @@
 package com.websarva.wings.android.kakeibo0422
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -28,7 +27,6 @@ class MemberAdapter(private val context: Context, private var memberList: List<M
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    @SuppressLint("StringFormatMatches")
     override fun onBindViewHolder(holder: MemberViewHolder, position: Int) {
         val member = memberList[position]
         holder.memberNameTextView.text = member.memberName
@@ -50,7 +48,6 @@ class MemberAdapter(private val context: Context, private var memberList: List<M
     }
 
     // 新しいデータでAdapterを更新
-    @SuppressLint("NotifyDataSetChanged")
     fun updateData(newMemberList: List<Member>) {
         memberList = newMemberList
         notifyDataSetChanged()

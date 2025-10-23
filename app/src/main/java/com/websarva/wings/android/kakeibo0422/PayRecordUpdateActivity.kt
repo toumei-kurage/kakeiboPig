@@ -1,6 +1,5 @@
 package com.websarva.wings.android.kakeibo0422
 
-import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.os.Build
 import android.os.Bundle
@@ -51,7 +50,6 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
     private var payPurposeId: String = ""
 
     @RequiresApi(Build.VERSION_CODES.O)
-    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pay_record_update)
@@ -247,7 +245,6 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
         noteEditText.clearFocus()
     }
 
-    @SuppressLint("DefaultLocale")
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showDatePickerDialog() {
         val calendar = Calendar.getInstance()
