@@ -166,6 +166,25 @@
                     android:layout_marginBottom="10dp"
                     android:textSize="18sp"/>
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/next_month_withdrawal"
+                        android:textSize="18sp" />
+
+                    <TextView
+                        android:id="@+id/nextMonthWithdrawalTextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="18sp" />
+                </LinearLayout>
+
                 <Button
                     android:id="@+id/buttonBalanceSheetAdd"
                     android:layout_width="match_parent"

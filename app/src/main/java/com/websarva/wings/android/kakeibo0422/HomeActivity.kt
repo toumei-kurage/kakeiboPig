@@ -25,6 +25,7 @@ class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
     private lateinit var actualBalanceEditText: EditText
     private lateinit var actualBalanceError: TextInputLayout
     private lateinit var differenceTextView: TextView
+    private lateinit var nextMonthWithdrawalTextView: TextView
     private lateinit var buttonSetInfo: Button
     private lateinit var buttonSetActualBalance: Button
     private lateinit var buttonBalanceSheetAdd: Button
@@ -34,6 +35,11 @@ class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
     private var budgetSet: String = "0"
     private var startDateString: String = ""
     private var finishDateString: String = ""
+
+    // 設定値および計算結果の保持
+    private var provisionalBudget: Int = 0
+    private var isRoundDownFraction: Boolean = false
+    private var calculatedAdjustedBudget: Int = 0
 
     private val firestore = FirebaseFirestore.getInstance()
     private val validateHelper = ValidateHelper(this)
@@ -55,16 +61,20 @@ class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
         actualBalanceEditText = findViewById(R.id.actualBalanceEditText)
         actualBalanceError = findViewById(R.id.actualBalanceError)
         differenceTextView = findViewById(R.id.differenceTextView)
+        nextMonthWithdrawalTextView = findViewById(R.id.nextMonthWithdrawalTextView)
         buttonSetInfo = findViewById(R.id.buttonSetInfo)
         buttonSetActualBalance = findViewById(R.id.buttonSetActualBalance)
         buttonBalanceSheetAdd = findViewById(R.id.buttonBalanceSheetAdd)
         buttonBalanceDetail = findViewById(R.id.buttonBalanceDetail)
 
-        loadLatestBalanceHistory()
+        loadUserSettings {
+            loadLatestBalanceHistory()
+        }
 
         // 「設定」ボタンのクリックリスナー
         buttonSetInfo.setOnClickListener {
-            val fragment = BalanceSheetSetInfoFragment()
+            val initialBudgetToSend = if (calculatedAdjustedBudget > 0) calculatedAdjustedBudget else provisionalBudget
+            val fragment = BalanceSheetSetInfoFragment.newInstance(initialBudgetToSend)
             fragment.show(supportFragmentManager, "BalanceSheetSetInfoFragment")
         }
 
@@ -105,6 +115,10 @@ class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
             else{
                 differenceTextView.text = getString(R.string.text_difference,getString(R.string.formatted_number,actualBalance - bookBalance) + "多いです")
             }
+
+            // 次月に下ろす金額の計算と表示
+            calculateAndDisplayWithdrawal(actualBalance)
+
             getBalanceId { balanceId ->
                 updateBalance(balanceId)
             }
@@ -117,6 +131,52 @@ class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
             startActivity(intent)
             finish()
         }
+    }
+
+    // ユーザー設定（仮予算・端数処理フラグ）を取得
+    private fun loadUserSettings(onComplete: () -> Unit) {
+        firestore.collection("user_settings")
+            .document(userID)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document != null && document.exists()) {
+                    provisionalBudget = document.getLong("provisional_budget")?.toInt() ?: 0
+                    isRoundDownFraction = document.getBoolean("round_down_fraction") ?: false
+                }
+                onComplete()
+            }
+            .addOnFailureListener {
+                onComplete()
+            }
+    }
+
+    // 次月に下ろす金額を計算してUIに反映
+    private fun calculateAndDisplayWithdrawal(actualBalance: Int) {
+        if (provisionalBudget <= 0) {
+            nextMonthWithdrawalTextView.text = "設定なし"
+            return
+        }
+
+        val withdrawalAmount: Int
+        if (!isRoundDownFraction) {
+            // 端数処理を行わない場合
+            val diff = provisionalBudget - actualBalance
+            withdrawalAmount = if (diff > 0) diff else 0
+            calculatedAdjustedBudget = provisionalBudget
+        } else {
+            // 端数処理を行う場合（例: 123,680円 → 123,000円）
+            val diff = provisionalBudget - actualBalance
+            if (diff > 0) {
+                val fraction = diff % 1000
+                calculatedAdjustedBudget = provisionalBudget - fraction
+                withdrawalAmount = calculatedAdjustedBudget - actualBalance
+            } else {
+                calculatedAdjustedBudget = provisionalBudget
+                withdrawalAmount = 0
+            }
+        }
+
+        nextMonthWithdrawalTextView.text = getString(R.string.formatted_number, withdrawalAmount)
     }
 
     // Fragmentから情報を受け取る
@@ -224,6 +284,9 @@ class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
                     finishDateString = document.getString("finish_date") ?: ""
                     val actualBalance = document.getLong("actual_balance") ?: 0
                     actualBalanceEditText.setText("$actualBalance")
+
+                    // 取得した実際残高から次月下ろし金額を初期計算
+                    calculateAndDisplayWithdrawal(actualBalance.toInt())
                 } else {
                     budgetSet = "0"
                     startDateString = ""
