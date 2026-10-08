@@ -106,4 +106,12 @@
     <string name="text_unit">円</string>
     <string name="text_difference">帳簿残高より%1s。</string>
     <string name="text_just">帳簿残高とぴったりです。</string>
+
+    <!-- 設定画面-->
+    <string name="title_setting">設定</string>
+    <string name="next_month_withdrawal">次月に下ろす金額：</string>
+    <string name="label_provisional_budget">毎月の仮予算</string>
+    <string name="hint_provisional_budget">仮予算を入力</string>
+    <string name="label_round_down_fraction">次月に下ろす金額の端数を処理する (千円未満切り捨て)</string>
+    <string name="button_save_setting">設定を保存</string>
 </resources>
