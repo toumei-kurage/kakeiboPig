@@ -27,6 +27,10 @@
         android:title="@string/title_user_update"/>
 
     <item
+        android:id="@+id/nav_setting"
+        android:title="@string/title_setting" />
+
+    <item
         android:id="@+id/nav_license"
         android:title="@string/title_license"/>
 

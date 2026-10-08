@@ -94,6 +94,11 @@ abstract class BaseActivity(private val layoutResId: Int, private val title: Int
                 startActivity(intent)
                 finish()
             }
+            R.id.nav_setting -> {
+                val intent = Intent(this, SettingActivity::class.java)
+                startActivity(intent)
+                finish()
+            }
             R.id.nav_logout ->{
                 logout()
             }

@@ -27,6 +27,19 @@ class BalanceSheetSetInfoFragment : DialogFragment() {
 
     private lateinit var validateHelper: ValidateHelper
 
+    companion object {
+        private const val ARG_INITIAL_BUDGET = "ARG_INITIAL_BUDGET"
+
+        fun newInstance(initialBudget: Int): BalanceSheetSetInfoFragment {
+            val fragment = BalanceSheetSetInfoFragment()
+            val args = Bundle().apply {
+                putInt(ARG_INITIAL_BUDGET, initialBudget)
+            }
+            fragment.arguments = args
+            return fragment
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -42,6 +55,12 @@ class BalanceSheetSetInfoFragment : DialogFragment() {
         buttonOK = view.findViewById(R.id.buttonOK)
 
         validateHelper = ValidateHelper(requireContext())
+
+        // 初期予算が渡されていればセットする
+        val initialBudget = arguments?.getInt(ARG_INITIAL_BUDGET, 0) ?: 0
+        if (initialBudget > 0) {
+            budgetEditText.setText(initialBudget.toString())
+        }
 
         budgetEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
