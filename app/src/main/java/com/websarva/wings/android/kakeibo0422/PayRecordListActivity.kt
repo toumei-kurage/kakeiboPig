@@ -79,8 +79,8 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
                 putExtra("USER_ID", item.userId)
                 putExtra("MEMBER_ID", item.memberId)
                 putExtra("PAY_PURPOSE_ID", item.payPurposeId)
-                putExtra("PAYMENT_DATE", item.payDate)
-                putExtra("AMOUNT", item.payAmount)
+                putExtra("PAY_DATE", item.payDate)
+                putExtra("PAY_AMOUNT", item.payAmount)
                 putExtra("IS_RECEPT_CHECKED", item.isReceptChecked)
                 putExtra("NOTE", item.note)
             }
@@ -130,7 +130,7 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
         val currentUserId = userID ?: return
 
         // 1. 支払い目的のロード
-        firestore.collection("pay_purposes")
+        firestore.collection("payPurposes")
             .whereEqualTo("user_id", currentUserId)
             .get()
             .addOnSuccessListener { purposeSnapshot ->
