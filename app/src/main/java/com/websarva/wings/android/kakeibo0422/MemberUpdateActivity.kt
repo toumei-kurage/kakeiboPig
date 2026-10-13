@@ -141,6 +141,11 @@ class MemberUpdateActivity : BaseActivity(R.layout.activity_member_update, R.str
         memberRef.set(updatedData)
             .addOnSuccessListener {
                 Toast.makeText(this, "更新されました", Toast.LENGTH_SHORT).show()
+                val resultIntent = Intent().apply {
+                    putExtra("IS_DATA_CHANGED", true)
+                }
+                setResult(RESULT_OK, resultIntent)
+                finish()
             }
             .addOnFailureListener { exception ->
                 Toast.makeText(this, "更新できませんでした: ${exception.message}", Toast.LENGTH_SHORT).show()

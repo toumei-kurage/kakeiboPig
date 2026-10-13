@@ -29,12 +29,7 @@ class PayPurposeListActivity : BaseActivity(R.layout.activity_pay_purpose_list, 
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK) {
-            val data = result.data
-            // 削除された場合の処理
-            if (data?.getBooleanExtra("PAY_PURPOSE_DELETED", false) == true) {
-                // 削除後にデータを再読み込みしてRecyclerViewを更新
-                loadPayPurposeList()
-            }
+            loadPayPurposeList() // 変更があった場合のみ再取得
         }
     }
 
@@ -62,8 +57,7 @@ class PayPurposeListActivity : BaseActivity(R.layout.activity_pay_purpose_list, 
 
         buttonPayPurposeAdd.setOnClickListener {
             val intent = Intent(this, PayPurposeAddActivity::class.java)
-            startActivity(intent)
-            finish()
+            editPayPurposeLauncher.launch(intent)
         }
     }
 

@@ -33,11 +33,6 @@ class UserAddActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_add)
 
-        // 戻るボタンを無効化
-        onBackPressedDispatcher.addCallback(this) {
-            // ここに何も書かない or 任意の処理を書く
-        }
-
         // ToolbarをActionBarとして設定
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         toolbar.setTitle(R.string.title_register)
@@ -122,9 +117,6 @@ class UserAddActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
-                // MainActivityに遷移する処理
-                val intent = Intent(this, LoginActivity::class.java)
-                startActivity(intent)
                 finish()
                 true
             }

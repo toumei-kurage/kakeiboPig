@@ -1,145 +1,194 @@
 package com.websarva.wings.android.kakeibo0422
 
 import android.content.Intent
-import android.content.SharedPreferences
-import android.graphics.Color
 import android.os.Bundle
+import android.view.MenuItem
+import android.widget.Toast
 import androidx.activity.addCallback
-import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
-import androidx.core.content.edit
 
-abstract class BaseActivity(private val layoutResId: Int, private val title: Int) : AppCompatActivity() {
+abstract class BaseActivity(private val layoutResId: Int, private val titleResId: Int) :
+    AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     private lateinit var drawerLayout: DrawerLayout
-    private lateinit var toggle: ActionBarDrawerToggle
-    lateinit var toolbar: Toolbar
-    lateinit var userID: String
+    protected lateinit var userID: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(layoutResId) // 各ActivityでsetContentViewを上書きするため、この行は必要に応じて変更
+        setContentView(layoutResId)
 
-        // 戻るボタンを無効化
-        onBackPressedDispatcher.addCallback(this) {
-            // ここに何も書かない or 任意の処理を書く
-        }
-
-        // DrawerLayoutとNavigationViewのセットアップ
         setupDrawerAndToolbar()
 
-        //ログイン中のユーザーIDを取得
-        userID = FirebaseAuth.getInstance().currentUser?.uid.toString()
+        // 戻るボタンの制御
+        if (this is HomeActivity) {
+            setupDoubleBackToExit()
+        } else if (!isSubActivity()) {
+            // メイン・一覧画面：ドロワーが開いている場合はドロワーを閉じる
+            onBackPressedDispatcher.addCallback(this) {
+                if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    drawerLayout.closeDrawer(GravityCompat.START)
+                } else {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                    isEnabled = true
+                }
+            }
+        }
+        // ※サブ画面（isSubActivity() == true）はコールバックを登録せず、標準動作で前画面へ戻る
+
+        userID = FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
     }
 
-    // DrawerLayoutとNavigationViewのセットアップを共通化
-    fun setupDrawerAndToolbar() {
+    /**
+     * 追加・更新などのサブ画面かどうかを判定
+     */
+    private fun isSubActivity(): Boolean {
+        return when (this) {
+            is PayRecordAddActivity,
+            is PayRecordUpdateActivity,
+            is MemberAddActivity,
+            is MemberUpdateActivity,
+            is PayPurposeAddActivity,
+            is PayPurposeUpdateActivity,
+            is BalanceUpdateActivity,
+            is BalanceDetailActivity-> true
+            else -> false
+        }
+    }
+
+    /**
+     * ホーム画面専用：2秒以内に2回戻るボタンが押された場合にアプリを終了する
+     */
+    private fun setupDoubleBackToExit() {
+        var backPressedTime: Long = 0
+        onBackPressedDispatcher.addCallback(this) {
+            if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                drawerLayout.closeDrawer(GravityCompat.START)
+            } else if (System.currentTimeMillis() - backPressedTime < 2000) {
+                finish()
+            } else {
+                Toast.makeText(this@BaseActivity, "もう一度押すと終了します", Toast.LENGTH_SHORT).show()
+                backPressedTime = System.currentTimeMillis()
+            }
+        }
+    }
+
+    protected fun setupDrawerAndToolbar() {
+        val toolbar: Toolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
+        supportActionBar?.setTitle(titleResId)
+        toolbar.setTitle(titleResId)
+
         drawerLayout = findViewById(R.id.drawerLayout)
         val navView: NavigationView = findViewById(R.id.nav_view)
 
-        // Toolbarを設定
-        toolbar = findViewById(R.id.toolbar)
-        toolbar.setTitle(title)
-        toolbar.setTitleTextColor(Color.WHITE)
-        setSupportActionBar(toolbar)
-
-        // ActionBarのハンバーガーメニューアイコン設定
-        toggle = ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.open, R.string.close)
-        drawerLayout.addDrawerListener(toggle)
-        toggle.syncState()
-
-        // ナビゲーションメニューアイテムのクリックリスナー設定
-        navView.setNavigationItemSelectedListener { menuItem ->
-            onNavigationItemSelected(menuItem.itemId)
-            drawerLayout.closeDrawers() // メニューを閉じる
-            true
+        if (isSubActivity()) {
+            // 【サブ画面（追加・更新）】
+            // 1. 戻るアイコンを表示
+            toolbar.setNavigationIcon(R.drawable.ic_arrow_back)
+            // 2. タップ時はドロワーを開かず、前画面に戻る
+            toolbar.setNavigationOnClickListener {
+                onBackPressedDispatcher.onBackPressed()
+            }
+            // 3. 誤スワイプでドロワーが開かないようにロック
+            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
+        } else {
+            // 【メイン画面（一覧・ホーム等）】
+            // 1. ハンバーガーアイコンを表示
+            toolbar.setNavigationIcon(R.drawable.ic_hamburger_menu)
+            // 2. タップ時はドロワーメニューを開く
+            toolbar.setNavigationOnClickListener {
+                drawerLayout.openDrawer(GravityCompat.START)
+            }
+            // 3. ドロワーのスワイプ操作を有効化
+            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
         }
 
-        // アイコンのクリックリスナーを設定
-        toolbar.setNavigationIcon(R.drawable.ic_hamburger_menu) // ハンバーガーアイコンを表示
+        navView.setNavigationItemSelectedListener(this)
     }
 
-    // 各Activityでメニューアイテムの動作をオーバーライド可能に
-    open fun onNavigationItemSelected(itemId: Int) {
-        when (itemId) {
-            R.id.nav_home -> {
-                val intent = Intent(this, HomeActivity::class.java)
-                startActivity(intent)
-                finish()
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                if (isSubActivity()) {
+                    onBackPressedDispatcher.onBackPressed()
+                } else {
+                    drawerLayout.openDrawer(GravityCompat.START)
+                }
+                true
             }
-
-            R.id.nav_member_list -> {
-                val intent = Intent(this, MemberListActivity::class.java)
-                startActivity(intent)
-                finish()
-            }
-
-            R.id.nav_pay_record_list -> {
-                val intent = Intent(this, PayRecordListActivity::class.java)
-                startActivity(intent)
-                finish()
-            }
-            R.id.nav_balance_list ->{
-                val intent = Intent(this,BalanceListActivity::class.java)
-                startActivity(intent)
-                finish()
-            }
-            R.id.nav_user_update -> {
-                val intent = Intent(this,UserUpdateActivity::class.java)
-                startActivity(intent)
-                finish()
-            }
-            R.id.nav_setting -> {
-                val intent = Intent(this, SettingActivity::class.java)
-                startActivity(intent)
-                finish()
-            }
-            R.id.nav_logout ->{
-                logout()
-            }
-            R.id.nav_secession ->{
-                val intent = Intent(this,SecessionActivity::class.java)
-                startActivity(intent)
-                finish()
-            }
-            R.id.nav_pay_purpose_list ->{
-                val intent = Intent(this,PayPurposeListActivity::class.java)
-                startActivity(intent)
-                finish()
-            }
-            R.id.nav_license ->{
-                OssLicensesMenuActivity.setActivityTitle("ライセンス")
-                startActivity(Intent(this, OssLicensesMenuActivity::class.java))
-            }
-            // 他のメニューアイテムを追加する場合はここに追加
+            else -> super.onOptionsItemSelected(item)
         }
     }
 
-    // ハンバーガーメニューのクリック対応
-    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
-        if (toggle.onOptionsItemSelected(item)) {
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        if (isCurrentActivity(item.itemId)) {
+            drawerLayout.closeDrawer(GravityCompat.START)
             return true
         }
-        return super.onOptionsItemSelected(item)
+
+        val targetClass = when (item.itemId) {
+            R.id.nav_home -> HomeActivity::class.java
+            R.id.nav_member_list -> MemberListActivity::class.java
+            R.id.nav_pay_record_list -> PayRecordListActivity::class.java
+            R.id.nav_balance_list -> BalanceListActivity::class.java
+            R.id.nav_user_update -> UserUpdateActivity::class.java
+            R.id.nav_setting -> SettingActivity::class.java
+            R.id.nav_pay_purpose_list -> PayPurposeListActivity::class.java
+            R.id.nav_secession -> SecessionActivity::class.java
+            R.id.nav_logout -> {
+                logout()
+                drawerLayout.closeDrawer(GravityCompat.START)
+                return true
+            }
+            R.id.nav_license -> {
+                OssLicensesMenuActivity.setActivityTitle("ライセンス")
+                startActivity(Intent(this, OssLicensesMenuActivity::class.java))
+                drawerLayout.closeDrawer(GravityCompat.START)
+                return true
+            }
+            else -> {
+                drawerLayout.closeDrawer(GravityCompat.START)
+                return false
+            }
+        }
+
+        val intent = Intent(this, targetClass)
+        if (targetClass == HomeActivity::class.java) {
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+
+        startActivity(intent)
+        drawerLayout.closeDrawer(GravityCompat.START)
+        return true
+    }
+
+    private fun isCurrentActivity(itemId: Int): Boolean {
+        return when (itemId) {
+            R.id.nav_home -> this is HomeActivity
+            R.id.nav_member_list -> this is MemberListActivity
+            R.id.nav_pay_record_list -> this is PayRecordListActivity
+            R.id.nav_balance_list -> this is BalanceListActivity
+            R.id.nav_user_update -> this is UserUpdateActivity
+            R.id.nav_setting -> this is SettingActivity
+            R.id.nav_pay_purpose_list -> this is PayPurposeListActivity
+            R.id.nav_secession -> this is SecessionActivity
+            else -> false
+        }
     }
 
     private fun logout() {
-        // SharedPreferencesを使用してセッションをクリアする
-        val sharedPreferences: SharedPreferences = getSharedPreferences("userSession", MODE_PRIVATE)
-        sharedPreferences.edit {
-            clear() // セッション情報をクリア
+        FirebaseAuth.getInstance().signOut()
+        val intent = Intent(this, LoginActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
-
-        // LoginActivityへ遷移
-        val intent = Intent(this, LoginActivity::class.java)
         startActivity(intent)
-
-        // HomeActivityを終了して戻れないようにする
         finish()
     }
 }

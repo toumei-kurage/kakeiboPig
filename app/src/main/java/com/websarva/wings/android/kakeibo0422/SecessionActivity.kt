@@ -31,8 +31,6 @@ class SecessionActivity : BaseActivity(R.layout.activity_secession, R.string.tit
             deleteUser()
         }
         buttonSecessionNG.setOnClickListener {
-            val intent = Intent(this, HomeActivity::class.java)
-            startActivity(intent)
             finish()
         }
     }

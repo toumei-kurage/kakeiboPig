@@ -23,18 +23,13 @@ class MemberListActivity : BaseActivity(R.layout.activity_member_list, R.string.
 
     private val firestore = FirebaseFirestore.getInstance()
 
-    // ✅ Activity Result API を使ってコールバックを登録
+    // Activity Result API を使ってコールバックを登録
     @RequiresApi(Build.VERSION_CODES.O)
     private val editMemberLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK) {
-            val data = result.data
-            // 削除された場合の処理
-            if (data?.getBooleanExtra("MEMBER_DELETED", false) == true) {
-                // 削除後にデータを再読み込みしてRecyclerViewを更新
-                loadMemberList()
-            }
+            loadMemberList() // 変更があった場合のみ再取得
         }
     }
 
@@ -62,8 +57,7 @@ class MemberListActivity : BaseActivity(R.layout.activity_member_list, R.string.
 
         buttonMemberAdd.setOnClickListener {
             val intent = Intent(this, MemberAddActivity::class.java)
-            startActivity(intent)
-            finish()
+            editMemberLauncher.launch(intent)
         }
     }
 

@@ -1,6 +1,7 @@
 package com.websarva.wings.android.kakeibo0422
 
 import android.app.DatePickerDialog
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -21,6 +22,7 @@ import com.websarva.wings.android.kakeibo0422.helper.ValidateHelper
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
+import java.util.Locale
 
 class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.string.title_add_pay_record) {
     //画面部品の用意
@@ -148,7 +150,7 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
         val datePickerDialog =
             DatePickerDialog(this, { _, selectedYear, selectedMonth, selectedDay ->
                 // 日付を選択したときの処理
-                val formattedDate = String.format("%04d/%02d/%02d", selectedYear, selectedMonth + 1, selectedDay)
+                val formattedDate = String.format(Locale.ROOT, "%04d/%02d/%02d", selectedYear, selectedMonth + 1, selectedDay)
                 payDateEditText.setText(formattedDate) // EditTextに日付を設定
 
                 // OKボタンが押されたときにバリデーションを行う
@@ -232,7 +234,12 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
         firestore.collection("payment_history")
             .add(paymentHistory)
             .addOnSuccessListener {
-                dialogHelper.dialogOkOnly("","支払い履歴が追加されました")
+                Toast.makeText(this, "支払い履歴が追加されました", Toast.LENGTH_SHORT).show()
+                val resultIntent = Intent().apply {
+                    putExtra("IS_DATA_CHANGED", true)
+                }
+                setResult(RESULT_OK, resultIntent)
+                finish()
             }
             .addOnFailureListener { exception ->
                 showError("支払い履歴の追加に失敗しました: ${exception.message}")

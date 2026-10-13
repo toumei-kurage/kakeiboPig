@@ -1,5 +1,6 @@
 package com.websarva.wings.android.kakeibo0422
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -113,6 +114,11 @@ class MemberAddActivity : BaseActivity(R.layout.activity_member_add, R.string.ti
                         .addOnSuccessListener {
                             // 成功した場合の処理
                             Toast.makeText(this, "メンバーが追加されました", Toast.LENGTH_SHORT).show()
+                            val resultIntent = Intent().apply {
+                                putExtra("IS_DATA_CHANGED", true)
+                            }
+                            setResult(RESULT_OK, resultIntent)
+                            finish()
                         }
                         .addOnFailureListener { e ->
                             // エラーが発生した場合の処理

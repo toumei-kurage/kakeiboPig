@@ -25,12 +25,7 @@ class BalanceListActivity : BaseActivity(R.layout.activity_balance_list, R.strin
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK) {
-            val data = result.data
-            // 削除された場合の処理
-            if (data?.getBooleanExtra("BALANCE_DELETE", false) == true) {
-                // 削除後にデータを再読み込みしてRecyclerViewを更新
-                loadBalanceList()
-            }
+            loadBalanceList()
         }
     }
 

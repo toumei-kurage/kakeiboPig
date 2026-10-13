@@ -32,11 +32,6 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        // 戻るボタンを無効化
-        onBackPressedDispatcher.addCallback(this) {
-            // ここに何も書かない or 任意の処理を書く
-        }
-
         // Toolbarを設定
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         toolbar.setTitle(R.string.title_login)
@@ -101,7 +96,6 @@ class LoginActivity : AppCompatActivity() {
             clearBordFocus()
             val intent = Intent(this, UserAddActivity::class.java)
             startActivity(intent)
-            finish() // このアクティビティを終了して、戻れないようにする
         }
     }
 

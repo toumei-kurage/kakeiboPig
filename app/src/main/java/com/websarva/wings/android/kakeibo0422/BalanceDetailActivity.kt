@@ -79,16 +79,27 @@ class BalanceDetailActivity : BaseActivity(R.layout.activity_balance_detail,R.st
         // 支払い目的リストを取得して表示
         loadPaymentPurposes()
 
-        buttonBalanceSheetUpdate.setOnClickListener{
-            val intent = Intent(this,BalanceUpdateActivity::class.java)
-            // 編集するデータを渡す
-            intent.putExtra("BALANCE_ID", balanceId)
-            intent.putExtra("START_DATE", startDate)
-            intent.putExtra("FINISH_DATE",finishDate)
-            intent.putExtra("BUDGET",budgetSet)
-            intent.putExtra("ACTUAL_BALANCE",actualBalance)
-            startActivity(intent)
-            finish()
+        val updateBalanceLauncher = registerForActivityResult(
+            androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == RESULT_OK) {
+                // 親の一覧画面（BalanceListActivity）にも更新完了を伝えるようセット
+                setResult(RESULT_OK)
+
+                // 詳細画面自身を閉じて一覧に戻す場合（推奨）
+                finish()
+            }
+        }
+
+        buttonBalanceSheetUpdate.setOnClickListener {
+            val intent = Intent(this, BalanceUpdateActivity::class.java).apply {
+                putExtra("BALANCE_ID", balanceId)
+                putExtra("START_DATE", startDate)
+                putExtra("FINISH_DATE", finishDate)
+                putExtra("BUDGET", budgetSet)
+                putExtra("ACTUAL_BALANCE", actualBalance)
+            }
+            updateBalanceLauncher.launch(intent)
         }
     }
 

@@ -1,6 +1,7 @@
 package com.websarva.wings.android.kakeibo0422
 
 import android.app.DatePickerDialog
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -169,6 +170,11 @@ class BalanceUpdateActivity : BaseActivity(R.layout.activity_balance_update,R.st
                 .update(updatedRecord as Map<String, Any>)
                 .addOnSuccessListener {
                     Toast.makeText(this,"家計簿記録が更新されました",Toast.LENGTH_SHORT).show()
+                    val resultIntent = Intent().apply {
+                        putExtra("IS_DATA_CHANGED", true)
+                    }
+                    setResult(RESULT_OK, resultIntent)
+                    finish()
                 }
                 .addOnFailureListener { e ->
                     Toast.makeText(this,"更新に失敗しました: ${e.message}",Toast.LENGTH_SHORT).show()

@@ -1,6 +1,7 @@
 package com.websarva.wings.android.kakeibo0422
 
 import android.app.DatePickerDialog
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -300,7 +301,12 @@ class PayRecordUpdateActivity : BaseActivity(R.layout.activity_pay_record_update
                 .document(payRecordId)
                 .update(updatedRecord as Map<String, Any>)
                 .addOnSuccessListener {
-                    dialogHelper.dialogOkOnly("","支払い記録が更新されました")
+                    Toast.makeText(this, "支払い記録が更新されました", Toast.LENGTH_SHORT).show()
+                    val resultIntent = Intent().apply {
+                        putExtra("IS_DATA_CHANGED", true)
+                    }
+                    setResult(RESULT_OK, resultIntent)
+                    finish()
                 }
                 .addOnFailureListener { e ->
                     showToast("更新に失敗しました: ${e.message}")
