@@ -108,7 +108,7 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
         buttonPayRecordAdd.setOnClickListener {
             clearBordFocus()
             val (resultPayAmount, payAmountMessage) = validateHelper.payAmountCheck(payAmountEditText)
-            val (resultPayDate, payDateMessage) = validateHelper.payDateCheck(payDateEditText)
+            val (resultPayDate, payDateMessage) = validateHelper.dateCheck(payDateEditText)
             val (resultPayPurpose,payPurposeMessage) = validateHelper.selectedCheck(selectedPayPurposeName)
             val (resultMember,memberMessage) = validateHelper.selectedCheck(selectedMemberName)
             if(!(resultPayAmount && resultPayDate && resultPayPurpose && resultMember)){
@@ -154,7 +154,7 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
                 payDateEditText.setText(formattedDate) // EditTextに日付を設定
 
                 // OKボタンが押されたときにバリデーションを行う
-                val (result, errorMessage) = validateHelper.payDateCheck(payDateEditText)
+                val (result, errorMessage) = validateHelper.dateCheck(payDateEditText)
                 if (!result) {
                     payDateError.error = errorMessage
                 } else {

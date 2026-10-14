@@ -109,25 +109,6 @@ class ValidateHelper(private val context: Context) {
         return Pair(true, "")
     }
 
-    /**
-     * 支払日のバリデーションチェック
-     */
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun payDateCheck(payDateEditText: EditText): Pair<Boolean, String> {
-        val payDateStr = payDateEditText.text.toString()
-        if (!emptyCheck(payDateStr)) {
-            return Pair(false, context.getString(R.string.error_empty))
-        }
-        val maxDate = LocalDate.now()
-        val minDate = LocalDate.of(1900, 1, 1)
-        val format = DateTimeFormatter.ofPattern("yyy/MM/dd")
-        val payDate = LocalDate.parse(payDateStr, format)
-        if (!((payDate.isEqual(maxDate) || payDate.isBefore(maxDate)) && payDate.isAfter(minDate))) {
-            return Pair(false, context.getString(R.string.error_range_pay_date))
-        }
-        return Pair(true, "")
-    }
-
     //日付型のバリデーションチェック
     @RequiresApi(Build.VERSION_CODES.O)
     fun dateCheck(dateEditText: EditText): Pair<Boolean, String> {
