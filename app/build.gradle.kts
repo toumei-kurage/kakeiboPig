@@ -80,5 +80,10 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     implementation(libs.play.services.oss.licenses.v1700)
+
+    // 生体認証 (BiometricPrompt)
+    implementation(libs.androidx.biometric)
+    // 暗号化SharedPreferences (資格情報の安全な保存)
+    implementation(libs.androidx.security.crypto)
 }
 

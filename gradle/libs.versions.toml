@@ -1,5 +1,6 @@
 [versions]
 agp = "8.10.1"
+biometric = "1.2.0-alpha05"
 firebaseBom = "33.3.0"
 firebaseFirestore = "24.0.0"
 kotlin = "1.9.0"
@@ -18,10 +19,13 @@ ksp = "1.9.0-1.0.13"
 playServicesAuthVersion = "21.6.0"
 lifecycle-runtime-ktx = "2.8.7"
 playServicesOssLicensesVersion = "17.1.0"
+securityCrypto = "1.1.0-alpha06"
 
 [libraries]
+androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
+androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }

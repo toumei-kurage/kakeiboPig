@@ -10,11 +10,12 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.addCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
+import com.websarva.wings.android.kakeibo0422.helper.BiometricAuthManager
 import com.websarva.wings.android.kakeibo0422.helper.DialogHelper
 import com.websarva.wings.android.kakeibo0422.helper.ValidateHelper
 
@@ -24,13 +25,19 @@ import com.websarva.wings.android.kakeibo0422.helper.ValidateHelper
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
+    private lateinit var biometricAuthManager: BiometricAuthManager
 
     private val validateHelper = ValidateHelper(this)
     private val dialogHelper = DialogHelper(this)
 
+    private lateinit var emailEditText: EditText
+    private lateinit var passwordEditText: EditText
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
+
+        biometricAuthManager = BiometricAuthManager(this)
 
         // Toolbarを設定
         val toolbar: Toolbar = findViewById(R.id.toolbar)
@@ -38,11 +45,11 @@ class LoginActivity : AppCompatActivity() {
         toolbar.setTitleTextColor(Color.WHITE)
         setSupportActionBar(toolbar)
 
-        //画面部品の取得
+        // 画面部品の取得
         val emailError = findViewById<TextInputLayout>(R.id.email)
-        val emailEditText: EditText = findViewById(R.id.emailEditText)
+        emailEditText = findViewById(R.id.emailEditText)
         val passwordError = findViewById<TextInputLayout>(R.id.password)
-        val passwordEditText: EditText = findViewById(R.id.passwordEditText)
+        passwordEditText = findViewById(R.id.passwordEditText)
         val loginButton: Button = findViewById(R.id.loginButton)
         val signUpButton: Button = findViewById(R.id.SignUpButton)
         val versionNameTextView = findViewById<TextView>(R.id.versionName)
@@ -89,7 +96,7 @@ class LoginActivity : AppCompatActivity() {
 
             val email = emailEditText.text.toString()
             val password = passwordEditText.text.toString()
-            login(email, password)
+            login(email, password, isBiometricFlow = false)
         }
 
         signUpButton.setOnClickListener {
@@ -97,29 +104,111 @@ class LoginActivity : AppCompatActivity() {
             val intent = Intent(this, UserAddActivity::class.java)
             startActivity(intent)
         }
+
+        // 登録済みの場合は起動時に生体認証プロンプトを自動表示
+        if (savedInstanceState == null && biometricAuthManager.isBiometricAuthEnabled()) {
+            checkAndTriggerBiometricLogin()
+        }
     }
 
-    private fun login(email: String, password: String) {
+    /**
+     * 生体認証による自動ログインの開始
+     */
+    private fun checkAndTriggerBiometricLogin() {
+        if (!biometricAuthManager.isFingerprintEnrolled()) {
+            biometricAuthManager.showEnrollPromptDialog(this)
+            return
+        }
+
+        biometricAuthManager.authenticate(
+            activity = this,
+            onSuccess = {
+                val savedEmail = biometricAuthManager.getSavedEmail()
+                val savedPassword = biometricAuthManager.getSavedPassword()
+                if (!savedEmail.isNullOrEmpty() && !savedPassword.isNullOrEmpty()) {
+                    emailEditText.setText(savedEmail)
+                    passwordEditText.setText(savedPassword)
+                    login(savedEmail, savedPassword, isBiometricFlow = true)
+                }
+            },
+            onError = { _, _ -> },
+            onFailed = {
+                Toast.makeText(this, "指紋認証に失敗しました", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+
+    /**
+     * Firebase認証処理
+     */
+    private fun login(email: String, password: String, isBiometricFlow: Boolean) {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    // ログイン成功
                     Toast.makeText(this, "ログイン成功", Toast.LENGTH_SHORT).show()
-                    // 次の画面に遷移する処理
-                    val intent = Intent(this, HomeActivity::class.java)
-                    startActivity(intent)
-                    finish() // このアクティビティを終了して、戻れないようにする
+
+                    // 生体認証フロー、登録済み、または過去に「NO」を選択している場合はスキップ
+                    if (isBiometricFlow || biometricAuthManager.isBiometricAuthEnabled() || biometricAuthManager.isBiometricPromptDismissed()) {
+                        navigateToHome()
+                    } else {
+                        // 初回・生体認証未登録時の登録確認ダイアログ
+                        showBiometricRegistrationDialog(email, password)
+                    }
                 } else {
-                    // ログイン失敗
-                    dialogHelper.dialogOkOnly("ログイン失敗","ユーザーIDまたはパスワードが間違っています。")
+                    dialogHelper.dialogOkOnly("ログイン失敗", "ユーザーIDまたはパスワードが間違っています。")
                 }
             }
     }
 
-    private fun clearBordFocus(){
-        val emailEditText = findViewById<EditText>(R.id.emailEditText)
-        val passwordEditText = findViewById<EditText>(R.id.passwordEditText)
-        // キーボードを閉じる処理
+    /**
+     * 初回ログイン時の生体認証登録ダイアログ
+     */
+    private fun showBiometricRegistrationDialog(email: String, password: String) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.dialog_biometric_register_title)
+            .setMessage(R.string.dialog_biometric_register_message)
+            .setPositiveButton("YES") { _, _ ->
+                if (!biometricAuthManager.isFingerprintEnrolled()) {
+                    // 指紋が端末に未登録の場合は設定画面への誘導ダイアログを表示
+                    biometricAuthManager.showEnrollPromptDialog(this, onCancel = {
+                        navigateToHome()
+                    })
+                } else {
+                    // 指紋プロンプトを表示
+                    biometricAuthManager.authenticate(
+                        activity = this,
+                        onSuccess = {
+                            biometricAuthManager.saveCredentials(email, password)
+                            biometricAuthManager.setBiometricPromptDismissed(true)
+                            Toast.makeText(this, R.string.toast_biometric_registered, Toast.LENGTH_SHORT).show()
+                            navigateToHome()
+                        },
+                        onError = { _, _ ->
+                            navigateToHome()
+                        },
+                        onFailed = {
+                            Toast.makeText(this, "認証に失敗しました", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                }
+            }
+            .setNegativeButton("NO") { dialog, _ ->
+                // 次回以降ダイアログを表示しないようにフラグを保存
+                biometricAuthManager.setBiometricPromptDismissed(true)
+                dialog.dismiss()
+                navigateToHome()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+    private fun navigateToHome() {
+        val intent = Intent(this, HomeActivity::class.java)
+        startActivity(intent)
+        finish()
+    }
+
+    private fun clearBordFocus() {
         val inputMethodManager = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         inputMethodManager.hideSoftInputFromWindow(emailEditText.windowToken, 0)
         inputMethodManager.hideSoftInputFromWindow(passwordEditText.windowToken, 0)

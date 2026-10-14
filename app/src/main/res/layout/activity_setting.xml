@@ -55,6 +55,14 @@
                     android:text="@string/label_round_down_fraction"
                     android:textSize="16sp" />
 
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switchBiometric"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="24dp"
+                    android:text="@string/label_biometric_setting"
+                    android:textSize="16sp" />
+
                 <Button
                     android:id="@+id/buttonSaveSetting"
                     android:layout_width="match_parent"
