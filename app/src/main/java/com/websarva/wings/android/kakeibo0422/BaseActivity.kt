@@ -3,7 +3,6 @@ package com.websarva.wings.android.kakeibo0422
 import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
-import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -25,22 +24,10 @@ abstract class BaseActivity(private val layoutResId: Int, private val titleResId
 
         setupDrawerAndToolbar()
 
-        // 戻るボタンの制御
-        if (this is HomeActivity) {
-            setupDoubleBackToExit()
-        } else if (!isSubActivity()) {
-            // メイン・一覧画面：ドロワーが開いている場合はドロワーを閉じる
-            onBackPressedDispatcher.addCallback(this) {
-                if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-                    drawerLayout.closeDrawer(GravityCompat.START)
-                } else {
-                    isEnabled = false
-                    onBackPressedDispatcher.onBackPressed()
-                    isEnabled = true
-                }
-            }
+        // 端末の戻るボタン（ジェスチャー含む）を完全に無効化
+        onBackPressedDispatcher.addCallback(this) {
+            // 何も実行しないことで戻る操作を消費・無効化
         }
-        // ※サブ画面（isSubActivity() == true）はコールバックを登録せず、標準動作で前画面へ戻る
 
         userID = FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
     }
@@ -62,23 +49,6 @@ abstract class BaseActivity(private val layoutResId: Int, private val titleResId
         }
     }
 
-    /**
-     * ホーム画面専用：2秒以内に2回戻るボタンが押された場合にアプリを終了する
-     */
-    private fun setupDoubleBackToExit() {
-        var backPressedTime: Long = 0
-        onBackPressedDispatcher.addCallback(this) {
-            if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-                drawerLayout.closeDrawer(GravityCompat.START)
-            } else if (System.currentTimeMillis() - backPressedTime < 2000) {
-                finish()
-            } else {
-                Toast.makeText(this@BaseActivity, "もう一度押すと終了します", Toast.LENGTH_SHORT).show()
-                backPressedTime = System.currentTimeMillis()
-            }
-        }
-    }
-
     protected fun setupDrawerAndToolbar() {
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
@@ -94,7 +64,7 @@ abstract class BaseActivity(private val layoutResId: Int, private val titleResId
             toolbar.setNavigationIcon(R.drawable.ic_arrow_back)
             // 2. タップ時はドロワーを開かず、前画面に戻る
             toolbar.setNavigationOnClickListener {
-                onBackPressedDispatcher.onBackPressed()
+                finish() // 画面上部の戻る矢印はアプリUIのため、画面を閉じる処理を直接呼ぶ
             }
             // 3. 誤スワイプでドロワーが開かないようにロック
             drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
@@ -117,7 +87,7 @@ abstract class BaseActivity(private val layoutResId: Int, private val titleResId
         return when (item.itemId) {
             android.R.id.home -> {
                 if (isSubActivity()) {
-                    onBackPressedDispatcher.onBackPressed()
+                    finish()
                 } else {
                     drawerLayout.openDrawer(GravityCompat.START)
                 }

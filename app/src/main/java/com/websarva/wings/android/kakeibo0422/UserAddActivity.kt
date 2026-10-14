@@ -33,6 +33,11 @@ class UserAddActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_add)
 
+        // 端末の戻るボタンを無効化
+        onBackPressedDispatcher.addCallback(this) {
+            // 何もしない
+        }
+
         // ToolbarをActionBarとして設定
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         toolbar.setTitle(R.string.title_register)
@@ -104,7 +109,6 @@ class UserAddActivity : AppCompatActivity() {
                         val intent = Intent(this, LoginActivity::class.java)
                         startActivity(intent)
                         finish() // このアクティビティを終了して、戻れないようにする
-
                     } else {
                         // エラー処理
                         dialogHelper.dialogOkOnly("","登録に失敗しました")
@@ -113,7 +117,7 @@ class UserAddActivity : AppCompatActivity() {
         }
     }
 
-    // 戻るアイコンがタップされた時の処理
+    // 画面上部の戻るアイコンがタップされた時の処理（端末の戻るキーとは別扱い）
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
@@ -123,7 +127,6 @@ class UserAddActivity : AppCompatActivity() {
             else -> super.onOptionsItemSelected(item)
         }
     }
-
 
     private fun clearBordFocus() {
         val emailEditText = findViewById<EditText>(R.id.emailEditText)
