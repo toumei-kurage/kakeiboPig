@@ -13,7 +13,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.websarva.wings.android.kakeibo0422.R
-import androidx.core.content.edit
 
 class BiometricAuthManager(private val context: Context) {
 
@@ -33,41 +32,20 @@ class BiometricAuthManager(private val context: Context) {
         private const val KEY_IS_BIOMETRIC_ENABLED = "key_is_biometric_enabled"
         private const val KEY_SAVED_EMAIL = "key_saved_email"
         private const val KEY_SAVED_PASSWORD = "key_saved_password"
-        private const val KEY_BIOMETRIC_PROMPT_DISMISSED = "key_biometric_prompt_dismissed"
+        private const val PREFIX_DISMISSED = "key_dismissed_"
     }
 
-    /**
-     * 初回登録ダイアログで「NO」を選択済み（または非表示対象）か判定
-     */
-    fun isBiometricPromptDismissed(): Boolean {
-        return sharedPreferences.getBoolean(KEY_BIOMETRIC_PROMPT_DISMISSED, false)
-    }
-
-    /**
-     * 初回登録ダイアログのスキップフラグを設定
-     */
-    fun setBiometricPromptDismissed(dismissed: Boolean) {
-        sharedPreferences.edit()
-            .putBoolean(KEY_BIOMETRIC_PROMPT_DISMISSED, dismissed)
-            .apply()
-    }
-    /**
-     * 端末が生体認証に対応し、指紋が登録されているか判定
-     */
     fun canAuthenticateStatus(): Int {
         val biometricManager = BiometricManager.from(context)
         return biometricManager.canAuthenticate(BIOMETRIC_STRONG)
     }
 
-    /**
-     * 端末内に指紋情報が登録されているか
-     */
     fun isFingerprintEnrolled(): Boolean {
         return canAuthenticateStatus() != BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
     }
 
     /**
-     * アプリ内で生体認証ログインが有効化されているか
+     * 端末全体で生体認証ログインが有効か（アプリ起動時の自動ポップアップ表示判定用）
      */
     fun isBiometricAuthEnabled(): Boolean {
         return sharedPreferences.getBoolean(KEY_IS_BIOMETRIC_ENABLED, false) &&
@@ -76,36 +54,56 @@ class BiometricAuthManager(private val context: Context) {
     }
 
     /**
-     * 資格情報の暗号化保存 & 有効化
-     * （SettingActivityからの登録時も含め、登録確認ダイアログスキップフラグも同時にtrueにする）
+     * 指定されたメールアドレスに対して生体認証が有効化されているか
+     */
+    fun isBiometricAuthEnabledFor(email: String): Boolean {
+        return isBiometricAuthEnabled() && getSavedEmail() == email
+    }
+
+    /**
+     * 指定されたメールアドレスで登録確認ダイアログをスキップ（NOを選択済み）しているか
+     */
+    fun isPromptDismissedFor(email: String): Boolean {
+        val key = PREFIX_DISMISSED + email.replace(".", "_")
+        return sharedPreferences.getBoolean(key, false)
+    }
+
+    /**
+     * 指定されたメールアドレスに対するスキップフラグを設定
+     */
+    fun setPromptDismissedFor(email: String, dismissed: Boolean) {
+        val key = PREFIX_DISMISSED + email.replace(".", "_")
+        sharedPreferences.edit()
+            .putBoolean(key, dismissed)
+            .apply()
+    }
+
+    /**
+     * 資格情報を最新のユーザー情報で上書き保存 & 有効化
      */
     fun saveCredentials(email: String, password: String) {
-        sharedPreferences.edit {
-            putBoolean(KEY_IS_BIOMETRIC_ENABLED, true)
-                .putBoolean(KEY_BIOMETRIC_PROMPT_DISMISSED, true)
-                .putString(KEY_SAVED_EMAIL, email)
-                .putString(KEY_SAVED_PASSWORD, password)
-        }
+        setPromptDismissedFor(email, true)
+        sharedPreferences.edit()
+            .putBoolean(KEY_IS_BIOMETRIC_ENABLED, true)
+            .putString(KEY_SAVED_EMAIL, email)
+            .putString(KEY_SAVED_PASSWORD, password)
+            .apply()
     }
 
     /**
      * 保存されている資格情報と生体認証設定を削除
-     * ※ KEY_BIOMETRIC_PROMPT_DISMISSED は保持し、OFFにした後に通常ログインした際ダイアログが再表示されるのを防ぐ
      */
     fun clearCredentials() {
-        sharedPreferences.edit {
-            remove(KEY_IS_BIOMETRIC_ENABLED)
-                .remove(KEY_SAVED_EMAIL)
-                .remove(KEY_SAVED_PASSWORD)
-        }
+        sharedPreferences.edit()
+            .remove(KEY_IS_BIOMETRIC_ENABLED)
+            .remove(KEY_SAVED_EMAIL)
+            .remove(KEY_SAVED_PASSWORD)
+            .apply()
     }
 
     fun getSavedEmail(): String? = sharedPreferences.getString(KEY_SAVED_EMAIL, null)
     fun getSavedPassword(): String? = sharedPreferences.getString(KEY_SAVED_PASSWORD, null)
 
-    /**
-     * 端末設定画面への登録誘導ダイアログを表示
-     */
     fun showEnrollPromptDialog(activity: FragmentActivity, onCancel: () -> Unit = {}) {
         AlertDialog.Builder(activity)
             .setTitle(R.string.dialog_biometric_not_enrolled_title)

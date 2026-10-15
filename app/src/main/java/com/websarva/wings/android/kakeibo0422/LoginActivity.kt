@@ -153,11 +153,24 @@ class LoginActivity : AppCompatActivity() {
                 if (task.isSuccessful) {
                     Toast.makeText(this, "ログイン成功", Toast.LENGTH_SHORT).show()
 
-                    // 生体認証フロー、登録済み、または過去に「NO」を選択している場合はスキップ
-                    if (isBiometricFlow || biometricAuthManager.isBiometricAuthEnabled() || biometricAuthManager.isBiometricPromptDismissed()) {
+                    if (isBiometricFlow) {
+                        navigateToHome()
+                        return@addOnCompleteListener
+                    }
+
+                    val savedEmail = biometricAuthManager.getSavedEmail()
+
+                    if (savedEmail != null && savedEmail != email) {
+                        // 以前と異なるアカウントでログインした場合：最新アカウントへの更新ダイアログを表示
+                        showBiometricSwitchUserDialog(email, password)
+                    } else if (biometricAuthManager.isBiometricAuthEnabledFor(email)) {
+                        // 既にこのアカウントで生体認証が有効
+                        navigateToHome()
+                    } else if (biometricAuthManager.isPromptDismissedFor(email)) {
+                        // このアカウントで「NO」を選択済み
                         navigateToHome()
                     } else {
-                        // 初回・生体認証未登録時の登録確認ダイアログ
+                        // 初回：登録確認ダイアログを表示
                         showBiometricRegistrationDialog(email, password)
                     }
                 } else {
@@ -167,7 +180,50 @@ class LoginActivity : AppCompatActivity() {
     }
 
     /**
-     * 初回ログイン時の生体認証登録ダイアログ
+     * 別アカウント登録済みの状態から最新アカウントへ更新するダイアログ
+     */
+    private fun showBiometricSwitchUserDialog(email: String, password: String) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.dialog_biometric_switch_user_title)
+            .setMessage(getString(R.string.dialog_biometric_switch_user_message, email))
+            .setPositiveButton("YES") { _, _ ->
+                if (!biometricAuthManager.isFingerprintEnrolled()) {
+                    biometricAuthManager.showEnrollPromptDialog(this, onCancel = {
+                        biometricAuthManager.clearCredentials()
+                        navigateToHome()
+                    })
+                } else {
+                    biometricAuthManager.authenticate(
+                        activity = this,
+                        onSuccess = {
+                            // 最新のアカウント（B）で上書き保存
+                            biometricAuthManager.saveCredentials(email, password)
+                            Toast.makeText(this, R.string.toast_biometric_registered, Toast.LENGTH_SHORT).show()
+                            navigateToHome()
+                        },
+                        onError = { _, _ ->
+                            biometricAuthManager.clearCredentials()
+                            navigateToHome()
+                        },
+                        onFailed = {
+                            Toast.makeText(this, "認証に失敗しました", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                }
+            }
+            .setNegativeButton("NO") { dialog, _ ->
+                // NO選択時は旧アカウント（A）の情報で誤ログインされないようクリア
+                biometricAuthManager.clearCredentials()
+                biometricAuthManager.setPromptDismissedFor(email, true)
+                dialog.dismiss()
+                navigateToHome()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+    /**
+     * 初回登録ダイアログ（email単位でのスキップフラグ管理）
      */
     private fun showBiometricRegistrationDialog(email: String, password: String) {
         AlertDialog.Builder(this)
@@ -185,7 +241,6 @@ class LoginActivity : AppCompatActivity() {
                         activity = this,
                         onSuccess = {
                             biometricAuthManager.saveCredentials(email, password)
-                            biometricAuthManager.setBiometricPromptDismissed(true)
                             Toast.makeText(this, R.string.toast_biometric_registered, Toast.LENGTH_SHORT).show()
                             navigateToHome()
                         },
@@ -200,7 +255,7 @@ class LoginActivity : AppCompatActivity() {
             }
             .setNegativeButton("NO") { dialog, _ ->
                 // 次回以降ダイアログを表示しないようにフラグを保存
-                biometricAuthManager.setBiometricPromptDismissed(true)
+                biometricAuthManager.setPromptDismissedFor(email, true)
                 dialog.dismiss()
                 navigateToHome()
             }

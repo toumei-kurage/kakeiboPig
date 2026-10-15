@@ -72,7 +72,6 @@ class PayRecordDetailActivity : BaseActivity(R.layout.activity_pay_record_detail
             intent.putExtra("IS_RECEPT_CHECKED", isReceptChecked)
             intent.putExtra("NOTE", note)
             startActivity(intent)
-            finish()
         }
     }
 
