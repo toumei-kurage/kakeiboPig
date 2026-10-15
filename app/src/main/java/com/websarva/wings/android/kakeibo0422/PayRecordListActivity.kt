@@ -13,13 +13,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.string.title_pay_record_list) {
-    // 画面部品の用意
+    // 画面部品
     private lateinit var recyclerView: RecyclerView
     private lateinit var buttonPayRecordAdd: FloatingActionButton
     private lateinit var buttonRefinement: Button
@@ -32,24 +31,28 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
     private val purposeMap = mutableMapOf<String, String>()
     private val memberMap = mutableMapOf<String, String>()
 
-    // 現在の絞り込み条件を保持（再読み込み用）
+    // Firestoreから取得した全件のインメモリキャッシュ
+    private var allPayRecords: List<PayRecordUiModel> = emptyList()
+
+    // 現在の絞り込み条件（ローカルフィルタ用）
     private var currentMemberId: String? = null
     private var currentStartDate: String? = null
     private var currentFinishDate: String? = null
     private var currentPayDone: String? = null
     private var currentPayPurposeId: String? = null
 
-    // ✅ Activity Result API を使ってコールバックを登録
+    // Activity Result API を使ってコールバックを登録
     @RequiresApi(Build.VERSION_CODES.O)
     private val editPayRecordLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK) {
             val data = result.data
-            // 削除または更新された場合に再読み込み
+            // 削除または更新された場合はリモートから再取得
             if (data?.getBooleanExtra("PAY_RECORD_DELETE", false) == true ||
-                data?.getBooleanExtra("PAY_RECORD_UPDATED", false) == true) {
-                reloadCurrentData()
+                data?.getBooleanExtra("PAY_RECORD_UPDATED", false) == true ||
+                data?.getBooleanExtra("IS_DATA_CHANGED", false) == true) {
+                fetchRecordsFromRemote()
             }
         }
     }
@@ -67,14 +70,13 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
         buttonRefinement = findViewById(R.id.buttonRefinement)
         textViewTotalAmount = findViewById(R.id.textViewTotalAmount)
 
-        // リストビューに区切り線を入れる
+        // リストビューの区切り線
         val itemDecoration = DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
         recyclerView.addItemDecoration(itemDecoration)
 
-        // ListAdapterの定義に合わせてクリックコールバックを渡して初期化
+        // ListAdapterの初期化
         payRecordAdapter = PayRecordAdapter { item ->
-            // タップ時に編集・詳細画面へ遷移
-            val intent = Intent(this, PayRecordUpdateActivity::class.java).apply {
+            val intent = Intent(this, PayRecordDetailActivity::class.java).apply {
                 putExtra("PAY_RECORD_ID", item.id)
                 putExtra("USER_ID", item.userId)
                 putExtra("MEMBER_ID", item.memberId)
@@ -92,18 +94,21 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
         }
         recyclerView.adapter = payRecordAdapter
 
-        // マスタデータ（目的・メンバー）を先読みしてから一覧を取得
+        // マスタデータをロード後にFirestoreから全履歴を取得
         loadMasterDataAndFetchList()
 
-        // 追加画面への遷移（一覧を破棄しないよう finish() は不要）
+        // 支払い登録画面への遷移
         buttonPayRecordAdd.setOnClickListener {
             val intent = Intent(this, PayRecordAddActivity::class.java)
-            startActivity(intent)
-            finish()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                launchEditPayRecord(intent)
+            } else {
+                startActivity(intent)
+            }
         }
 
+        // 絞り込みダイアログの表示
         buttonRefinement.setOnClickListener {
-            // フラグメントを表示
             val fragment = PayRecordListRefinementFragment()
             fragment.show(supportFragmentManager, "PayRecordListRefinementFragment")
         }
@@ -111,23 +116,22 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
 
     override fun onResume() {
         super.onResume()
-        // 新規登録画面から戻ってきた際などに一覧を最新化
-        if (purposeMap.isNotEmpty()) {
-            reloadCurrentData()
+        // 初回ロード完了後に画面復帰した場合はデータを再取得
+        if (purposeMap.isNotEmpty() && memberMap.isNotEmpty()) {
+            fetchRecordsFromRemote()
         }
     }
 
-    // ✅ 他クラスから Activity を起動するためのヘルパー
     @RequiresApi(Build.VERSION_CODES.O)
     fun launchEditPayRecord(intent: Intent) {
         editPayRecordLauncher.launch(intent)
     }
 
     /**
-     * マスタデータ（目的・メンバー）を一括事前ロードし、N+1クエリを防止する
+     * マスタデータ（目的・メンバー）を一括事前ロードし、その後全履歴を取得
      */
     private fun loadMasterDataAndFetchList() {
-        val currentUserId = userID ?: return
+        val currentUserId = userID.takeIf { it.isNotEmpty() } ?: return
 
         // 1. 支払い目的のロード
         firestore.collection("payPurposes")
@@ -149,49 +153,35 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
                             memberMap[doc.id] = doc.getString("member_name") ?: "未設定"
                         }
 
-                        // マスタ準備完了後に初回のデータ取得を実行
-                        applyRefinement(null, null, null, null, null)
+                        // マスタ準備完了後に全件データを取得
+                        fetchRecordsFromRemote()
                     }
                     .addOnFailureListener {
-                        applyRefinement(null, null, null, null, null)
+                        fetchRecordsFromRemote()
                     }
             }
             .addOnFailureListener { exception ->
                 Toast.makeText(this, "マスタデータ取得に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
-                applyRefinement(null, null, null, null, null)
+                fetchRecordsFromRemote()
             }
     }
 
-    fun applyRefinement(memberId: String?, startDate: String?, finishDate: String?, payDone: String?, payPurposeId: String?) {
-        currentMemberId = memberId
-        currentStartDate = startDate
-        currentFinishDate = finishDate
-        currentPayDone = payDone
-        currentPayPurposeId = payPurposeId
-
-        fetchFilterData(memberId, startDate, finishDate, payDone, payPurposeId)
-    }
-
-    private fun reloadCurrentData() {
-        fetchFilterData(currentMemberId, currentStartDate, currentFinishDate, currentPayDone, currentPayPurposeId)
-    }
-
     /**
-     * 非同期でFirestoreから取得し、PayRecordUiModelを生成してListAdapterへ反映
+     * Firestoreからは user_id のみの一致で全件取得（複合インデックス不要）
      */
-    private fun fetchFilterData(memberId: String?, startDate: String?, finishDate: String?, payDoneString: String?, payPurposeId: String?) {
-        val query = createQuery(memberId, startDate, finishDate, payDoneString, payPurposeId)
+    private fun fetchRecordsFromRemote() {
+        val currentUserId = userID.takeIf { it.isNotEmpty() } ?: return
 
-        query.get()
+        firestore.collection("payment_history")
+            .whereEqualTo("user_id", currentUserId)
+            .get()
             .addOnSuccessListener { querySnapshot ->
-                // ✅ 修正点2: PayRecordUiModel のリストを作成
-                val newPayRecordList = mutableListOf<PayRecordUiModel>()
+                val recordList = mutableListOf<PayRecordUiModel>()
 
                 for (document in querySnapshot) {
                     val pPurposeId = document.getString("pay_purpose_id") ?: ""
                     val mId = document.getString("member_id") ?: ""
 
-                    // キャッシュMapから名称を解決
                     val pPurposeName = purposeMap[pPurposeId] ?: "未設定"
 
                     val payRecord = PayRecordUiModel(
@@ -205,12 +195,12 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
                         isReceptChecked = document.getBoolean("is_recept_checked") == true,
                         note = document.getString("note") ?: ""
                     )
-                    newPayRecordList.add(payRecord)
+                    recordList.add(payRecord)
                 }
 
-                // 日付降順ソート
+                // 日付降順にソートしてメモリキャッシュに保存
                 val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
-                newPayRecordList.sortByDescending {
+                allPayRecords = recordList.sortedByDescending {
                     try {
                         dateFormat.parse(it.payDate) ?: Date(0)
                     } catch (e: Exception) {
@@ -218,42 +208,64 @@ class PayRecordListActivity : BaseActivity(R.layout.activity_pay_record_list, R.
                     }
                 }
 
-                // 合計金額の更新
-                val totalAmount = newPayRecordList.sumOf { it.payAmount }
-                textViewTotalAmount.text = "合計金額：" + getString(R.string.formatted_number, totalAmount)
-
-                if (newPayRecordList.isEmpty()) {
-                    Toast.makeText(this, "支払い履歴が登録されていません。", Toast.LENGTH_SHORT).show()
-                }
-
-                // ✅ 修正点3: ListAdapter標準の submitList() を呼んで差分アニメーション更新
-                payRecordAdapter.submitList(newPayRecordList)
+                // 現在の条件でローカルフィルタを実行
+                applyLocalFilter()
             }
             .addOnFailureListener { exception ->
                 Toast.makeText(this, "データ取得に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
-    private fun createQuery(memberId: String?, startDate: String?, finishDate: String?, payDoneString: String?, payPurposeId: String?): Query {
-        val payDone = if (payDoneString != null) (payDoneString == "領収済み") else null
-        var query: Query = firestore.collection("payment_history")
-            .whereEqualTo("user_id", userID)
+    /**
+     * ダイアログからの絞り込み条件を受け取り、ローカルフィルタを実行
+     */
+    fun applyRefinement(memberId: String?, startDate: String?, finishDate: String?, payDone: String?, payPurposeId: String?) {
+        currentMemberId = memberId
+        currentStartDate = startDate
+        currentFinishDate = finishDate
+        currentPayDone = payDone
+        currentPayPurposeId = payPurposeId
 
-        if (memberId != null) {
-            query = query.whereEqualTo("member_id", memberId)
-        }
-        if (payPurposeId != null) {
-            query = query.whereEqualTo("pay_purpose_id", payPurposeId)
-        }
-        if (startDate != null && finishDate != null) {
-            query = query
-                .whereGreaterThanOrEqualTo("payment_date", startDate)
-                .whereLessThanOrEqualTo("payment_date", finishDate)
-        }
-        if (payDone != null) {
-            query = query.whereEqualTo("is_recept_checked", payDone)
+        // ネットワーク通信を行わず、ローカルで即座に絞り込み
+        applyLocalFilter()
+    }
+
+    /**
+     * メモリ上の allPayRecords に対してKotlinコレクション関数でフィルタリング
+     */
+    private fun applyLocalFilter() {
+        val filteredList = allPayRecords.filter { item ->
+            // メンバー絞り込み
+            val matchesMember = currentMemberId == null || item.memberId == currentMemberId
+
+            // 支払い目的絞り込み
+            val matchesPurpose = currentPayPurposeId == null || item.payPurposeId == currentPayPurposeId
+
+            // 期間絞り込み（yyyy/MM/dd 形式のため文字列比較が可能）
+            val matchesStartDate = currentStartDate == null || item.payDate >= currentStartDate!!
+            val matchesFinishDate = currentFinishDate == null || item.payDate <= currentFinishDate!!
+
+            // 領収状態絞り込み
+            val matchesPayDone = when (currentPayDone) {
+                "領収済み" -> item.isReceptChecked
+                "未受領" -> !item.isReceptChecked
+                else -> true
+            }
+
+            matchesMember && matchesPurpose && matchesStartDate && matchesFinishDate && matchesPayDone
         }
 
-        return query
+        // 合計金額の更新
+        val totalAmount = filteredList.sumOf { it.payAmount }
+        textViewTotalAmount.text = "合計金額：" + getString(R.string.formatted_number, totalAmount)
+
+        if (allPayRecords.isNotEmpty() && filteredList.isEmpty()) {
+            Toast.makeText(this, "該当する支払い履歴がありません。", Toast.LENGTH_SHORT).show()
+        } else if (allPayRecords.isEmpty()) {
+            Toast.makeText(this, "支払い履歴が登録されていません。", Toast.LENGTH_SHORT).show()
+        }
+
+        // ListAdapterに差分反映
+        payRecordAdapter.submitList(filteredList)
     }
 }
