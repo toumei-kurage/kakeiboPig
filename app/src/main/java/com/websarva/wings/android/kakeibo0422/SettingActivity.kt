@@ -2,6 +2,7 @@ package com.websarva.wings.android.kakeibo0422
 
 import android.os.Bundle
 import android.text.InputType
+import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
@@ -17,6 +18,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.websarva.wings.android.kakeibo0422.helper.BiometricAuthManager
+import com.websarva.wings.android.kakeibo0422.helper.ValidateHelper
 
 class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_setting) {
 
@@ -27,6 +29,7 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
     private lateinit var buttonSaveSetting: Button
 
     private lateinit var biometricAuthManager: BiometricAuthManager
+    private val validateHelper = ValidateHelper(this)
     private val firestore = FirebaseFirestore.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,6 +51,16 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
         // 現在ログインしているユーザーに紐づく生体認証が有効か判定
         switchBiometric.isChecked = biometricAuthManager.isBiometricAuthEnabledFor(currentUserEmail)
 
+        provisionalBudgetEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                val (result, errorMessage) = validateHelper.payAmountCheck(provisionalBudgetEditText)
+                if (!result) {
+                    provisionalBudgetLayout.error = errorMessage
+                    return@OnFocusChangeListener
+                }
+            }
+        }
+
         switchBiometric.setOnCheckedChangeListener { _, isChecked ->
             if (!switchBiometric.isPressed) return@setOnCheckedChangeListener // ユーザー操作のみ検知
 
@@ -65,6 +78,12 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
 
         buttonSaveSetting.setOnClickListener {
             clearKeyboardFocus()
+            //すべての入力項目のバリデーションチェック
+            val (resultProvisionalBudget: Boolean, provisionalBudgetMsg: String) = validateHelper.payAmountCheck(provisionalBudgetEditText)
+            if (!resultProvisionalBudget) {
+                provisionalBudgetLayout.error = provisionalBudgetMsg
+                return@setOnClickListener
+            }
             saveUserSettings()
         }
     }
