@@ -39,6 +39,7 @@ abstract class BaseActivity(private val layoutResId: Int, private val titleResId
         return when (this) {
             is PayRecordAddActivity,
             is PayRecordUpdateActivity,
+            is PayRecordDetailActivity,
             is MemberAddActivity,
             is MemberUpdateActivity,
             is PayPurposeAddActivity,
@@ -135,6 +136,8 @@ abstract class BaseActivity(private val layoutResId: Int, private val titleResId
         }
 
         startActivity(intent)
+        // ドロワーからの画面切り替え時は遷移元を破棄（バックスタック蓄積を防止）
+        finish()
         drawerLayout.closeDrawer(GravityCompat.START)
         return true
     }
