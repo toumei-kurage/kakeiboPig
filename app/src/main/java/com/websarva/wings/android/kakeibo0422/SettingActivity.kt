@@ -43,8 +43,10 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
         switchBiometric = findViewById(R.id.switchBiometric)
         buttonSaveSetting = findViewById(R.id.buttonSaveSetting)
 
-        // 生体認証の現在の有効状態を反映
-        switchBiometric.isChecked = biometricAuthManager.isBiometricAuthEnabled()
+
+        val currentUserEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
+        // 現在ログインしているユーザーに紐づく生体認証が有効か判定
+        switchBiometric.isChecked = biometricAuthManager.isBiometricAuthEnabledFor(currentUserEmail)
 
         switchBiometric.setOnCheckedChangeListener { _, isChecked ->
             if (!switchBiometric.isPressed) return@setOnCheckedChangeListener // ユーザー操作のみ検知

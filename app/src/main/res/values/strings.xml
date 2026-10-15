@@ -130,4 +130,6 @@
     <string name="dialog_biometric_reauth_message">生体認証を有効にするため、現在のログインパスワードを入力してください。</string>
     <string name="toast_biometric_registered">生体認証を登録しました</string>
     <string name="toast_biometric_disabled">生体認証を無効化し、保存情報を削除しました</string>
+    <string name="dialog_biometric_switch_user_title">生体認証アカウントの更新</string>
+    <string name="dialog_biometric_switch_user_message">別のアカウントの生体認証が登録されています。\nこのアカウント（%1$s）の生体認証に更新しますか？</string>
 </resources>
