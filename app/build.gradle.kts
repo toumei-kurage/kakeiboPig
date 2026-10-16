@@ -23,8 +23,8 @@ android {
         applicationId = "com.websarva.wings.android.kakeibo0422"
         minSdk = 34
         targetSdk = 36
-        versionCode = 11
-        versionName = "1.0.6"
+        versionCode = 12
+        versionName = "1.0.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
