@@ -7,8 +7,10 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
@@ -19,6 +21,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.websarva.wings.android.kakeibo0422.helper.BiometricAuthManager
 import com.websarva.wings.android.kakeibo0422.helper.ValidateHelper
+import com.websarva.wings.android.kakeibo0422.repository.PeriodSetting
+import com.websarva.wings.android.kakeibo0422.repository.SettingRepository
+import kotlinx.coroutines.launch
 
 class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_setting) {
 
@@ -36,6 +41,7 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
     private var initialBudget: Int? = null
     private var initialRoundDown: Boolean? = null
     private var isInitiallyBiometricEnabled: Boolean = false
+    private var initialPeriodSetting: PeriodSetting? = null
 
     // 生体認証の保留状態を管理
     private enum class PendingBiometricState {
@@ -45,6 +51,10 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
     }
     private var pendingBiometricState = PendingBiometricState.NONE
     private var pendingPassword: String? = null
+
+    // SettingActivity 内に追加するフィールドとメソッド
+    private val settingRepository = SettingRepository()
+    private var periodSetting = PeriodSetting()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -102,6 +112,8 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
 
         loadUserSettings()
 
+        setupPeriodSetting()
+
         buttonSaveSetting.setOnClickListener {
             clearKeyboardFocus()
 
@@ -123,7 +135,8 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
             val currentRoundDown = switchRoundDown.isChecked
 
             // 差分検知（Firestore側、ローカル生体認証側）
-            val isFirestoreChanged = (initialBudget != currentBudget) || (initialRoundDown != currentRoundDown)
+            val isPeriodChanged = (initialPeriodSetting != periodSetting)
+            val isFirestoreChanged = (initialBudget != currentBudget) || (initialRoundDown != currentRoundDown) || isPeriodChanged
             val isBiometricChanged = (pendingBiometricState != PendingBiometricState.NONE)
 
             if (!isFirestoreChanged && !isBiometricChanged) {
@@ -258,6 +271,8 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
             "user_id" to userID,
             "provisional_budget" to budget,
             "round_down_fraction" to roundDown,
+            "period_start_day" to periodSetting.startDay,
+            "period_finish_day" to periodSetting.finishDay,
             "updated_at" to FieldValue.serverTimestamp()
         )
 
@@ -268,6 +283,7 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
                 // Firestore保存成功に合わせて初期値スナップショットを更新
                 initialBudget = budget
                 initialRoundDown = roundDown
+                initialPeriodSetting = periodSetting
 
                 // 生体認証の保留変更を一括コミット
                 commitBiometricSettings()
@@ -308,5 +324,54 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(provisionalBudgetEditText.windowToken, 0)
         provisionalBudgetEditText.clearFocus()
+    }
+
+    private fun setupPeriodSetting() {
+        val layoutPeriod = findViewById<View>(R.id.layoutPeriodSetting)
+        val tvSummary = findViewById<TextView>(R.id.tvPeriodSummary)
+
+        // 設定値の読み込み
+        lifecycleScope.launch {
+            periodSetting = settingRepository.getPeriodSetting()
+            initialPeriodSetting = periodSetting
+            updatePeriodSummaryText(tvSummary)
+        }
+
+        layoutPeriod.setOnClickListener {
+            showPeriodPickerDialog(tvSummary)
+        }
+    }
+
+    private fun updatePeriodSummaryText(tvSummary: TextView) {
+        tvSummary.text = "毎月 ${periodSetting.startDay} 日 〜 毎月 ${periodSetting.finishDay} 日"
+    }
+
+    private fun showPeriodPickerDialog(tvSummary: TextView) {
+        val days = (1..31).map { "${it}日" }.toTypedArray()
+        var tempStartDay = periodSetting.startDay
+        var tempFinishDay = periodSetting.finishDay
+
+        // 1. まず開始日を選択
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setTitle("家計簿の開始日を選択")
+            .setSingleChoiceItems(days, tempStartDay - 1) { _, which ->
+                tempStartDay = which + 1
+            }
+            .setPositiveButton("次へ（終了日を設定）") { _, _ ->
+                // 2. 続けて終了日を選択
+                com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                    .setTitle("家計簿の終了日を選択")
+                    .setSingleChoiceItems(days, tempFinishDay - 1) { _, which ->
+                        tempFinishDay = which + 1
+                    }
+                    .setPositiveButton("決定") { _, _ ->
+                        periodSetting = PeriodSetting(tempStartDay, tempFinishDay)
+                        updatePeriodSummaryText(tvSummary)
+                    }
+                    .setNegativeButton("戻る", null)
+                    .show()
+            }
+            .setNegativeButton("キャンセル", null)
+            .show()
     }
 }

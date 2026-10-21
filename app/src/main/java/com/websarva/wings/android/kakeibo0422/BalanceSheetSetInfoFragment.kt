@@ -15,6 +15,14 @@ import com.google.android.material.textfield.TextInputLayout
 import com.websarva.wings.android.kakeibo0422.helper.ValidateHelper
 import java.util.Calendar
 import android.view.ViewGroup
+import androidx.lifecycle.lifecycleScope
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import com.websarva.wings.android.kakeibo0422.repository.SettingRepository
+import com.websarva.wings.android.kakeibo0422.util.DatePeriodUtil
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class BalanceSheetSetInfoFragment : DialogFragment() {
     private lateinit var budgetError:TextInputLayout
@@ -109,6 +117,8 @@ class BalanceSheetSetInfoFragment : DialogFragment() {
             dismiss()
         }
 
+        loadAndSetDefaultPeriod()
+
         return view
     }
 
@@ -153,4 +163,61 @@ class BalanceSheetSetInfoFragment : DialogFragment() {
         finishDateEditText.clearFocus()
         budgetEditText.clearFocus()
     }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun loadAndSetDefaultPeriod() {
+        val settingRepository = SettingRepository()
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val setting = settingRepository.getPeriodSetting()
+
+            // 最新の家計簿の終了日を取得
+            val latestFinishDate = getLatestBalanceFinishDate(userId)
+
+            val (startDate, finishDate) = if (!latestFinishDate.isNullOrEmpty()) {
+                // 最新家計簿の終了日以降で被らない期間を計算
+                DatePeriodUtil.calculateNextPeriodAfter(
+                    latestFinishDateStr = latestFinishDate,
+                    startDay = setting.startDay,
+                    finishDay = setting.finishDay
+                )
+            } else {
+                // 家計簿が存在しない場合は現在日を基準に計算
+                DatePeriodUtil.calculateCurrentPeriod(
+                    startDay = setting.startDay,
+                    finishDay = setting.finishDay
+                )
+            }
+
+            // 空欄の場合のみデフォルト値をセット（ユーザーが手入力した内容を阻害しない）
+            if (startDateEditText.text.isNullOrEmpty()) {
+                startDateEditText.setText(startDate)
+            }
+            if (finishDateEditText.text.isNullOrEmpty()) {
+                finishDateEditText.setText(finishDate)
+            }
+        }
+    }
+
+    private suspend fun getLatestBalanceFinishDate(userId: String): String? {
+        if (userId.isEmpty()) return null
+        return try {
+            val snapshot = FirebaseFirestore.getInstance().collection("balance_history")
+                .whereEqualTo("user_id", userId)
+                .orderBy("start_date", Query.Direction.DESCENDING)
+                .limit(1)
+                .get()
+                .await()
+
+            if (!snapshot.isEmpty) {
+                snapshot.documents.first().getString("finish_date")
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
 }
