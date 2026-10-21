@@ -45,7 +45,10 @@ abstract class BaseActivity(private val layoutResId: Int, private val titleResId
             is PayPurposeAddActivity,
             is PayPurposeUpdateActivity,
             is BalanceUpdateActivity,
-            is BalanceDetailActivity-> true
+            is BalanceDetailActivity,
+            is RecurringPaymentUpdateActivity,
+            is RecurringPaymentAddActivity,
+            is RecurringPaymentListActivity -> true
             else -> false
         }
     }

@@ -132,4 +132,14 @@
     <string name="toast_biometric_disabled">生体認証を無効化し、保存情報を削除しました</string>
     <string name="dialog_biometric_switch_user_title">生体認証アカウントの更新</string>
     <string name="dialog_biometric_switch_user_message">別のアカウントの生体認証が登録されています。\nこのアカウント（%1$s）の生体認証に更新しますか？</string>
+
+    <!-- 固定費管理 -->
+    <string name="title_recurring_payment_list">固定費一覧</string>
+    <string name="title_recurring_payment_add">固定費の登録</string>
+    <string name="title_recurring_payment_edit">固定費の編集</string>
+    <string name="label_recurring_payment_setting">固定費の設定</string>
+    <string name="summary_recurring_payment_setting">家計簿作成時に自動登録する固定費を管理します</string>
+    <string name="hint_recurring_payment_day">毎月の支払日を選択（1〜31日）</string>
+    <string name="error_range_recurring_day">支払日を選択してください</string>
+    <string name="recurring_payment_day_format">毎月%1$d日</string>
 </resources>

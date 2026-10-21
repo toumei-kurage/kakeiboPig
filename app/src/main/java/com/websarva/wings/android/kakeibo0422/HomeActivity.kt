@@ -12,6 +12,7 @@ import androidx.annotation.RequiresApi
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
 import com.websarva.wings.android.kakeibo0422.helper.ValidateHelper
+import com.websarva.wings.android.kakeibo0422.util.DatePeriodUtil
 
 class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
     // 画面部品の用意
@@ -233,37 +234,98 @@ class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
 
     // Firestore に家計簿データを保存
     private fun saveBalanceHistory() {
-        val actualBalance = if(validateHelper.actualBalanceCheck(actualBalanceEditText).first) actualBalanceEditText.text.toString().toInt() else 0
-        val balanceHistory = hashMapOf(
-            "user_id" to userID,
-            "start_date" to startDateString,
-            "finish_date" to finishDateString,
-            "budget" to budgetSet.toInt(),
-            "actual_balance" to actualBalance
-        )
+        buttonBalanceSheetAdd.isEnabled = false // 連打防止
 
-        // Firestore で既に同じ期間のデータが存在するか確認
+        val actualBalance = if (validateHelper.actualBalanceCheck(actualBalanceEditText).first) {
+            actualBalanceEditText.text.toString().toInt()
+        } else {
+            0
+        }
+
+        // 1. 同一期間の家計簿が既に存在するか確認
         firestore.collection("balance_history")
             .whereEqualTo("user_id", userID)
             .whereEqualTo("start_date", startDateString)
             .whereEqualTo("finish_date", finishDateString)
             .get()
             .addOnSuccessListener { querySnapshot ->
-                if (querySnapshot.isEmpty) {
-                    firestore.collection("balance_history")
-                        .add(balanceHistory)
-                        .addOnSuccessListener {
-                            Toast.makeText(this, "家計簿が追加されました", Toast.LENGTH_SHORT).show()
-                        }
-                        .addOnFailureListener { exception ->
-                            Toast.makeText(this, "データベースに挿入できませんでした: ${exception.message}", Toast.LENGTH_SHORT).show()
-                        }
-                } else {
-                    Toast.makeText(this, "この期間は既に存在します", Toast.LENGTH_SHORT).show()
+                if (!querySnapshot.isEmpty) {
+                    Toast.makeText(this, "この期間の家計簿は既に存在します", Toast.LENGTH_SHORT).show()
+                    buttonBalanceSheetAdd.isEnabled = true
+                    return@addOnSuccessListener
                 }
+
+                // 2. 固定費マスタ（recurring_payments）を取得
+                firestore.collection("recurring_payments")
+                    .whereEqualTo("user_id", userID)
+                    .get()
+                    .addOnSuccessListener { recurringSnapshot ->
+                        val batch = firestore.batch()
+
+                        // A. 家計簿ドキュメントの作成準備
+                        val balanceDocRef = firestore.collection("balance_history").document()
+                        val balanceData = hashMapOf(
+                            "user_id" to userID,
+                            "start_date" to startDateString,
+                            "finish_date" to finishDateString,
+                            "budget" to budgetSet.toInt(),
+                            "actual_balance" to actualBalance,
+                            "created_at" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+                        )
+                        batch.set(balanceDocRef, balanceData)
+
+                        // B. 各固定費を payment_history に展開して追加
+                        for (doc in recurringSnapshot) {
+                            val paymentDay = (doc.getLong("payment_day") ?: 1L).toInt()
+                            val mappedPayDate = DatePeriodUtil.resolveRecurringPaymentDate(
+                                startDateStr = startDateString,
+                                finishDateStr = finishDateString,
+                                paymentDay = paymentDay
+                            )
+
+                            val payRecordDocRef = firestore.collection("payment_history").document()
+                            val payRecordData = hashMapOf(
+                                "user_id" to userID,
+                                "member_id" to (doc.getString("member_id") ?: ""),
+                                "pay_purpose_id" to (doc.getString("pay_purpose_id") ?: ""),
+                                "payment_date" to mappedPayDate,
+                                "amount" to ((doc.getLong("amount") ?: 0L).toInt()),
+                                "is_recept_checked" to (doc.getBoolean("is_recept_checked") ?: false),
+                                "note" to (doc.getString("note") ?: ""),
+                                "is_recurring" to true,       // 固定費から自動登録されたレコードであることを記録
+                                "recurring_id" to doc.id     // 生成元の固定費マスタID
+                            )
+                            batch.set(payRecordDocRef, payRecordData)
+                        }
+
+                        // C. アトミックに一括コミット
+                        batch.commit()
+                            .addOnSuccessListener {
+                                val recurringCount = recurringSnapshot.size()
+                                val message = if (recurringCount > 0) {
+                                    "家計簿を登録し、固定費（${recurringCount}件）を自動追加しました"
+                                } else {
+                                    "家計簿が追加されました"
+                                }
+                                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+
+                                // UI（支出合計や残高）を再計算・更新
+                                updateUI()
+                                buttonBalanceSheetAdd.isEnabled = true
+                            }
+                            .addOnFailureListener { e ->
+                                Toast.makeText(this, "家計簿の登録に失敗しました: ${e.message}", Toast.LENGTH_SHORT).show()
+                                buttonBalanceSheetAdd.isEnabled = true
+                            }
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(this, "固定費マスタの取得に失敗しました: ${e.message}", Toast.LENGTH_SHORT).show()
+                        buttonBalanceSheetAdd.isEnabled = true
+                    }
             }
             .addOnFailureListener { exception ->
                 Toast.makeText(this, "データベースの確認に失敗しました: ${exception.message}", Toast.LENGTH_SHORT).show()
+                buttonBalanceSheetAdd.isEnabled = true
             }
     }
 

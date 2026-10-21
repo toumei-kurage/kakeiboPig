@@ -82,4 +82,42 @@ object DatePeriodUtil {
             calculateCurrentPeriod(startDay, finishDay, isFinishNextMonth)
         }
     }
+
+    /**
+     * 家計簿期間（startDateStr 〜 finishDateStr）の中で、
+     * 固定費の支払日（paymentDay: 1〜31）に合致する具体的な日付（yyyy/MM/dd）を算出する。
+     * 該当月にその日が存在しない場合は月末日に丸める。
+     */
+    fun resolveRecurringPaymentDate(
+        startDateStr: String,
+        finishDateStr: String,
+        paymentDay: Int
+    ): String {
+        return try {
+            val start = LocalDate.parse(startDateStr, formatter)
+            val finish = LocalDate.parse(finishDateStr, formatter)
+            val safeDay = paymentDay.coerceIn(1, 31)
+
+            // 開始月の候補日
+            val startMonthTargetDay = min(safeDay, start.lengthOfMonth())
+            val candidateStartMonth = start.withDayOfMonth(startMonthTargetDay)
+
+            if (!candidateStartMonth.isBefore(start) && !candidateStartMonth.isAfter(finish)) {
+                return candidateStartMonth.format(formatter)
+            }
+
+            // 終了月の候補日
+            val finishMonthTargetDay = min(safeDay, finish.lengthOfMonth())
+            val candidateFinishMonth = finish.withDayOfMonth(finishMonthTargetDay)
+
+            if (!candidateFinishMonth.isBefore(start) && !candidateFinishMonth.isAfter(finish)) {
+                return candidateFinishMonth.format(formatter)
+            }
+
+            // 万が一範囲から外れた場合は開始日当日をフォールバックとする
+            startDateStr
+        } catch (e: Exception) {
+            startDateStr
+        }
+    }
 }

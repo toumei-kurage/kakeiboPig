@@ -1,5 +1,6 @@
 package com.websarva.wings.android.kakeibo0422
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
 import android.view.View
@@ -152,6 +153,12 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
                 commitBiometricSettings()
                 Toast.makeText(this, "設定を保存しました", Toast.LENGTH_SHORT).show()
             }
+        }
+
+        val layoutRecurring = findViewById<View>(R.id.layoutRecurringPaymentSetting)
+        layoutRecurring.setOnClickListener {
+            val intent = Intent(this, RecurringPaymentListActivity::class.java)
+            startActivity(intent)
         }
     }
 
