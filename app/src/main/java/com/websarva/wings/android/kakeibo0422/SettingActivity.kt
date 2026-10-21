@@ -32,6 +32,20 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
     private val validateHelper = ValidateHelper(this)
     private val firestore = FirebaseFirestore.getInstance()
 
+    // 初期値保持用（差分検知用）
+    private var initialBudget: Int? = null
+    private var initialRoundDown: Boolean? = null
+    private var isInitiallyBiometricEnabled: Boolean = false
+
+    // 生体認証の保留状態を管理
+    private enum class PendingBiometricState {
+        NONE,    // 変更なし
+        ENABLE,  // 保存ボタン押下時に有効化
+        DISABLE  // 保存ボタン押下時に無効化
+    }
+    private var pendingBiometricState = PendingBiometricState.NONE
+    private var pendingPassword: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_setting)
@@ -46,10 +60,10 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
         switchBiometric = findViewById(R.id.switchBiometric)
         buttonSaveSetting = findViewById(R.id.buttonSaveSetting)
 
-
         val currentUserEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
         // 現在ログインしているユーザーに紐づく生体認証が有効か判定
-        switchBiometric.isChecked = biometricAuthManager.isBiometricAuthEnabledFor(currentUserEmail)
+        isInitiallyBiometricEnabled = biometricAuthManager.isBiometricAuthEnabledFor(currentUserEmail)
+        switchBiometric.isChecked = isInitiallyBiometricEnabled
 
         provisionalBudgetEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
@@ -65,12 +79,24 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
             if (!switchBiometric.isPressed) return@setOnCheckedChangeListener // ユーザー操作のみ検知
 
             if (isChecked) {
-                // 生体認証をONにする処理
-                handleEnableBiometric()
+                if (isInitiallyBiometricEnabled) {
+                    // 元々ONだった状態に戻した場合は変更なし
+                    pendingBiometricState = PendingBiometricState.NONE
+                    pendingPassword = null
+                } else {
+                    // OFF -> ON の認証準備
+                    handleEnableBiometric()
+                }
             } else {
-                // 生体認証をOFF（削除）にする処理
-                biometricAuthManager.clearCredentials()
-                Toast.makeText(this, R.string.toast_biometric_disabled, Toast.LENGTH_SHORT).show()
+                if (!isInitiallyBiometricEnabled) {
+                    // 元々OFFだった状態に戻した場合は変更なし
+                    pendingBiometricState = PendingBiometricState.NONE
+                    pendingPassword = null
+                } else {
+                    // ON -> OFF の保留
+                    pendingBiometricState = PendingBiometricState.DISABLE
+                    pendingPassword = null
+                }
             }
         }
 
@@ -78,18 +104,46 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
 
         buttonSaveSetting.setOnClickListener {
             clearKeyboardFocus()
+
+            val budgetText = provisionalBudgetEditText.text.toString().trim()
+            if (budgetText.isEmpty()) {
+                provisionalBudgetLayout.error = "仮予算を入力してください。"
+                return@setOnClickListener
+            }
+
             //すべての入力項目のバリデーションチェック
             val (resultProvisionalBudget: Boolean, provisionalBudgetMsg: String) = validateHelper.payAmountCheck(provisionalBudgetEditText)
             if (!resultProvisionalBudget) {
                 provisionalBudgetLayout.error = provisionalBudgetMsg
                 return@setOnClickListener
             }
-            saveUserSettings()
+            provisionalBudgetLayout.error = null
+
+            val currentBudget = budgetText.toIntOrNull() ?: 0
+            val currentRoundDown = switchRoundDown.isChecked
+
+            // 差分検知（Firestore側、ローカル生体認証側）
+            val isFirestoreChanged = (initialBudget != currentBudget) || (initialRoundDown != currentRoundDown)
+            val isBiometricChanged = (pendingBiometricState != PendingBiometricState.NONE)
+
+            if (!isFirestoreChanged && !isBiometricChanged) {
+                Toast.makeText(this, "変更はありません", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (isFirestoreChanged) {
+                // Firestoreに変更がある場合は通信を実行（生体認証の変更も完了時にコミット）
+                saveFirestoreUserSettings(currentBudget, currentRoundDown)
+            } else {
+                // 生体認証のみ変更された場合は通信を行わずローカルのみ更新
+                commitBiometricSettings()
+                Toast.makeText(this, "設定を保存しました", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
     /**
-     * 生体認証の再有効化処理
+     * 生体認証の事前検証処理（保存は行わず、認証成功時に保留状態とする）
      */
     private fun handleEnableBiometric() {
         if (!biometricAuthManager.isFingerprintEnrolled()) {
@@ -140,17 +194,21 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
                             title = getString(R.string.biometric_prompt_title),
                             subtitle = getString(R.string.biometric_prompt_subtitle),
                             onSuccess = {
-                                // 資格情報の暗号化保存とフラグ更新
-                                biometricAuthManager.saveCredentials(email, enteredPassword)
+                                // 認証成功：保存は行わず保留状態にする
+                                pendingBiometricState = PendingBiometricState.ENABLE
+                                pendingPassword = enteredPassword
                                 switchBiometric.isChecked = true
-                                Toast.makeText(this, R.string.toast_biometric_registered, Toast.LENGTH_SHORT).show()
                             },
                             onError = { _, _ ->
                                 switchBiometric.isChecked = false
+                                pendingBiometricState = PendingBiometricState.NONE
+                                pendingPassword = null
                             },
                             onFailed = {
                                 Toast.makeText(this, "認証に失敗しました", Toast.LENGTH_SHORT).show()
                                 switchBiometric.isChecked = false
+                                pendingBiometricState = PendingBiometricState.NONE
+                                pendingPassword = null
                             }
                         )
                     }
@@ -177,10 +235,17 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
             .get()
             .addOnSuccessListener { document ->
                 if (document != null && document.exists()) {
-                    val budget = document.getLong("provisional_budget") ?: 0
+                    val budget = (document.getLong("provisional_budget") ?: 0).toInt()
                     val roundDown = document.getBoolean("round_down_fraction") ?: false
                     provisionalBudgetEditText.setText(budget.toString())
                     switchRoundDown.isChecked = roundDown
+
+                    // 取得した初期値を保持
+                    initialBudget = budget
+                    initialRoundDown = roundDown
+                } else {
+                    initialBudget = 0
+                    initialRoundDown = false
                 }
             }
             .addOnFailureListener { e ->
@@ -188,17 +253,7 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
             }
     }
 
-    private fun saveUserSettings() {
-        val budgetText = provisionalBudgetEditText.text.toString().trim()
-        if (budgetText.isEmpty()) {
-            provisionalBudgetLayout.error = "仮予算を入力してください。"
-            return
-        }
-        provisionalBudgetLayout.error = null
-
-        val budget = budgetText.toIntOrNull() ?: 0
-        val roundDown = switchRoundDown.isChecked
-
+    private fun saveFirestoreUserSettings(budget: Int, roundDown: Boolean) {
         val settingData = hashMapOf(
             "user_id" to userID,
             "provisional_budget" to budget,
@@ -210,11 +265,43 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
             .document(userID)
             .set(settingData, SetOptions.merge())
             .addOnSuccessListener {
+                // Firestore保存成功に合わせて初期値スナップショットを更新
+                initialBudget = budget
+                initialRoundDown = roundDown
+
+                // 生体認証の保留変更を一括コミット
+                commitBiometricSettings()
                 Toast.makeText(this, "設定を保存しました", Toast.LENGTH_SHORT).show()
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "設定の保存に失敗しました: ${e.message}", Toast.LENGTH_SHORT).show()
             }
+    }
+
+    /**
+     * 保留されている生体認証設定を確定する
+     */
+    private fun commitBiometricSettings() {
+        val currentUserEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
+        when (pendingBiometricState) {
+            PendingBiometricState.ENABLE -> {
+                val password = pendingPassword
+                if (!password.isNullOrEmpty() && currentUserEmail.isNotEmpty()) {
+                    biometricAuthManager.saveCredentials(currentUserEmail, password)
+                    isInitiallyBiometricEnabled = true
+                }
+            }
+            PendingBiometricState.DISABLE -> {
+                biometricAuthManager.clearCredentials()
+                isInitiallyBiometricEnabled = false
+            }
+            PendingBiometricState.NONE -> {
+                // 変更なし
+            }
+        }
+        // コミット完了後は保留状態をリセット
+        pendingBiometricState = PendingBiometricState.NONE
+        pendingPassword = null
     }
 
     private fun clearKeyboardFocus() {
