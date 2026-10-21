@@ -273,6 +273,7 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
             "round_down_fraction" to roundDown,
             "period_start_day" to periodSetting.startDay,
             "period_finish_day" to periodSetting.finishDay,
+            "is_finish_next_month" to periodSetting.isFinishNextMonth,
             "updated_at" to FieldValue.serverTimestamp()
         )
 
@@ -280,12 +281,10 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
             .document(userID)
             .set(settingData, SetOptions.merge())
             .addOnSuccessListener {
-                // Firestore保存成功に合わせて初期値スナップショットを更新
                 initialBudget = budget
                 initialRoundDown = roundDown
                 initialPeriodSetting = periodSetting
 
-                // 生体認証の保留変更を一括コミット
                 commitBiometricSettings()
                 Toast.makeText(this, "設定を保存しました", Toast.LENGTH_SHORT).show()
             }
@@ -343,30 +342,46 @@ class SettingActivity : BaseActivity(R.layout.activity_setting, R.string.title_s
     }
 
     private fun updatePeriodSummaryText(tvSummary: TextView) {
-        tvSummary.text = "毎月 ${periodSetting.startDay} 日 〜 毎月 ${periodSetting.finishDay} 日"
+        val monthPrefix = if (periodSetting.isFinishNextMonth) "翌月 " else "当月 "
+        tvSummary.text = "毎月 ${periodSetting.startDay} 日 〜 ${monthPrefix}${periodSetting.finishDay} 日"
     }
 
     private fun showPeriodPickerDialog(tvSummary: TextView) {
         val days = (1..31).map { "${it}日" }.toTypedArray()
         var tempStartDay = periodSetting.startDay
         var tempFinishDay = periodSetting.finishDay
+        var tempIsFinishNextMonth = periodSetting.isFinishNextMonth
 
-        // 1. まず開始日を選択
+        // ステップ1: 開始日を選択
         com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
-            .setTitle("家計簿の開始日を選択")
+            .setTitle("家計簿の【開始日】を選択")
             .setSingleChoiceItems(days, tempStartDay - 1) { _, which ->
                 tempStartDay = which + 1
             }
-            .setPositiveButton("次へ（終了日を設定）") { _, _ ->
-                // 2. 続けて終了日を選択
+            .setPositiveButton("次へ") { _, _ ->
+                // ステップ2: 終了日は「当月」か「翌月」かを選択
+                val monthOptions = arrayOf("当月（開始日と同じ月）", "翌月（開始日の次の月）")
+                val initialMonthIndex = if (tempIsFinishNextMonth) 1 else 0
+
                 com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
-                    .setTitle("家計簿の終了日を選択")
-                    .setSingleChoiceItems(days, tempFinishDay - 1) { _, which ->
-                        tempFinishDay = which + 1
+                    .setTitle("【終了日】の月を選択")
+                    .setSingleChoiceItems(monthOptions, initialMonthIndex) { _, which ->
+                        tempIsFinishNextMonth = (which == 1)
                     }
-                    .setPositiveButton("決定") { _, _ ->
-                        periodSetting = PeriodSetting(tempStartDay, tempFinishDay)
-                        updatePeriodSummaryText(tvSummary)
+                    .setPositiveButton("次へ") { _, _ ->
+                        // ステップ3: 終了日を選択
+                        val targetMonthText = if (tempIsFinishNextMonth) "翌月" else "当月"
+                        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                            .setTitle("家計簿の【終了日（${targetMonthText}）】を選択")
+                            .setSingleChoiceItems(days, tempFinishDay - 1) { _, which ->
+                                tempFinishDay = which + 1
+                            }
+                            .setPositiveButton("決定") { _, _ ->
+                                periodSetting = PeriodSetting(tempStartDay, tempFinishDay, tempIsFinishNextMonth)
+                                updatePeriodSummaryText(tvSummary)
+                            }
+                            .setNegativeButton("戻る", null)
+                            .show()
                     }
                     .setNegativeButton("戻る", null)
                     .show()

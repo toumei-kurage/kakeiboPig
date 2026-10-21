@@ -8,11 +8,12 @@ object DatePeriodUtil {
     private val formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd")
 
     /**
-     * 開始日(1〜31)と終了日(1〜31)に基づき、指定日付を基準とした家計簿期間を算出する
+     * 開始日(1〜31)、終了日(1〜31)、および終了月が翌月かどうかに基づき期間を算出する
      */
     fun calculateCurrentPeriod(
         startDay: Int,
         finishDay: Int,
+        isFinishNextMonth: Boolean = (startDay > finishDay),
         baseDate: LocalDate = LocalDate.now()
     ): Pair<String, String> {
         val safeStartDay = startDay.coerceIn(1, 31)
@@ -21,8 +22,8 @@ object DatePeriodUtil {
         val startDate: LocalDate
         val finishDate: LocalDate
 
-        if (safeStartDay > safeFinishDay) {
-            // パターンA: 月またぎ（例: 25日 〜 翌月24日）
+        if (isFinishNextMonth) {
+            // パターンA: 翌月終了（例: 10/27 〜 11/28、または 10/25 〜 11/24）
             if (baseDate.dayOfMonth >= safeStartDay) {
                 // 当月開始 〜 翌月終了
                 val validStart = min(safeStartDay, baseDate.lengthOfMonth())
@@ -41,7 +42,7 @@ object DatePeriodUtil {
                 finishDate = baseDate.withDayOfMonth(validFinish)
             }
         } else {
-            // パターンB: 同月内（例: 1日 〜 31日、または 1日 〜 25日）
+            // パターンB: 同月内終了（例: 10/01 〜 10/31）
             val validStart = min(safeStartDay, baseDate.lengthOfMonth())
             val validFinish = min(safeFinishDay, baseDate.lengthOfMonth())
 
@@ -58,27 +59,27 @@ object DatePeriodUtil {
     fun calculateNextPeriodAfter(
         latestFinishDateStr: String,
         startDay: Int,
-        finishDay: Int
+        finishDay: Int,
+        isFinishNextMonth: Boolean = (startDay > finishDay)
     ): Pair<String, String> {
         return try {
             val latestFinishDate = LocalDate.parse(latestFinishDateStr, formatter)
             val nextDay = latestFinishDate.plusDays(1)
 
-            // 終了日の翌日を基準に期間を計算
-            var period = calculateCurrentPeriod(startDay, finishDay, nextDay)
+            var period = calculateCurrentPeriod(startDay, finishDay, isFinishNextMonth, nextDay)
             val periodStartDate = LocalDate.parse(period.first, formatter)
 
-            // 算出した開始日が最新の終了日以前（被っている）場合はさらに1ヶ月進める
+            // 算出した開始日が最新終了日以前（被っている）場合は1ヶ月進める
             if (!periodStartDate.isAfter(latestFinishDate)) {
                 val safeStartDay = startDay.coerceIn(1, 31)
                 val nextMonth = periodStartDate.plusMonths(1)
                 val validStart = min(safeStartDay, nextMonth.lengthOfMonth())
                 val adjustedBaseDate = nextMonth.withDayOfMonth(validStart)
-                period = calculateCurrentPeriod(startDay, finishDay, adjustedBaseDate)
+                period = calculateCurrentPeriod(startDay, finishDay, isFinishNextMonth, adjustedBaseDate)
             }
             period
         } catch (e: Exception) {
-            calculateCurrentPeriod(startDay, finishDay)
+            calculateCurrentPeriod(startDay, finishDay, isFinishNextMonth)
         }
     }
 }

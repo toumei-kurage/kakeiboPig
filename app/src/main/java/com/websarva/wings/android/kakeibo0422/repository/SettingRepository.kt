@@ -7,22 +7,18 @@ import kotlinx.coroutines.tasks.await
 
 data class PeriodSetting(
     val startDay: Int = 1,
-    val finishDay: Int = 31
+    val finishDay: Int = 31,
+    val isFinishNextMonth: Boolean = false
 )
 
 class SettingRepository {
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
 
-    // ルールに合わせて /user_settings/{userId} を直接参照
     private fun getSettingsDocRef() = auth.currentUser?.uid?.let { uid ->
         db.collection("user_settings").document(uid)
     }
 
-    /**
-     * 家計簿の期間設定（開始日・終了日）を取得する。
-     * 未設定の場合はデフォルト（1日〜31日）を返却。
-     */
     suspend fun getPeriodSetting(): PeriodSetting {
         val docRef = getSettingsDocRef() ?: return PeriodSetting()
         return try {
@@ -30,7 +26,9 @@ class SettingRepository {
             if (snapshot.exists()) {
                 val startDay = snapshot.getLong("period_start_day")?.toInt() ?: 1
                 val finishDay = snapshot.getLong("period_finish_day")?.toInt() ?: 31
-                PeriodSetting(startDay, finishDay)
+                // 保存されていない既存データの場合は startDay > finishDay で自動補完
+                val isFinishNextMonth = snapshot.getBoolean("is_finish_next_month") ?: (startDay > finishDay)
+                PeriodSetting(startDay, finishDay, isFinishNextMonth)
             } else {
                 PeriodSetting()
             }
@@ -39,15 +37,12 @@ class SettingRepository {
         }
     }
 
-    /**
-     * 家計簿の期間設定（開始日・終了日）を保存する。
-     * SetOptions.merge() により既存の仮予算等のフィールドを保持したまま更新。
-     */
-    suspend fun savePeriodSetting(startDay: Int, finishDay: Int): Boolean {
+    suspend fun savePeriodSetting(startDay: Int, finishDay: Int, isFinishNextMonth: Boolean): Boolean {
         val docRef = getSettingsDocRef() ?: return false
         val data = hashMapOf<String, Any>(
             "period_start_day" to startDay.coerceIn(1, 31),
-            "period_finish_day" to finishDay.coerceIn(1, 31)
+            "period_finish_day" to finishDay.coerceIn(1, 31),
+            "is_finish_next_month" to isFinishNextMonth
         )
         return try {
             docRef.set(data, SetOptions.merge()).await()

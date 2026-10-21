@@ -176,17 +176,17 @@ class BalanceSheetSetInfoFragment : DialogFragment() {
             val latestFinishDate = getLatestBalanceFinishDate(userId)
 
             val (startDate, finishDate) = if (!latestFinishDate.isNullOrEmpty()) {
-                // 最新家計簿の終了日以降で被らない期間を計算
                 DatePeriodUtil.calculateNextPeriodAfter(
                     latestFinishDateStr = latestFinishDate,
                     startDay = setting.startDay,
-                    finishDay = setting.finishDay
+                    finishDay = setting.finishDay,
+                    isFinishNextMonth = setting.isFinishNextMonth // ★追加
                 )
             } else {
-                // 家計簿が存在しない場合は現在日を基準に計算
                 DatePeriodUtil.calculateCurrentPeriod(
                     startDay = setting.startDay,
-                    finishDay = setting.finishDay
+                    finishDay = setting.finishDay,
+                    isFinishNextMonth = setting.isFinishNextMonth // ★追加
                 )
             }
 
