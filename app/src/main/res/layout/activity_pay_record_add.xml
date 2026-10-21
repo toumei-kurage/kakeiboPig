@@ -138,6 +138,20 @@
 
                     </com.google.android.material.textfield.TextInputLayout>
 
+                    <!-- レシート読み取りボタンを追加 -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonScanReceipt"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginEnd="10dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="8dp"
+                        android:text="@string/button_ocr"
+                        app:icon="@drawable/ic_add"
+                        app:iconGravity="textStart" />
+
                     <Button
                         android:id="@+id/buttonPayRecordAdd"
                         android:layout_width="match_parent"

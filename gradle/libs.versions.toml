@@ -20,6 +20,7 @@ playServicesAuthVersion = "21.6.0"
 lifecycle-runtime-ktx = "2.8.7"
 playServicesOssLicensesVersion = "17.1.0"
 securityCrypto = "1.1.0-alpha06"
+textRecognitionJapanese = "16.0.1"
 
 [libraries]
 androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
@@ -43,6 +44,7 @@ lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtim
 
 play-services-auth-v2001 = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuthVersion" }
 play-services-oss-licenses-v1700 = { module = "com.google.android.gms:play-services-oss-licenses", version.ref = "playServicesOssLicensesVersion" }
+text-recognition-japanese = { module = "com.google.mlkit:text-recognition-japanese", version.ref = "textRecognitionJapanese" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

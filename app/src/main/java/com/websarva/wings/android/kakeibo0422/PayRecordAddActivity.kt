@@ -2,6 +2,7 @@ package com.websarva.wings.android.kakeibo0422
 
 import android.app.DatePickerDialog
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -14,11 +15,18 @@ import android.widget.EditText
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.core.content.FileProvider
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
-import com.websarva.wings.android.kakeibo0422.helper.DialogHelper
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions
+import com.websarva.wings.android.kakeibo0422.helper.ReceiptParser
 import com.websarva.wings.android.kakeibo0422.helper.ValidateHelper
+import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
@@ -45,7 +53,110 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
     //ヘルパークラス
     private val validateHelper = ValidateHelper(this)
     private val firestore = FirebaseFirestore.getInstance()
-    private val dialogHelper = DialogHelper(this)
+
+    // ML Kit テキスト認識クライアント（日本語）
+    private val recognizer = TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build())
+
+    // カメラ撮影用の画像URI保持用
+    private var cameraImageUri: Uri? = null
+
+    // 写真ピッカーのランチャー
+    private val pickMediaLauncher = registerForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            processReceiptImage(uri)
+        }
+    }
+
+    // カメラ撮影のランチャー
+    private val takePictureLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { isSuccess ->
+        if (isSuccess) {
+            cameraImageUri?.let { processReceiptImage(it) }
+        }
+    }
+
+    // onCreate 内に追加
+    private fun setupReceiptScanButton() {
+        val buttonScanReceipt = findViewById<View>(R.id.buttonScanReceipt)
+        buttonScanReceipt.setOnClickListener {
+            clearBordFocus()
+            showImageSourceDialog()
+        }
+    }
+
+    private fun showImageSourceDialog() {
+        val options = arrayOf("カメラで撮影", "アルバムから選択")
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setTitle("レシートの読み取り方法を選択")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> launchCamera()
+                    1 -> pickMediaLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                }
+            }
+            .show()
+    }
+
+    private fun launchCamera() {
+        val tempFile = File.createTempFile("receipt_", ".jpg", cacheDir).apply {
+            createNewFile()
+            deleteOnExit()
+        }
+        val uri = FileProvider.getUriForFile(
+            this,
+            "${applicationContext.packageName}.fileprovider",
+            tempFile
+        )
+        cameraImageUri = uri
+        takePictureLauncher.launch(uri)
+    }
+
+    private fun processReceiptImage(imageUri: Uri) {
+        val image: InputImage
+        try {
+            image = InputImage.fromFilePath(this, imageUri)
+        } catch (e: Exception) {
+            Toast.makeText(this, "画像の読み込みに失敗しました", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        Toast.makeText(this, "レシートを解析中...", Toast.LENGTH_SHORT).show()
+
+        recognizer.process(image)
+            .addOnSuccessListener { visionText ->
+                val result = ReceiptParser.parse(visionText)
+
+                var updated = false
+
+                // 日付が検出されたらセット
+                if (!result.date.isNullOrEmpty()) {
+                    payDateEditText.setText(result.date)
+                    payDateError.error = null
+                    updated = true
+                }
+
+                // 金額が検出されたらセット
+                if (result.amount != null) {
+                    payAmountEditText.setText(result.amount.toString())
+                    payAmountError.error = null
+                    updated = true
+                }
+
+                if (updated) {
+                    Toast.makeText(this, "レシートの情報を反映しました", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "レシートから日付・金額を検出できませんでした", Toast.LENGTH_LONG).show()
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "文字認識に失敗しました: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,6 +177,8 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
         payDone = findViewById(R.id.payDone)
         noteEditText = findViewById(R.id.payNoteEditText)
         buttonPayRecordAdd = findViewById(R.id.buttonPayRecordAdd)
+
+        setupReceiptScanButton()
 
         // PayPurposeデータを取得しSpinnerにセット
         loadPayPurposesFromFirestore()

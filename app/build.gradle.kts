@@ -85,5 +85,7 @@ dependencies {
     implementation(libs.androidx.biometric)
     // 暗号化SharedPreferences (資格情報の安全な保存)
     implementation(libs.androidx.security.crypto)
+
+    implementation(libs.text.recognition.japanese)
 }
 

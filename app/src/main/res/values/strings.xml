@@ -40,6 +40,7 @@
     <string name="button_update_balance">家計簿の更新</string>
     <string name="button_set_actual_balance">実際残高の設定</string>
     <string name="button_balance_detail">支払い目的別合計</string>
+    <string name="button_ocr">レシートから自動入力 (OCR)</string>
 
     <!--    ヒント-->
     <string name="hint_password">パスワード</string>
