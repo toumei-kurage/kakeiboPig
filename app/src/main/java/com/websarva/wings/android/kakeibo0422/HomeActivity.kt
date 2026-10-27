@@ -187,6 +187,7 @@ class HomeActivity : BaseActivity(R.layout.activity_home, R.string.title_home) {
         this.finishDateString = finishDate
 
         actualBalanceEditText.setText("0")
+        calculateAndDisplayWithdrawal(0)
 
         // 新しいデータで画面を再描画
         updateUI()
