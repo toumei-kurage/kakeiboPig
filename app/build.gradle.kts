@@ -86,6 +86,9 @@ dependencies {
     // 暗号化SharedPreferences (資格情報の安全な保存)
     implementation(libs.androidx.security.crypto)
 
+    // ML Kitの日本語テキスト認識
     implementation(libs.text.recognition.japanese)
+
+    implementation(libs.generativeai)
 }
 

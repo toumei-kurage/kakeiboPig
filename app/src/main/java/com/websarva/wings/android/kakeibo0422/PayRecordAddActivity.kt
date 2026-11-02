@@ -31,6 +31,8 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.string.title_add_pay_record) {
     //画面部品の用意
@@ -129,28 +131,37 @@ class PayRecordAddActivity : BaseActivity(R.layout.activity_pay_record_add, R.st
 
         recognizer.process(image)
             .addOnSuccessListener { visionText ->
-                val result = ReceiptParser.parse(visionText)
+                // OCR結果のテキスト全文をAIに渡して非同期パース
+                lifecycleScope.launch {
+                    val result = ReceiptParser.parseWithAi(visionText.text)
 
-                var updated = false
+                    var updated = false
 
-                // 日付が検出されたらセット
-                if (!result.date.isNullOrEmpty()) {
-                    payDateEditText.setText(result.date)
-                    payDateError.error = null
-                    updated = true
-                }
+                    // 日付が検出されたらセット
+                    if (!result.date.isNullOrEmpty()) {
+                        payDateEditText.setText(result.date)
+                        payDateError.error = null
+                        updated = true
+                    }
 
-                // 金額が検出されたらセット
-                if (result.amount != null) {
-                    payAmountEditText.setText(result.amount.toString())
-                    payAmountError.error = null
-                    updated = true
-                }
+                    // 金額が検出されたらセット
+                    if (result.amount != null) {
+                        payAmountEditText.setText(result.amount.toString())
+                        payAmountError.error = null
+                        updated = true
+                    }
 
-                if (updated) {
-                    Toast.makeText(this, "レシートの情報を反映しました", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this, "レシートから日付・金額を検出できませんでした", Toast.LENGTH_LONG).show()
+                    // 店名が検出されたらメモ（noteEditText）にセット
+                    if (!result.storeName.isNullOrEmpty()) {
+                        noteEditText.setText(result.storeName)
+                        updated = true
+                    }
+
+                    if (updated) {
+                        Toast.makeText(this@PayRecordAddActivity, "レシートの情報を反映しました", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this@PayRecordAddActivity, "レシートから情報を検出できませんでした", Toast.LENGTH_LONG).show()
+                    }
                 }
             }
             .addOnFailureListener { e ->

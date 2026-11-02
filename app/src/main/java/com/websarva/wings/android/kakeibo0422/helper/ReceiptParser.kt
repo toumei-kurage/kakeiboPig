@@ -1,125 +1,126 @@
 package com.websarva.wings.android.kakeibo0422.helper
 
-import com.google.mlkit.vision.text.Text
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import kotlin.math.abs
+import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.generationConfig
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
 
 data class ReceiptParseResult(
     val date: String?,
     val amount: Int?,
-    val candidateAmounts: List<Int>
+    val storeName: String?
 )
 
 object ReceiptParser {
 
-    private val dateFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd")
+    /**
+     * Gemini API の API キーは、Google 公式の開発者向けツール 「Google AI Studio」 から無料で即座に取得できます。クレジットカードの登録も不要です。
+     *
+     * API キーの取得手順（3ステップ）
+     * Google AI Studio にアクセス
+     *
+     * ブラウザで https://aistudio.google.com/ を開き、お使いの Google アカウントでログインします。
+     * 初回アクセス時、利用規約の同意画面が表示されたら内容を確認して同意します。
+     * API キーの作成画面へ進む
+     *
+     * 画面左上のメニュー、または画面内にある 「Get API key」 ボタンをクリックします。
+     * キーを発行・コピー
+     *
+     * 「Create API key」（API キーを作成）をクリックします。
+     * プロジェクトの選択肢が出ます：
+     * すでに GCP（Google Cloud Platform）プロジェクトがある場合はそれを選択
+     * ない場合（または分ける場合）は 「Create API key in new project」（新規プロジェクトで作成）を選択
+     * 画面に AIzaSy... から始まる API キーが表示されるのでコピーします。
+     * 安全な管理方法（推奨設定）
+     * コード内に直接キーを書き込む（ハードコードする）と、GitHub などの公開リポジトリへ誤ってコミットしてしまう危険があります。Android 開発では以下の手順で local.properties を経由させて扱うのが一般的です。
+     *
+     * 1. local.properties に記述（Git 管理対象外のファイル）
+     * プロジェクト直下の local.properties に追記します。
+     *
+     * properties
+     *
+     * GEMINI_API_KEY=AIzaSyあなたのAPIキー
+     * 2. app/build.gradle で読み込み設定
+     * buildFeatures で buildConfig を有効化し、buildConfigField で注入します。
+     *
+     * groovy
+     *
+     * android {
+     *     ...
+     *     defaultConfig {
+     *         ...
+     *         // local.properties から読み込んで BuildConfig に定義
+     *         Properties properties = new Properties()
+     *         properties.load(project.rootProject.file('local.properties').newDataInputStream())
+     *         buildConfigField "String", "GEMINI_API_KEY", "\"${properties.getProperty('GEMINI_API_KEY')}\""
+     *     }
+     *
+     *     buildFeatures {
+     *         buildConfig true
+     *     }
+     * }
+     * 3. コード内での参照 (ReceiptParser.kt)
+     * ハードコードではなく BuildConfig から取得します。
+     *
+     * kotlin
+     *
+     * // ReceiptParser.kt
+     * private val GEMINI_API_KEY = BuildConfig.GEMINI_API_KEY
+     */
+    private const val GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"
 
-    // 日付判定用正規表現 (例: 2026/04/22, 2026年4月22日, 2026-04-22, 26/4/22)
-    private val dateRegexList = listOf(
-        Regex("""(20\d{2})[/\-.年](0?[1-9]|1[0-2])[/\-.月](0?[1-9]|[12]\d|3[01])"""),
-        Regex("""(\d{2})[/\-.年](0?[1-9]|1[0-2])[/\-.月](0?[1-9]|[12]\d|3[01])""") // 西暦下2桁
-    )
-
-    // 金額抽出用（カンマ区切り数値、¥記号対応）
-    private val amountRegex = Regex("""[¥￥]?\s*([1-9]\d{0,2}(?:,\d{3})+|[1-9]\d{1,6})\s*円?""")
-
-    // 合計を示すキーワード
-    private val totalKeywords = listOf("総合計", "合計", "お買上計", "小計", "支払計", "決済額")
-
-    // 除外キーワード（合計金額と誤認しやすいノイズ）
-    private val excludeKeywords = listOf("お預", "預り", "お釣", "釣", "対象額", "内税", "外税", "消費税", "ポイント", "値引", "割引")
-
-    fun parse(text: Text): ReceiptParseResult {
-        var detectedDate: String? = null
-        val detectedAmounts = mutableListOf<Pair<Int, Text.Line>>()
-
-        val allLines = text.textBlocks.flatMap { it.lines }
-
-        // --- 1. 日付の抽出 ---
-        for (line in allLines) {
-            val lineText = line.text.replace(" ", "")
-            for (regex in dateRegexList) {
-                val match = regex.find(lineText)
-                if (match != null) {
-                    val groups = match.groupValues
-                    val rawYear = groups[1].toInt()
-                    val year = if (rawYear < 100) 2000 + rawYear else rawYear
-                    val month = groups[2].toInt()
-                    val day = groups[3].toInt()
-
-                    try {
-                        val parsed = LocalDate.of(year, month, day)
-                        // 未来すぎる日付や10年以上過去の日付は除外
-                        if (!parsed.isAfter(LocalDate.now().plusDays(1)) && parsed.year >= 2015) {
-                            detectedDate = parsed.format(dateFormatter)
-                            break
-                        }
-                    } catch (_: Exception) {
-                    }
-                }
+    private val generativeModel by lazy {
+        GenerativeModel(
+            modelName = "gemini-1.5-flash",
+            apiKey = GEMINI_API_KEY,
+            generationConfig = generationConfig {
+                responseMimeType = "application/json"
             }
-            if (detectedDate != null) break
-        }
-
-        // --- 2. 金額候補の収集 ---
-        for (line in allLines) {
-            val lineText = line.text.replace(" ", "")
-            // ノイズキーワードが含まれる行はスキップ
-            if (excludeKeywords.any { lineText.contains(it) }) continue
-
-            val matches = amountRegex.findAll(lineText)
-            for (m in matches) {
-                val rawValue = m.groupValues[1].replace(",", "")
-                val value = rawValue.toIntOrNull()
-                if (value != null && value in 10..9999999) {
-                    detectedAmounts.add(Pair(value, line))
-                }
-            }
-        }
-
-        // --- 3. 「合計」キーワードに最も近接する金額の特定 ---
-        var bestAmount: Int? = null
-        var totalLine: Text.Line? = null
-
-        // 最もフッター（下側）にある「合計」キーワード行を探す
-        for (line in allLines.reversed()) {
-            if (totalKeywords.any { line.text.contains(it) }) {
-                totalLine = line
-                break
-            }
-        }
-
-        if (totalLine != null) {
-            val totalBox = totalLine.boundingBox
-            if (totalBox != null) {
-                // 「合計」行と同一水平線上（Y座標が近い）または直下にある数値を優先
-                val bestMatch = detectedAmounts
-                    .filter { (_, line) ->
-                        val box = line.boundingBox ?: return@filter false
-                        // 「合計」の右側、または直下500px以内
-                        (box.bottom >= totalBox.top - 20) && (box.top <= totalBox.bottom + 150)
-                    }
-                    .minByOrNull { (_, line) ->
-                        val box = line.boundingBox!!
-                        abs(box.centerY() - totalBox.centerY())
-                    }
-
-                bestAmount = bestMatch?.first
-            }
-        }
-
-        // 「合計」で見つからなかった場合は、検出された中で最も大きい金額をフォールバックとして採用
-        if (bestAmount == null && detectedAmounts.isNotEmpty()) {
-            bestAmount = detectedAmounts.maxOf { it.first }
-        }
-
-        val candidateList = detectedAmounts.map { it.first }.distinct()
-
-        return ReceiptParseResult(
-            date = detectedDate,
-            amount = bestAmount,
-            candidateAmounts = candidateList
         )
+    }
+
+    private val promptTemplate = """
+        以下のテキストはレシートをOCRで読み取った結果です。
+        内容を解析し、以下の項目を抽出して指定のJSON形式のみで出力してください。
+        
+        【抽出項目】
+        - storeName: 店舗名・会社名（見当たらない場合は null）
+        - date: 支払日・取引日。必ず「yyyy/MM/dd」形式に変換してください（見当たらない場合は null）
+        - amount: 支払合計金額・請求金額（お釣りや預かり金ではなく、実際に支払った総計額の整数値。見当たらない場合は null）
+
+        【出力JSONフォーマット】
+        {
+          "storeName": "店舗名文字列またはnull",
+          "date": "yyyy/MM/dd文字列またはnull",
+          "amount": 0
+        }
+
+        【レシートOCRテキスト】
+    """.trimIndent()
+
+    suspend fun parseWithAi(ocrText: String): ReceiptParseResult = withContext(Dispatchers.IO) {
+        if (ocrText.isBlank()) {
+            return@withContext ReceiptParseResult(null, null, null)
+        }
+
+        try {
+            val response = generativeModel.generateContent("$promptTemplate\n$ocrText")
+            val responseText = response.text ?: return@withContext ReceiptParseResult(null, null, null)
+
+            val json = JSONObject(responseText)
+            val storeName = if (json.isNull("storeName")) null else json.optString("storeName").takeIf { it.isNotBlank() }
+            val date = if (json.isNull("date")) null else json.optString("date").takeIf { it.isNotBlank() }
+            val amount = if (json.isNull("amount")) null else json.optInt("amount").takeIf { it > 0 }
+
+            ReceiptParseResult(
+                date = date,
+                amount = amount,
+                storeName = storeName
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            ReceiptParseResult(null, null, null)
+        }
     }
 }
